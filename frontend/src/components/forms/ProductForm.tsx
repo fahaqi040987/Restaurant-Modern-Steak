@@ -44,22 +44,22 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
 
   // Choose the appropriate schema and default values
   const schema = isEditing ? updateProductSchema : createProductSchema
-  const defaultValues = isEditing 
+  const defaultValues: any = isEditing && product
     ? {
         id: product.id,
         name: product.name,
         description: product.description || '',
         price: product.price,
-        category_id: product.category_id,
+        category_id: Number(product.category_id) || Number(categories[0]?.id) || 1,
         image_url: product.image_url || '',
-        status: product.status as any,
+        status: product.is_available ? 'active' as const : 'inactive' as const,
         preparation_time: product.preparation_time || 5,
       }
     : {
         name: '',
         description: '',
         price: 0,
-        category_id: categories[0]?.id || 1,
+        category_id: Number(categories[0]?.id) || 1,
         image_url: '',
         status: 'active' as const,
         preparation_time: 5,
@@ -73,11 +73,11 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (data: CreateProductData) => apiClient.createProduct(data),
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['products'] })
       queryClient.invalidateQueries({ queryKey: ['categories'] })
-      toastHelpers.productCreated(form.getValues('name'))
+      toastHelpers.productCreated(form.getValues('name') || 'Product')
       form.reset()
       onSuccess?.()
     },

@@ -31,12 +31,12 @@ export function TableForm({ table, onSuccess, onCancel, mode = 'create' }: Table
 
   // Choose the appropriate schema and default values
   const schema = isEditing ? updateTableSchema : createTableSchema
-  const defaultValues = isEditing 
+  const defaultValues: any = isEditing 
     ? {
         id: table.id,
         table_number: table.table_number,
-        seats: table.seats,
-        status: table.status as any,
+        seats: table.seating_capacity,
+        status: table.is_occupied ? 'occupied' as const : 'available' as const,
         location: table.location || '',
       }
     : {
@@ -54,11 +54,11 @@ export function TableForm({ table, onSuccess, onCancel, mode = 'create' }: Table
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (data: CreateTableData) => apiClient.createTable(data),
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-tables'] })
       queryClient.invalidateQueries({ queryKey: ['tables'] })
       queryClient.invalidateQueries({ queryKey: ['tables-summary'] })
-      toastHelpers.tableCreated(form.getValues('table_number'))
+      toastHelpers.tableCreated(form.getValues('table_number') || 'Table')
       form.reset()
       onSuccess?.()
     },

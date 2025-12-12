@@ -21,14 +21,15 @@ function HomePage() {
       return apiClient.getCurrentUser()
     },
     retry: 1,
-    enabled: false, // Temporarily disable server verification
-    onError: (error) => {
-      console.error('getCurrentUser failed:', error)
-      // Clear auth and redirect to login
-      apiClient.clearAuth()
-      window.location.href = '/login'
-    }
+    enabled: false // Temporarily disable server verification
   })
+
+  // Handle errors separately
+  if (error) {
+    console.error('getCurrentUser failed:', error)
+    apiClient.clearAuth()
+    window.location.href = '/login'
+  }
 
   useEffect(() => {
     console.log('Loading user from localStorage...')

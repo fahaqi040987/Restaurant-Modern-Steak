@@ -9,11 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StaffRouteImport } from './routes/staff'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as KitchenRouteImport } from './routes/kitchen'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicIndexRouteImport } from './routes/public/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as PublicMenuRouteImport } from './routes/public/menu'
+import { Route as PublicContactRouteImport } from './routes/public/contact'
+import { Route as PublicAboutRouteImport } from './routes/public/about'
 import { Route as AdminTablesRouteImport } from './routes/admin/tables'
 import { Route as AdminStaffRouteImport } from './routes/admin/staff'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
@@ -24,6 +29,11 @@ import { Route as AdminKitchenRouteImport } from './routes/admin/kitchen'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminCounterRouteImport } from './routes/admin/counter'
 
+const StaffRoute = StaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -44,10 +54,30 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicIndexRoute = PublicIndexRouteImport.update({
+  id: '/public/',
+  path: '/public/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const PublicMenuRoute = PublicMenuRouteImport.update({
+  id: '/public/menu',
+  path: '/public/menu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicContactRoute = PublicContactRouteImport.update({
+  id: '/public/contact',
+  path: '/public/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicAboutRoute = PublicAboutRouteImport.update({
+  id: '/public/about',
+  path: '/public/about',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTablesRoute = AdminTablesRouteImport.update({
   id: '/tables',
@@ -100,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
+  '/staff': typeof StaffRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/kitchen': typeof AdminKitchenRoute
@@ -109,12 +140,17 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
+  '/public/about': typeof PublicAboutRoute
+  '/public/contact': typeof PublicContactRoute
+  '/public/menu': typeof PublicMenuRoute
   '/admin/': typeof AdminIndexRoute
+  '/public': typeof PublicIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
+  '/staff': typeof StaffRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/kitchen': typeof AdminKitchenRoute
@@ -124,7 +160,11 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
+  '/public/about': typeof PublicAboutRoute
+  '/public/contact': typeof PublicContactRoute
+  '/public/menu': typeof PublicMenuRoute
   '/admin': typeof AdminIndexRoute
+  '/public': typeof PublicIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -132,6 +172,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
+  '/staff': typeof StaffRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/kitchen': typeof AdminKitchenRoute
@@ -141,7 +182,11 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
+  '/public/about': typeof PublicAboutRoute
+  '/public/contact': typeof PublicContactRoute
+  '/public/menu': typeof PublicMenuRoute
   '/admin/': typeof AdminIndexRoute
+  '/public/': typeof PublicIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -150,6 +195,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/kitchen'
     | '/login'
+    | '/staff'
     | '/admin/counter'
     | '/admin/dashboard'
     | '/admin/kitchen'
@@ -159,12 +205,17 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/tables'
+    | '/public/about'
+    | '/public/contact'
+    | '/public/menu'
     | '/admin/'
+    | '/public'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/kitchen'
     | '/login'
+    | '/staff'
     | '/admin/counter'
     | '/admin/dashboard'
     | '/admin/kitchen'
@@ -174,13 +225,18 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/tables'
+    | '/public/about'
+    | '/public/contact'
+    | '/public/menu'
     | '/admin'
+    | '/public'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/kitchen'
     | '/login'
+    | '/staff'
     | '/admin/counter'
     | '/admin/dashboard'
     | '/admin/kitchen'
@@ -190,7 +246,11 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/tables'
+    | '/public/about'
+    | '/public/contact'
+    | '/public/menu'
     | '/admin/'
+    | '/public/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -198,10 +258,22 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   KitchenRoute: typeof KitchenRoute
   LoginRoute: typeof LoginRoute
+  StaffRoute: typeof StaffRoute
+  PublicAboutRoute: typeof PublicAboutRoute
+  PublicContactRoute: typeof PublicContactRoute
+  PublicMenuRoute: typeof PublicMenuRoute
+  PublicIndexRoute: typeof PublicIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/staff': {
+      id: '/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof StaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -230,12 +302,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/public/': {
+      id: '/public/'
+      path: '/public'
+      fullPath: '/public'
+      preLoaderRoute: typeof PublicIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/public/menu': {
+      id: '/public/menu'
+      path: '/public/menu'
+      fullPath: '/public/menu'
+      preLoaderRoute: typeof PublicMenuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/public/contact': {
+      id: '/public/contact'
+      path: '/public/contact'
+      fullPath: '/public/contact'
+      preLoaderRoute: typeof PublicContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/public/about': {
+      id: '/public/about'
+      path: '/public/about'
+      fullPath: '/public/about'
+      preLoaderRoute: typeof PublicAboutRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/tables': {
       id: '/admin/tables'
@@ -336,6 +436,11 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   KitchenRoute: KitchenRoute,
   LoginRoute: LoginRoute,
+  StaffRoute: StaffRoute,
+  PublicAboutRoute: PublicAboutRoute,
+  PublicContactRoute: PublicContactRoute,
+  PublicMenuRoute: PublicMenuRoute,
+  PublicIndexRoute: PublicIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

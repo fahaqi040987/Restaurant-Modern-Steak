@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { AdminLayout } from '@/components/admin/AdminLayout'
@@ -98,7 +98,7 @@ export function RoleBasedLayout({ user }: RoleBasedLayoutProps) {
 
   // Get available views based on user role
   const getAvailableViews = (role: string) => {
-    const views = []
+    const views: Array<{ id: string; label: string; icon: React.ReactNode }> = []
 
     // Admin and managers get all views
     if (role === 'admin' || role === 'manager') {

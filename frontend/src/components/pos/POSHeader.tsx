@@ -11,7 +11,8 @@ import {
   ShoppingBag,
   Truck,
   MapPin,
-  ChefHat
+  ChefHat,
+  History
 } from 'lucide-react'
 import apiClient from '@/api/client'
 import type { User, DiningTable } from '@/types'

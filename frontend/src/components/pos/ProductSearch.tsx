@@ -116,7 +116,8 @@ export function ProductSearch({
     onClose()
   }
 
-  const getCategoryName = (categoryId: string) => {
+  const getCategoryName = (categoryId: string | undefined) => {
+    if (!categoryId) return 'Unknown'
     return categories.find(cat => cat.id === categoryId)?.name || 'Unknown'
   }
 
@@ -200,7 +201,7 @@ export function ProductSearch({
                               <DollarSign className="h-3 w-3" />
                               {formatCurrency(product.price)}
                             </span>
-                            {product.available && (
+                            {product.is_available && (
                               <Badge variant="outline" className="text-xs">
                                 <Package className="h-3 w-3 mr-1" />
                                 Available

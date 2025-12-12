@@ -52,11 +52,11 @@ export function CategoryForm({ category, onSuccess, onCancel, mode = 'create' }:
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (data: CreateCategoryData) => apiClient.createCategory(data),
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] })
       queryClient.invalidateQueries({ queryKey: ['categories'] })
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
-      toastHelpers.categoryCreated(form.getValues('name'))
+      toastHelpers.categoryCreated(form.getValues('name') || 'Category')
       form.reset()
       onSuccess?.()
     },

@@ -25,6 +25,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	productHandler := handlers.NewProductHandler(db)
 	paymentHandler := handlers.NewPaymentHandler(db)
 	tableHandler := handlers.NewTableHandler(db)
+	publicHandler := handlers.NewPublicHandler(db)
 
 	// Public routes (no authentication required)
 	public := router.Group("/")
@@ -32,6 +33,15 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		// Authentication routes
 		public.POST("/auth/login", authHandler.Login)
 		public.POST("/auth/logout", authHandler.Logout)
+	}
+
+	// Public website API routes (no authentication required)
+	publicAPI := router.Group("/public")
+	{
+		publicAPI.GET("/menu", publicHandler.GetPublicMenu)
+		publicAPI.GET("/categories", publicHandler.GetPublicCategories)
+		publicAPI.GET("/restaurant", publicHandler.GetRestaurantInfo)
+		publicAPI.POST("/contact", publicHandler.SubmitContactForm)
 	}
 
 	// Protected routes (authentication required)
@@ -137,32 +147,32 @@ func getDashboardStats(db *sql.DB) gin.HandlerFunc {
 		// Today's orders
 		var todayOrders int
 		db.QueryRow(`
-			SELECT COUNT(*) 
-			FROM orders 
+			SELECT COUNT(*)
+			FROM orders
 			WHERE DATE(created_at) = CURRENT_DATE
 		`).Scan(&todayOrders)
 
 		// Today's revenue
 		var todayRevenue float64
 		db.QueryRow(`
-			SELECT COALESCE(SUM(total_amount), 0) 
-			FROM orders 
+			SELECT COALESCE(SUM(total_amount), 0)
+			FROM orders
 			WHERE DATE(created_at) = CURRENT_DATE AND status = 'completed'
 		`).Scan(&todayRevenue)
 
 		// Active orders
 		var activeOrders int
 		db.QueryRow(`
-			SELECT COUNT(*) 
-			FROM orders 
+			SELECT COUNT(*)
+			FROM orders
 			WHERE status NOT IN ('completed', 'cancelled')
 		`).Scan(&activeOrders)
 
 		// Occupied tables
 		var occupiedTables int
 		db.QueryRow(`
-			SELECT COUNT(*) 
-			FROM dining_tables 
+			SELECT COUNT(*)
+			FROM dining_tables
 			WHERE is_occupied = true
 		`).Scan(&occupiedTables)
 
@@ -189,7 +199,7 @@ func getSalesReport(db *sql.DB) gin.HandlerFunc {
 		case "week":
 			query = `
 				SELECT DATE(created_at) as date, COUNT(*) as order_count, SUM(total_amount) as revenue
-				FROM orders 
+				FROM orders
 				WHERE created_at >= CURRENT_DATE - INTERVAL '7 days' AND status = 'completed'
 				GROUP BY DATE(created_at)
 				ORDER BY date DESC
@@ -197,7 +207,7 @@ func getSalesReport(db *sql.DB) gin.HandlerFunc {
 		case "month":
 			query = `
 				SELECT DATE(created_at) as date, COUNT(*) as order_count, SUM(total_amount) as revenue
-				FROM orders 
+				FROM orders
 				WHERE created_at >= CURRENT_DATE - INTERVAL '30 days' AND status = 'completed'
 				GROUP BY DATE(created_at)
 				ORDER BY date DESC
@@ -205,7 +215,7 @@ func getSalesReport(db *sql.DB) gin.HandlerFunc {
 		default: // today
 			query = `
 				SELECT DATE_TRUNC('hour', created_at) as hour, COUNT(*) as order_count, SUM(total_amount) as revenue
-				FROM orders 
+				FROM orders
 				WHERE DATE(created_at) = CURRENT_DATE AND status = 'completed'
 				GROUP BY DATE_TRUNC('hour', created_at)
 				ORDER BY hour DESC
@@ -259,11 +269,11 @@ func getOrdersReport(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get order statistics
 		query := `
-			SELECT 
+			SELECT
 				status,
 				COUNT(*) as count,
 				AVG(total_amount) as avg_amount
-			FROM orders 
+			FROM orders
 			WHERE DATE(created_at) = CURRENT_DATE
 			GROUP BY status
 		`
@@ -316,7 +326,7 @@ func getKitchenOrders(db *sql.DB) gin.HandlerFunc {
 		status := c.DefaultQuery("status", "all")
 
 		query := `
-			SELECT DISTINCT o.id, o.order_number, o.table_id, o.order_type, o.status, 
+			SELECT DISTINCT o.id, o.order_number, o.table_id, o.order_type, o.status,
 			       o.created_at, o.customer_name,
 			       t.table_number
 			FROM orders o
@@ -401,8 +411,8 @@ func updateOrderItemStatus(db *sql.DB) gin.HandlerFunc {
 
 		// Update order item status
 		_, err := db.Exec(`
-			UPDATE order_items 
-			SET status = $1, updated_at = CURRENT_TIMESTAMP 
+			UPDATE order_items
+			SET status = $1, updated_at = CURRENT_TIMESTAMP
 			WHERE id = $2 AND order_id = $3
 		`, req.Status, itemID, orderID)
 
@@ -474,56 +484,56 @@ func getIncomeReport(db *sql.DB) gin.HandlerFunc {
 		switch period {
 		case "week":
 			query = `
-				SELECT 
+				SELECT
 					DATE_TRUNC('day', created_at) as period,
 					COUNT(*) as total_orders,
 					SUM(total_amount) as gross_income,
 					SUM(tax_amount) as tax_collected,
 					SUM(total_amount - tax_amount) as net_income
-				FROM orders 
-				WHERE created_at >= CURRENT_DATE - INTERVAL '7 days' 
+				FROM orders
+				WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
 					AND status = 'completed'
 				GROUP BY DATE_TRUNC('day', created_at)
 				ORDER BY period DESC
 			`
 		case "month":
 			query = `
-				SELECT 
+				SELECT
 					DATE_TRUNC('day', created_at) as period,
 					COUNT(*) as total_orders,
 					SUM(total_amount) as gross_income,
 					SUM(tax_amount) as tax_collected,
 					SUM(total_amount - tax_amount) as net_income
-				FROM orders 
-				WHERE created_at >= CURRENT_DATE - INTERVAL '30 days' 
+				FROM orders
+				WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
 					AND status = 'completed'
 				GROUP BY DATE_TRUNC('day', created_at)
 				ORDER BY period DESC
 			`
 		case "year":
 			query = `
-				SELECT 
+				SELECT
 					DATE_TRUNC('month', created_at) as period,
 					COUNT(*) as total_orders,
 					SUM(total_amount) as gross_income,
 					SUM(tax_amount) as tax_collected,
 					SUM(total_amount - tax_amount) as net_income
-				FROM orders 
-				WHERE created_at >= CURRENT_DATE - INTERVAL '1 year' 
+				FROM orders
+				WHERE created_at >= CURRENT_DATE - INTERVAL '1 year'
 					AND status = 'completed'
 				GROUP BY DATE_TRUNC('month', created_at)
 				ORDER BY period DESC
 			`
 		default: // today
 			query = `
-				SELECT 
+				SELECT
 					DATE_TRUNC('hour', created_at) as period,
 					COUNT(*) as total_orders,
 					SUM(total_amount) as gross_income,
 					SUM(tax_amount) as tax_collected,
 					SUM(total_amount - tax_amount) as net_income
-				FROM orders 
-				WHERE DATE(created_at) = CURRENT_DATE 
+				FROM orders
+				WHERE DATE(created_at) = CURRENT_DATE
 					AND status = 'completed'
 				GROUP BY DATE_TRUNC('hour', created_at)
 				ORDER BY period DESC
@@ -701,8 +711,8 @@ func updateCategory(db *sql.DB) gin.HandlerFunc {
 		args = append(args, categoryID)
 
 		query := fmt.Sprintf(`
-			UPDATE categories 
-			SET %s 
+			UPDATE categories
+			SET %s
 			WHERE id = $%d
 		`, strings.Join(updates, ", "), argCount)
 
@@ -919,8 +929,8 @@ func updateProduct(db *sql.DB) gin.HandlerFunc {
 		args = append(args, productID)
 
 		query := fmt.Sprintf(`
-			UPDATE products 
-			SET %s 
+			UPDATE products
+			SET %s
 			WHERE id = $%d
 		`, strings.Join(updates, ", "), argCount)
 
@@ -958,9 +968,9 @@ func deleteProduct(db *sql.DB) gin.HandlerFunc {
 		// Check if product is used in any active orders
 		var orderCount int
 		db.QueryRow(`
-			SELECT COUNT(*) 
-			FROM order_items oi 
-			JOIN orders o ON oi.order_id = o.id 
+			SELECT COUNT(*)
+			FROM order_items oi
+			JOIN orders o ON oi.order_id = o.id
 			WHERE oi.product_id = $1 AND o.status NOT IN ('completed', 'cancelled')
 		`, productID).Scan(&orderCount)
 
@@ -1100,8 +1110,8 @@ func updateTable(db *sql.DB) gin.HandlerFunc {
 		args = append(args, tableID)
 
 		query := fmt.Sprintf(`
-			UPDATE dining_tables 
-			SET %s 
+			UPDATE dining_tables
+			SET %s
 			WHERE id = $%d
 		`, strings.Join(updates, ", "), argCount)
 
@@ -1139,8 +1149,8 @@ func deleteTable(db *sql.DB) gin.HandlerFunc {
 		// Check if table has active orders
 		var orderCount int
 		db.QueryRow(`
-			SELECT COUNT(*) 
-			FROM orders 
+			SELECT COUNT(*)
+			FROM orders
 			WHERE table_id = $1 AND status NOT IN ('completed', 'cancelled')
 		`, tableID).Scan(&orderCount)
 
@@ -1321,8 +1331,8 @@ func updateUser(db *sql.DB) gin.HandlerFunc {
 		args = append(args, userID)
 
 		query := fmt.Sprintf(`
-			UPDATE users 
-			SET %s 
+			UPDATE users
+			SET %s
 			WHERE id = $%d
 		`, strings.Join(updates, ", "), argCount)
 
@@ -1654,7 +1664,7 @@ func getAdminTables(db *sql.DB) gin.HandlerFunc {
 
 		// Build query with filters
 		queryBuilder := `
-			SELECT t.id, t.table_number, t.seating_capacity, t.location, t.is_occupied, 
+			SELECT t.id, t.table_number, t.seating_capacity, t.location, t.is_occupied,
 			       t.created_at, t.updated_at,
 			       o.id as order_id, o.order_number, o.customer_name, o.status as order_status,
 			       o.created_at as order_created_at, o.total_amount
@@ -1779,9 +1789,4 @@ func getAdminTables(db *sql.DB) gin.HandlerFunc {
 			},
 		})
 	}
-}
-
-// Helper function to convert string to pointer
-func stringPtr(s string) *string {
-	return &s
 }

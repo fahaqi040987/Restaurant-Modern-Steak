@@ -23,6 +23,13 @@ import type {
   OrderFilters,
   ProductFilters,
   TableFilters,
+  OrderStatus,
+  // Public API types (B2C Website)
+  PublicMenuItem,
+  PublicCategory,
+  RestaurantInfo,
+  ContactFormData,
+  ContactFormResponse,
 } from '@/types';
 
 class APIClient {
@@ -299,10 +306,11 @@ class APIClient {
   }
 
   // User management endpoints (Admin only)
-  async getUsers(): Promise<APIResponse<User[]>> {
+  async getUsers(params?: { page?: number; limit?: number; search?: string }): Promise<APIResponse<User[]>> {
     return this.request({
       method: 'GET',
       url: '/admin/users',
+      params,
     });
   }
 
@@ -409,6 +417,72 @@ class APIClient {
 
   async deleteTable(id: string): Promise<APIResponse> {
     return this.request({ method: 'DELETE', url: `/admin/tables/${id}` });
+  }
+
+  // ===========================================
+  // Public API endpoints (B2C Website - No Auth Required)
+  // ===========================================
+
+  /**
+   * Get public menu items with optional filtering
+   * @param categoryId - Filter by category ID
+   * @param search - Search term for menu items
+   * @returns Array of public menu items
+   */
+  async getPublicMenu(categoryId?: string, search?: string): Promise<PublicMenuItem[]> {
+    const response = await this.request<APIResponse<PublicMenuItem[]>>({
+      method: 'GET',
+      url: '/public/menu',
+      params: {
+        ...(categoryId && { category_id: categoryId }),
+        ...(search && { search }),
+      },
+    });
+    return response.data || [];
+  }
+
+  /**
+   * Get public categories
+   * @returns Array of public categories
+   */
+  async getPublicCategories(): Promise<PublicCategory[]> {
+    const response = await this.request<APIResponse<PublicCategory[]>>({
+      method: 'GET',
+      url: '/public/categories',
+    });
+    return response.data || [];
+  }
+
+  /**
+   * Get restaurant information with operating hours
+   * @returns Restaurant info including is_open_now computed field
+   */
+  async getRestaurantInfo(): Promise<RestaurantInfo> {
+    const response = await this.request<APIResponse<RestaurantInfo>>({
+      method: 'GET',
+      url: '/public/restaurant',
+    });
+    if (!response.data) {
+      throw new Error('Restaurant information not found');
+    }
+    return response.data;
+  }
+
+  /**
+   * Submit contact form
+   * @param data - Contact form data (name, email, subject, message required; phone optional)
+   * @returns Contact submission ID
+   */
+  async submitContactForm(data: ContactFormData): Promise<ContactFormResponse> {
+    const response = await this.request<APIResponse<ContactFormResponse>>({
+      method: 'POST',
+      url: '/public/contact',
+      data,
+    });
+    if (!response.data) {
+      throw new Error('Failed to submit contact form');
+    }
+    return response.data;
   }
 
   // Utility methods

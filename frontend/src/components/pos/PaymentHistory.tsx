@@ -322,11 +322,16 @@ export function PaymentHistory({ isOpen, onClose }: PaymentHistoryProps) {
           }}
           order={selectedPayment.order}
           payment={selectedPayment}
-          items={selectedPayment.order.order_items?.map(item => ({
+          items={selectedPayment.order.items?.map((item: any) => ({
             product: {
               id: item.product_id,
               name: item.product_name || 'Unknown Product',
-              price: item.unit_price
+              price: item.unit_price,
+              is_available: true,
+              preparation_time: 0,
+              sort_order: 0,
+              created_at: '',
+              updated_at: ''
             },
             quantity: item.quantity
           })) || []}
