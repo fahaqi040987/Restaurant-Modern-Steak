@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,43 +12,91 @@ import {
   DollarSign,
   Printer,
   Save,
-  RotateCcw
+  RotateCcw,
+  Loader2,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react'
+import apiClient from '@/api/client'
+import { toastHelpers } from '@/lib/toast-helpers'
+
+type SystemSettings = Record<string, any>
 
 export function AdminSettings() {
-  const [settings, setSettings] = useState({
-    restaurant_name: 'My Restaurant',
-    currency: 'USD',
-    tax_rate: '10.00',
-    service_charge: '5.00',
-    receipt_header: 'Thank you for dining with us!',
-    receipt_footer: 'Visit again soon!',
-    notification_email: 'admin@restaurant.com',
-    backup_frequency: 'daily',
-    theme: 'light',
-    language: 'en'
+  const queryClient = useQueryClient()
+  const [settings, setSettings] = useState<SystemSettings>({})
+
+  // Fetch settings from backend
+  const { data: settingsData, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn: async () => {
+      const response = await apiClient.getSettings()
+      if (!response.success) {
+        throw new Error(response.message)
+      }
+      return response.data as SystemSettings
+    },
+  })
+
+  // Fetch system health
+  const { data: healthData, isLoading: isLoadingHealth } = useQuery({
+    queryKey: ['system-health'],
+    queryFn: async () => {
+      const response = await apiClient.getSystemHealth()
+      if (!response.success) {
+        throw new Error(response.message)
+      }
+      return response.data
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  })
+
+  // Update local state when data is fetched
+  useEffect(() => {
+    if (settingsData) {
+      setSettings(settingsData)
+    }
+  }, [settingsData])
+
+  // Save settings mutation
+  const saveSettingsMutation = useMutation({
+    mutationFn: async (newSettings: SystemSettings) => {
+      const response = await apiClient.updateSettings(newSettings)
+      if (!response.success) {
+        throw new Error(response.message)
+      }
+      return response
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] })
+      toastHelpers.success('Settings saved successfully!')
+    },
+    onError: (error: Error) => {
+      toastHelpers.error(error.message || 'Failed to save settings')
+    },
   })
 
   const handleSave = () => {
-    // TODO: Implement settings save
-    console.log('Saving settings:', settings)
-    alert('Settings saved successfully!')
+    saveSettingsMutation.mutate(settings)
   }
 
   const handleReset = () => {
-    // Reset to defaults
-    setSettings({
-      restaurant_name: 'My Restaurant',
-      currency: 'USD',
-      tax_rate: '10.00',
-      service_charge: '5.00',
-      receipt_header: 'Thank you for dining with us!',
-      receipt_footer: 'Visit again soon!',
-      notification_email: 'admin@restaurant.com',
-      backup_frequency: 'daily',
-      theme: 'light',
-      language: 'en'
-    })
+    if (settingsData) {
+      setSettings(settingsData)
+      toastHelpers.info('Settings reset to saved values')
+    }
+  }
+
+  const updateSetting = (key: string, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }))
+  }
+
+  if (isLoadingSettings) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (
@@ -61,12 +110,16 @@ export function AdminSettings() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleReset}>
+          <Button variant="outline" onClick={handleReset} disabled={saveSettingsMutation.isPending}>
             <RotateCcw className="w-4 h-4 mr-2" />
             Reset
           </Button>
-          <Button onClick={handleSave}>
-            <Save className="w-4 h-4 mr-2" />
+          <Button onClick={handleSave} disabled={saveSettingsMutation.isPending}>
+            {saveSettingsMutation.isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
+            )}
             Save Changes
           </Button>
         </div>
@@ -88,22 +141,10 @@ export function AdminSettings() {
             <div>
               <label className="text-sm font-medium mb-2 block">Restaurant Name</label>
               <Input
-                value={settings.restaurant_name}
-                onChange={(e) => setSettings({...settings, restaurant_name: e.target.value})}
+                value={settings.restaurant_name || ''}
+                onChange={(e) => updateSetting('restaurant_name', e.target.value)}
                 placeholder="Enter restaurant name"
               />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Language</label>
-              <select
-                className="w-full p-2 border border-input rounded-md bg-background"
-                value={settings.language}
-                onChange={(e) => setSettings({...settings, language: e.target.value})}
-              >
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-              </select>
             </div>
           </CardContent>
         </Card>
@@ -122,14 +163,11 @@ export function AdminSettings() {
           <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Currency</label>
-              <select
-                className="w-full p-2 border border-input rounded-md bg-background"
-                value={settings.currency}
-                onChange={(e) => setSettings({...settings, currency: e.target.value})}
-              >
-                <option value="USD">USD ($)</option>
-                <option value="IDR">IDR (Rp)</option>
-              </select>
+              <Input
+                value={settings.currency || ''}
+                onChange={(e) => updateSetting('currency', e.target.value)}
+                placeholder="USD"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -137,8 +175,8 @@ export function AdminSettings() {
                 <Input
                   type="number"
                   step="0.01"
-                  value={settings.tax_rate}
-                  onChange={(e) => setSettings({...settings, tax_rate: e.target.value})}
+                  value={settings.tax_rate || ''}
+                  onChange={(e) => updateSetting('tax_rate', e.target.value)}
                 />
               </div>
               <div>
@@ -146,8 +184,8 @@ export function AdminSettings() {
                 <Input
                   type="number"
                   step="0.01"
-                  value={settings.service_charge}
-                  onChange={(e) => setSettings({...settings, service_charge: e.target.value})}
+                  value={settings.service_charge || ''}
+                  onChange={(e) => updateSetting('service_charge', e.target.value)}
                 />
               </div>
             </div>
@@ -169,16 +207,16 @@ export function AdminSettings() {
             <div>
               <label className="text-sm font-medium mb-2 block">Receipt Header</label>
               <Input
-                value={settings.receipt_header}
-                onChange={(e) => setSettings({...settings, receipt_header: e.target.value})}
+                value={settings.receipt_header || ''}
+                onChange={(e) => updateSetting('receipt_header', e.target.value)}
                 placeholder="Header message"
               />
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Receipt Footer</label>
               <Input
-                value={settings.receipt_footer}
-                onChange={(e) => setSettings({...settings, receipt_footer: e.target.value})}
+                value={settings.receipt_footer || ''}
+                onChange={(e) => updateSetting('receipt_footer', e.target.value)}
                 placeholder="Footer message"
               />
             </div>
@@ -198,23 +236,11 @@ export function AdminSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Theme</label>
-              <select
-                className="w-full p-2 border border-input rounded-md bg-background"
-                value={settings.theme}
-                onChange={(e) => setSettings({...settings, theme: e.target.value})}
-              >
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="system">System</option>
-              </select>
-            </div>
-            <div>
               <label className="text-sm font-medium mb-2 block">Backup Frequency</label>
               <select
                 className="w-full p-2 border border-input rounded-md bg-background"
-                value={settings.backup_frequency}
-                onChange={(e) => setSettings({...settings, backup_frequency: e.target.value})}
+                value={settings.backup_frequency || 'daily'}
+                onChange={(e) => updateSetting('backup_frequency', e.target.value)}
               >
                 <option value="hourly">Hourly</option>
                 <option value="daily">Daily</option>
@@ -222,44 +248,14 @@ export function AdminSettings() {
                 <option value="manual">Manual Only</option>
               </select>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Notifications */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              Notification Settings
-            </CardTitle>
-            <CardDescription>
-              Configure alerts and notifications
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Notification Email</label>
+              <label className="text-sm font-medium mb-2 block">Session Timeout (minutes)</label>
               <Input
-                type="email"
-                value={settings.notification_email}
-                onChange={(e) => setSettings({...settings, notification_email: e.target.value})}
-                placeholder="admin@restaurant.com"
+                type="number"
+                value={settings.session_timeout || ''}
+                onChange={(e) => updateSetting('session_timeout', e.target.value)}
+                placeholder="60"
               />
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">Low Stock Alerts</Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">Daily Reports</Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">System Updates</Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">Error Notifications</Badge>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -277,32 +273,65 @@ export function AdminSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <Badge variant="outline" className="w-full">
-                Database
-              </Badge>
-              <p className="text-sm text-green-600 mt-1">Connected</p>
+          {isLoadingHealth ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
-            <div className="text-center">
-              <Badge variant="outline" className="w-full">
-                API Server
-              </Badge>
-              <p className="text-sm text-green-600 mt-1">Online</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <Badge variant="outline" className="w-full">
+                  Database
+                </Badge>
+                <div className="flex items-center justify-center gap-1 mt-1">
+                  {healthData?.database === 'connected' ? (
+                    <>
+                      <CheckCircle2 className="h-3 w-3 text-green-600" />
+                      <p className="text-sm text-green-600">Connected</p>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-3 w-3 text-red-600" />
+                      <p className="text-sm text-red-600">Disconnected</p>
+                    </>
+                  )}
+                </div>
+                {healthData?.database_latency_ms && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {healthData.database_latency_ms.toFixed(2)}ms
+                  </p>
+                )}
+              </div>
+              <div className="text-center">
+                <Badge variant="outline" className="w-full">
+                  API Version
+                </Badge>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {healthData?.api_version || 'v1.0.0'}
+                </p>
+              </div>
+              <div className="text-center">
+                <Badge variant="outline" className="w-full">
+                  Last Backup
+                </Badge>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {healthData?.last_backup_at 
+                    ? new Date(healthData.last_backup_at).toLocaleDateString()
+                    : 'Never'
+                  }
+                </p>
+              </div>
+              <div className="text-center">
+                <Badge variant="outline" className="w-full">
+                  Status
+                </Badge>
+                <div className="flex items-center justify-center gap-1 mt-1">
+                  <CheckCircle2 className="h-3 w-3 text-green-600" />
+                  <p className="text-sm text-green-600">Online</p>
+                </div>
+              </div>
             </div>
-            <div className="text-center">
-              <Badge variant="outline" className="w-full">
-                Backup Status
-              </Badge>
-              <p className="text-sm text-green-600 mt-1">Up to date</p>
-            </div>
-            <div className="text-center">
-              <Badge variant="outline" className="w-full">
-                Version
-              </Badge>
-              <p className="text-sm text-muted-foreground mt-1">v1.0.0</p>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

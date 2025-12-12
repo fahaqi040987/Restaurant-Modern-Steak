@@ -51,6 +51,18 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		// Authentication routes
 		protected.GET("/auth/me", authHandler.GetCurrentUser)
 
+		// Profile routes
+		protected.GET("/profile", authHandler.GetUserProfile)
+		protected.PUT("/profile", authHandler.UpdateUserProfile)
+		protected.PUT("/profile/password", authHandler.ChangePassword)
+
+		// Notification routes
+		protected.GET("/notifications", handlers.GetNotifications(db))
+		protected.PUT("/notifications/:id/read", handlers.MarkNotificationRead(db))
+		protected.DELETE("/notifications/:id", handlers.DeleteNotification(db))
+		protected.GET("/notifications/preferences", handlers.GetNotificationPreferences(db))
+		protected.PUT("/notifications/preferences", handlers.UpdateNotificationPreferences(db))
+
 		// Product routes
 		protected.GET("/products", productHandler.GetProducts)
 		protected.GET("/products/:id", productHandler.GetProduct)
@@ -101,15 +113,20 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		admin.GET("/reports/orders", getOrdersReport(db))
 		admin.GET("/reports/income", getIncomeReport(db))
 
+		// System settings (admin only)
+		admin.GET("/settings", handlers.GetSettings(db))
+		admin.PUT("/settings", handlers.UpdateSettings(db))
+		admin.GET("/health", handlers.GetSystemHealth(db))
+
 		// Menu management with pagination
 		admin.GET("/products", productHandler.GetProducts) // Use existing paginated handler
 		admin.GET("/categories", getAdminCategories(db))   // Add pagination
 		admin.POST("/categories", createCategory(db))
 		admin.PUT("/categories/:id", updateCategory(db))
 		admin.DELETE("/categories/:id", deleteCategory(db))
-		admin.POST("/products", createProduct(db))
-		admin.PUT("/products/:id", updateProduct(db))
-		admin.DELETE("/products/:id", deleteProduct(db))
+		admin.POST("/products", productHandler.CreateProduct)
+		admin.PUT("/products/:id", productHandler.UpdateProduct)
+		admin.DELETE("/products/:id", productHandler.DeleteProduct)
 
 		// Table management with pagination
 		admin.GET("/tables", getAdminTables(db)) // Add pagination
@@ -126,6 +143,15 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		// Advanced order management
 		admin.POST("/orders", orderHandler.CreateOrder)                   // Admins can create any type of order
 		admin.POST("/orders/:id/payments", paymentHandler.ProcessPayment) // Admins can process payments
+	}
+
+	// Server with product management (server role can manage products)
+	serverWithProducts := router.Group("/server")
+	serverWithProducts.Use(authMiddleware)
+	serverWithProducts.Use(middleware.RequireRoles([]string{"server", "admin", "manager"}))
+	{
+		serverWithProducts.POST("/products", productHandler.CreateProduct)
+		serverWithProducts.PUT("/products/:id", productHandler.UpdateProduct)
 	}
 
 	// Kitchen routes (kitchen staff access)

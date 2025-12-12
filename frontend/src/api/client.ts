@@ -338,11 +338,33 @@ class APIClient {
   }
 
   // Admin-specific product management
-  async createProduct(productData: any): Promise<APIResponse<Product>> {
+  async createProduct(productData: {
+    category_id: string;
+    name: string;
+    description?: string;
+    price: number;
+    image_url?: string;
+    barcode?: string;
+    sku?: string;
+    is_available?: boolean;
+    preparation_time?: number;
+    sort_order?: number;
+  }): Promise<APIResponse<Product>> {
     return this.request({ method: 'POST', url: '/admin/products', data: productData });
   }
 
-  async updateProduct(id: string, productData: any): Promise<APIResponse<Product>> {
+  async updateProduct(id: string, productData: {
+    category_id?: string;
+    name?: string;
+    description?: string;
+    price?: number;
+    image_url?: string;
+    barcode?: string;
+    sku?: string;
+    is_available?: boolean;
+    preparation_time?: number;
+    sort_order?: number;
+  }): Promise<APIResponse<Product>> {
     return this.request({ method: 'PUT', url: `/admin/products/${id}`, data: productData });
   }
 
@@ -417,6 +439,120 @@ class APIClient {
 
   async deleteTable(id: string): Promise<APIResponse> {
     return this.request({ method: 'DELETE', url: `/admin/tables/${id}` });
+  }
+
+  // ===========================================
+  // Profile endpoints (Protected - Auth Required)
+  // ===========================================
+
+  async getUserProfile(): Promise<APIResponse<User>> {
+    return this.request({
+      method: 'GET',
+      url: '/profile',
+    });
+  }
+
+  async updateUserProfile(profileData: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  }): Promise<APIResponse<User>> {
+    return this.request({
+      method: 'PUT',
+      url: '/profile',
+      data: profileData,
+    });
+  }
+
+  async changePassword(passwordData: {
+    current_password: string;
+    new_password: string;
+  }): Promise<APIResponse> {
+    return this.request({
+      method: 'PUT',
+      url: '/profile/password',
+      data: passwordData,
+    });
+  }
+
+  // ===========================================
+  // Notifications endpoints (Protected - Auth Required)
+  // ===========================================
+
+  async getNotifications(filters?: {
+    type?: string;
+    is_read?: boolean;
+  }): Promise<APIResponse<any[]>> {
+    return this.request({
+      method: 'GET',
+      url: '/notifications',
+      params: filters,
+    });
+  }
+
+  async markNotificationRead(id: string): Promise<APIResponse> {
+    return this.request({
+      method: 'PUT',
+      url: `/notifications/${id}/read`,
+    });
+  }
+
+  async deleteNotification(id: string): Promise<APIResponse> {
+    return this.request({
+      method: 'DELETE',
+      url: `/notifications/${id}`,
+    });
+  }
+
+  async getNotificationPreferences(): Promise<APIResponse<any>> {
+    return this.request({
+      method: 'GET',
+      url: '/notifications/preferences',
+    });
+  }
+
+  async updateNotificationPreferences(preferences: {
+    email_enabled?: boolean;
+    notification_types?: string[];
+    quiet_hours_start?: string;
+    quiet_hours_end?: string;
+  }): Promise<APIResponse<any>> {
+    return this.request({
+      method: 'PUT',
+      url: '/notifications/preferences',
+      data: preferences,
+    });
+  }
+
+  // ===========================================
+  // System Settings endpoints (Admin - Auth Required)
+  // ===========================================
+
+  async getSettings(): Promise<APIResponse<Record<string, any>>> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/settings',
+    });
+  }
+
+  async updateSettings(settings: Record<string, any>): Promise<APIResponse> {
+    return this.request({
+      method: 'PUT',
+      url: '/admin/settings',
+      data: settings,
+    });
+  }
+
+  async getSystemHealth(): Promise<APIResponse<{
+    database: string;
+    database_latency_ms?: number;
+    api_version: string;
+    last_backup_at?: string;
+  }>> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/health',
+    });
   }
 
   // ===========================================
