@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"pos-backend/internal/handlers"
-	"pos-backend/internal/middleware"
-	"pos-backend/internal/models"
+	"pos-public/internal/handlers"
+	"pos-public/internal/middleware"
+	"pos-public/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"

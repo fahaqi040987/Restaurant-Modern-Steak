@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"pos-backend/internal/models"
+	"pos-public/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -93,7 +93,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	argIndex++
 	queryBuilder += ` LIMIT $` + strconv.Itoa(argIndex)
 	args = append(args, perPage)
-	
+
 	argIndex++
 	queryBuilder += ` OFFSET $` + strconv.Itoa(argIndex)
 	args = append(args, offset)
@@ -227,16 +227,16 @@ func (h *ProductHandler) GetProduct(c *gin.Context) {
 // GetCategories retrieves all categories
 func (h *ProductHandler) GetCategories(c *gin.Context) {
 	activeOnly := c.Query("active_only") == "true"
-	
+
 	query := `
 		SELECT id, name, description, color, sort_order, is_active, created_at, updated_at
 		FROM categories
 	`
-	
+
 	if activeOnly {
 		query += ` WHERE is_active = true`
 	}
-	
+
 	query += ` ORDER BY sort_order ASC, name ASC`
 
 	rows, err := h.db.Query(query)
@@ -357,4 +357,3 @@ func (h *ProductHandler) GetProductsByCategory(c *gin.Context) {
 		Data:    products,
 	})
 }
-

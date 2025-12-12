@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"pos-backend/internal/models"
+	"pos-public/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -223,4 +223,3 @@ func GetUserFromContext(c *gin.Context) (uuid.UUID, string, string, bool) {
 func stringPtr(s string) *string {
 	return &s
 }
-

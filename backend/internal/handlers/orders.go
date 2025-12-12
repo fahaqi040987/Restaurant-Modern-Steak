@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"pos-backend/internal/middleware"
-	"pos-backend/internal/models"
+	"pos-public/internal/middleware"
+	"pos-public/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -88,7 +88,7 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 	argIndex++
 	queryBuilder += fmt.Sprintf(" ORDER BY o.created_at DESC LIMIT $%d", argIndex)
 	args = append(args, perPage)
-	
+
 	argIndex++
 	queryBuilder += fmt.Sprintf(" OFFSET $%d", argIndex)
 	args = append(args, offset)
@@ -501,7 +501,7 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 	}
 
 	// If order is completed or cancelled, free up the table
-	if (req.Status == "completed" || req.Status == "cancelled") {
+	if req.Status == "completed" || req.Status == "cancelled" {
 		_, err = tx.Exec(`
 			UPDATE dining_tables 
 			SET is_occupied = false 
@@ -704,4 +704,3 @@ func (h *OrderHandler) generateOrderNumber() string {
 	timestamp := time.Now().Format("20060102")
 	return fmt.Sprintf("ORD%s%04d", timestamp, time.Now().UnixNano()%10000)
 }
-

@@ -28,7 +28,7 @@ function HomePage() {
   if (error) {
     console.error('getCurrentUser failed:', error)
     apiClient.clearAuth()
-    window.location.href = '/login'
+    window.location.href = '/public'
   }
 
   useEffect(() => {
@@ -66,11 +66,11 @@ function HomePage() {
     )
   }
 
-  // Check authentication - ONLY after localStorage is loaded
+  // Redirect to public website by default (no authentication required)
   console.log('Checking auth - isAuthenticated:', apiClient.isAuthenticated(), 'user:', user)
   if (!apiClient.isAuthenticated() || !user) {
-    console.log('Not authenticated, redirecting to login')
-    return <Navigate to="/login" />
+    console.log('Not authenticated, redirecting to public website')
+    return <Navigate to="/public" />
   }
 
   // Redirect admin users to admin panel

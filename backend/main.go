@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	"pos-backend/internal/api"
-	"pos-backend/internal/database"
-	"pos-backend/internal/middleware"
+	"pos-public/internal/api"
+	"pos-public/internal/database"
+	"pos-public/internal/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

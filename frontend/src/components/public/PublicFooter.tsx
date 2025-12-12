@@ -38,10 +38,10 @@ export function PublicFooter({ restaurantInfo }: PublicFooterProps) {
   }
 
   const quickLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/menu', label: 'Menu' },
-    { to: '/about', label: 'About' },
-    { to: '/contact', label: 'Contact' },
+    { to: '/public', label: 'Home' },
+    { to: '/public/menu', label: 'Menu' },
+    { to: '/public/about', label: 'About' },
+    { to: '/public/contact', label: 'Contact' },
   ]
 
   return (

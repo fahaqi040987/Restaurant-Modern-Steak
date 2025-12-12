@@ -350,7 +350,7 @@ make dev
 - [ ] Test with cleared localStorage
 
 ### Backend Issues
-- [ ] Check backend logs: `docker logs pos-backend-dev --tail 50`
+- [ ] Check backend logs: `docker logs pos-public-dev --tail 50`
 - [ ] Verify JWT_SECRET environment variable
 - [ ] Test API endpoints with curl
 - [ ] Confirm CORS includes frontend port

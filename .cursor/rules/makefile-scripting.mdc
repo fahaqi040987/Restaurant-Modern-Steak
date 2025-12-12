@@ -340,7 +340,7 @@ fi
 # Test all services are running
 status:
 	@echo "$(GREEN)📊 Service Status:$(NC)"
-	@if [ -n "$$(docker ps -q -f name=pos-backend)" ]; then \
+	@if [ -n "$$(docker ps -q -f name=pos-public)" ]; then \
 		echo "✅ Backend: Available"; \
 	else \
 		echo "❌ Backend: Not running"; \

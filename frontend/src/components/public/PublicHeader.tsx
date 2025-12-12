@@ -41,10 +41,10 @@ function NavLink({ to, children, onClick, className }: NavLinkProps) {
 }
 
 const navLinks = [
-  { to: '/', label: 'Home' },
-  { to: '/menu', label: 'Menu' },
-  { to: '/about', label: 'About' },
-  { to: '/contact', label: 'Contact' },
+  { to: '/public', label: 'Home' },
+  { to: '/public/menu', label: 'Menu' },
+  { to: '/public/about', label: 'About' },
+  { to: '/public/contact', label: 'Contact' },
 ]
 
 export function PublicHeader() {

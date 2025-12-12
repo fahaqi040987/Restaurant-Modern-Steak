@@ -46,8 +46,16 @@ Create a public-facing restaurant website that showcases the Modern Steak brand,
 - Error handling for invalid credentials with user-friendly messages
 - Already logged-in users redirect to appropriate dashboard
 
+**URL Structure**
+- Public Landing: `/public` (redirects from `/` for unauthenticated users)
+- Public Menu: `/public/menu`
+- Public About: `/public/about`
+- Public Contact: `/public/contact`
+- Staff Login: `/staff`
+
 **Navigation & Layout**
 - Sticky header with: Logo (links to homepage), Home, Menu, About, Contact links
+- Ensure navigation links correctly point to the `/public/*` routes
 - Staff Login button (subtle, top-right corner)
 - Mobile hamburger menu for responsive navigation
 - Footer with: Logo, quick links, operating hours, contact info, social media icons, copyright, subtle "Staff Portal" link

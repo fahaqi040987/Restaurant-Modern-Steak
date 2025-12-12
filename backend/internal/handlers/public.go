@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"pos-backend/internal/models"
+	"pos-public/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

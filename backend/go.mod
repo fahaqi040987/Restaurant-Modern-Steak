@@ -1,4 +1,4 @@
-module pos-backend
+module pos-public
 
 go 1.21
 

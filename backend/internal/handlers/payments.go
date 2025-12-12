@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"pos-backend/internal/middleware"
-	"pos-backend/internal/models"
+	"pos-public/internal/middleware"
+	"pos-public/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -453,4 +453,3 @@ func (h *PaymentHandler) getPaymentByID(paymentID uuid.UUID) (*models.Payment, e
 
 	return &payment, nil
 }
-

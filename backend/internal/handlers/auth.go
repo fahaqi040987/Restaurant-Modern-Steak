@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"net/http"
 
-	"pos-backend/internal/middleware"
-	"pos-backend/internal/models"
+	"pos-public/internal/middleware"
+	"pos-public/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -48,7 +48,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		FROM users 
 		WHERE username = $1 AND is_active = true
 	`
-	
+
 	err := h.db.QueryRow(query, req.Username).Scan(
 		&user.ID, &user.Username, &user.Email, &user.PasswordHash,
 		&user.FirstName, &user.LastName, &user.Role, &user.IsActive,
@@ -124,7 +124,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		FROM users 
 		WHERE id = $1
 	`
-	
+
 	err := h.db.QueryRow(query, userID).Scan(
 		&user.ID, &user.Username, &user.Email,
 		&user.FirstName, &user.LastName, &user.Role, &user.IsActive,
@@ -170,4 +170,3 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 func stringPtr(s string) *string {
 	return &s
 }
-

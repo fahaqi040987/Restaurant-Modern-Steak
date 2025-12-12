@@ -128,8 +128,7 @@ export function AdminSettings() {
                 onChange={(e) => setSettings({...settings, currency: e.target.value})}
               >
                 <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
+                <option value="IDR">IDR (Rp)</option>
               </select>
             </div>
             <div className="grid grid-cols-2 gap-4">

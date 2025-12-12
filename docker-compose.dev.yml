@@ -21,7 +21,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
       target: development
-    container_name: pos-backend-dev
+    container_name: pos-public-dev
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
