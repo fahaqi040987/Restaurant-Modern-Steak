@@ -66,12 +66,12 @@ export function AdminDashboard() {
             Manage your restaurant operations and monitor performance
           </p>
         </div>
-        <div className="flex gap-2"> onClick={() => navigate({ to: '/admin/settings' })}>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate({ to: '/admin/settings' })}>
             <Settings className="w-4 h-4 mr-2" />
             Settings
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate({ to: '/admin/reports' })}
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => navigate({ to: '/admin/reports' })}>
             <BarChart3 className="w-4 h-4 mr-2" />
             Reports
           </Button>
