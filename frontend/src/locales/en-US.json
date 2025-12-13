@@ -32,7 +32,11 @@
     "subtotal": "Subtotal",
     "tax": "Tax",
     "discount": "Discount",
-    "notes": "Notes"
+    "notes": "Notes",
+    "clearFilters": "Clear Filters",
+    "page": "Page",
+    "of": "of",
+    "previous": "Previous"
   },
   "auth": {
     "login": "Login",
@@ -112,7 +116,14 @@
     "completed": "Completed",
     "cancelled": "Cancelled",
     "viewDetails": "View Details",
-    "updateStatus": "Update Status"
+    "updateStatus": "Update Status",
+    "searchPlaceholder": "Order # or name...",
+    "noOrders": "No orders found",
+    "totalOrders": "orders",
+    "noDataToExport": "No data to export",
+    "exportSuccess": "Data exported successfully",
+    "exportError": "Failed to export data",
+    "createdBy": "Created By"
   },
   "payment": {
     "title": "Payment",
@@ -127,7 +138,9 @@
     "paymentSuccess": "Payment Successful",
     "paymentFailed": "Payment Failed",
     "printReceipt": "Print Receipt",
-    "paymentHistory": "Payment History"
+    "paymentHistory": "Payment History",
+    "paymentMethod": "Payment Method",
+    "price": "Price"
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -165,7 +178,8 @@
     "damage": "Damage",
     "theft": "Theft",
     "expired": "Expired",
-    "count": "Stock Count"
+    "count": "Stock Count",
+    "product": "Product"
   },
   "settings": {
     "title": "System Settings",

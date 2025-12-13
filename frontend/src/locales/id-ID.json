@@ -32,7 +32,11 @@
     "subtotal": "Subtotal",
     "tax": "Pajak",
     "discount": "Diskon",
-    "notes": "Catatan"
+    "notes": "Catatan",
+    "clearFilters": "Hapus Filter",
+    "page": "Halaman",
+    "of": "dari",
+    "previous": "Sebelumnya"
   },
   "auth": {
     "login": "Masuk",
@@ -112,7 +116,14 @@
     "completed": "Selesai",
     "cancelled": "Dibatalkan",
     "viewDetails": "Lihat Detail",
-    "updateStatus": "Perbarui Status"
+    "updateStatus": "Perbarui Status",
+    "searchPlaceholder": "No. pesanan atau nama...",
+    "noOrders": "Tidak ada pesanan",
+    "totalOrders": "pesanan",
+    "noDataToExport": "Tidak ada data untuk diekspor",
+    "exportSuccess": "Data berhasil diekspor",
+    "exportError": "Gagal mengekspor data",
+    "createdBy": "Dibuat Oleh"
   },
   "payment": {
     "title": "Pembayaran",
@@ -127,7 +138,9 @@
     "paymentSuccess": "Pembayaran Berhasil",
     "paymentFailed": "Pembayaran Gagal",
     "printReceipt": "Cetak Struk",
-    "paymentHistory": "Riwayat Pembayaran"
+    "paymentHistory": "Riwayat Pembayaran",
+    "paymentMethod": "Metode Pembayaran",
+    "price": "Harga"
   },
   "admin": {
     "dashboard": "Dasbor",
@@ -165,7 +178,8 @@
     "damage": "Kerusakan",
     "theft": "Kehilangan",
     "expired": "Kedaluwarsa",
-    "count": "Hitung Stok"
+    "count": "Hitung Stok",
+    "product": "Produk"
   },
   "settings": {
     "title": "Pengaturan Sistem",
