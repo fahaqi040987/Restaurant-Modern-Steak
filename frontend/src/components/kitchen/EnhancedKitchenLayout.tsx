@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,6 +34,8 @@ export function EnhancedKitchenLayout({ user }: EnhancedKitchenLayoutProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [previousOrderIds, setPreviousOrderIds] = useState<Set<string>>(new Set());
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  
+  const queryClient = useQueryClient();
 
   // Initialize sound service
   useEffect(() => {
@@ -101,25 +103,62 @@ export function EnhancedKitchenLayout({ user }: EnhancedKitchenLayoutProps) {
     }).length,
   };
 
-  // Handle order status updates
+  // Handle order status updates with optimistic update
   const handleOrderStatusUpdate = useCallback(async (orderId: string, newStatus: string) => {
+    // Optimistically update the UI immediately
+    const previousOrders = queryClient.getQueryData(['enhancedKitchenOrders']);
+    
+    queryClient.setQueryData(['enhancedKitchenOrders'], (old: any) => {
+      if (!old?.data) return old;
+      return {
+        ...old,
+        data: old.data.map((order: Order) =>
+          order.id === orderId ? { ...order, status: newStatus } : order
+        ),
+      };
+    });
+
     try {
       await apiClient.updateOrderStatus(orderId, newStatus as any);
       refetch();
     } catch (error) {
+      // Rollback on error
+      queryClient.setQueryData(['enhancedKitchenOrders'], previousOrders);
       console.error('Failed to update order status:', error);
     }
-  }, [refetch]);
+  }, [refetch, queryClient]);
 
-  // Handle order item status updates
+  // Handle order item status updates with optimistic update
   const handleOrderItemStatusUpdate = useCallback(async (orderId: string, itemId: string, newStatus: string) => {
+    // Optimistically update the UI immediately
+    const previousOrders = queryClient.getQueryData(['enhancedKitchenOrders']);
+    
+    queryClient.setQueryData(['enhancedKitchenOrders'], (old: any) => {
+      if (!old?.data) return old;
+      return {
+        ...old,
+        data: old.data.map((order: Order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                items: order.items?.map((item) =>
+                  item.id === itemId ? { ...item, status: newStatus } : item
+                ),
+              }
+            : order
+        ),
+      };
+    });
+
     try {
       await apiClient.updateOrderItemStatus(orderId, itemId, newStatus);
       refetch();
     } catch (error) {
+      // Rollback on error
+      queryClient.setQueryData(['enhancedKitchenOrders'], previousOrders);
       console.error('Failed to update order item status:', error);
     }
-  }, [refetch]);
+  }, [refetch, queryClient]);
 
   // Manual refresh
   const handleRefresh = useCallback(() => {

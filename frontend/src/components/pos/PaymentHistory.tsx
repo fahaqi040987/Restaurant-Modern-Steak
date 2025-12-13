@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { CardSkeleton } from '@/components/ui/loading-skeletons'
 import { 
   Search,
   Filter,
@@ -187,11 +188,8 @@ export function PaymentHistory({ isOpen, onClose }: PaymentHistoryProps) {
 
         <CardContent className="flex-1 overflow-auto p-0">
           {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="flex items-center gap-2 text-gray-500">
-                <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
-                <span>Loading payment history...</span>
-              </div>
+            <div className="p-6">
+              <CardSkeleton count={6} />
             </div>
           ) : filteredPayments.length === 0 ? (
             <div className="flex items-center justify-center h-64">

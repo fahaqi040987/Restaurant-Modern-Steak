@@ -35,6 +35,7 @@ import apiClient from '@/api/client';
 import { toastHelpers } from '@/lib/toast-helpers';
 import { ReceiptPrintButton } from '@/components/payment/ReceiptPrintButton';
 import { Order as APIOrder } from '@/types';
+import { TableSkeleton } from '@/components/ui/loading-skeletons';
 
 interface OrderHistoryItem extends Omit<APIOrder, 'table' | 'user'> {
   table_number?: string;
@@ -284,6 +285,9 @@ export function AdminOrderHistory() {
           </div>
 
           {/* Orders Table */}
+          {isLoading ? (
+            <TableSkeleton columns={8} rows={10} showHeader={true} />
+          ) : (
           <div className="border rounded-lg">
             <Table>
               <TableHeader>
@@ -299,13 +303,7 @@ export function AdminOrderHistory() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      {t('common.loading', 'Memuat...')}
-                    </TableCell>
-                  </TableRow>
-                ) : !ordersData?.orders || ordersData.orders.length === 0 ? (
+                {!ordersData?.orders || ordersData.orders.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       {t('orders.noOrders', 'Tidak ada pesanan')}
@@ -339,6 +337,7 @@ export function AdminOrderHistory() {
               </TableBody>
             </Table>
           </div>
+          )}
 
           {/* Pagination */}
           {ordersData && ordersData.total_pages > 1 && (

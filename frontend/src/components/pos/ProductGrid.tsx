@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { CardSkeleton } from '@/components/ui/loading-skeletons'
 import { Plus, Clock, Loader2, Package } from 'lucide-react'
 import { formatCurrency, getPreparationTimeDisplay } from '@/lib/utils'
 import type { Product } from '@/types'
@@ -15,20 +16,7 @@ export function ProductGrid({ products, onProductSelect, isLoading }: ProductGri
   if (isLoading) {
     return (
       <div className="p-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="aspect-square bg-gray-200 rounded-lg mb-3 animate-pulse" />
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
-                  <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <CardSkeleton count={10} />
       </div>
     )
   }

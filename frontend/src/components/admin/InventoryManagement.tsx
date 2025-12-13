@@ -28,6 +28,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { TableSkeleton } from '@/components/ui/loading-skeletons'
+import { ButtonLoadingSpinner } from '@/components/ui/loading-spinner'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { 
@@ -274,7 +276,7 @@ export default function InventoryManagement() {
 
       {/* Inventory Table */}
       {isLoading ? (
-        <div className="text-center py-8">Loading...</div>
+        <TableSkeleton columns={7} rows={8} showHeader={true} />
       ) : inventory.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           Tidak ada data inventaris
@@ -428,6 +430,7 @@ export default function InventoryManagement() {
               Batal
             </Button>
             <Button onClick={handleAdjustStock} disabled={adjustStockMutation.isPending}>
+              {adjustStockMutation.isPending && <ButtonLoadingSpinner />}
               Simpan
             </Button>
           </DialogFooter>
