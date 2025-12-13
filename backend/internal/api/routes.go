@@ -26,6 +26,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	paymentHandler := handlers.NewPaymentHandler(db)
 	tableHandler := handlers.NewTableHandler(db)
 	publicHandler := handlers.NewPublicHandler(db)
+	inventoryHandler := handlers.NewInventoryHandler(db)
 
 	// Public routes (no authentication required)
 	public := router.Group("/")
@@ -117,6 +118,20 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		admin.GET("/settings", handlers.GetSettings(db))
 		admin.PUT("/settings", handlers.UpdateSettings(db))
 		admin.GET("/health", handlers.GetSystemHealth(db))
+
+		// Contact submissions management
+		contactHandler := handlers.NewHandler(db)
+		admin.GET("/contacts", contactHandler.GetContactSubmissions)
+		admin.GET("/contacts/:id", contactHandler.GetContactSubmission)
+		admin.PUT("/contacts/:id/status", contactHandler.UpdateContactStatus)
+		admin.DELETE("/contacts/:id", contactHandler.DeleteContactSubmission)
+
+		// Inventory management
+		admin.GET("/inventory", inventoryHandler.GetInventory)
+		admin.GET("/inventory/low-stock", inventoryHandler.GetLowStock)
+		admin.GET("/inventory/:product_id", inventoryHandler.GetProductInventory)
+		admin.POST("/inventory/adjust", inventoryHandler.AdjustStock)
+		admin.GET("/inventory/history/:product_id", inventoryHandler.GetStockHistory)
 
 		// Menu management with pagination
 		admin.GET("/products", productHandler.GetProducts) // Use existing paginated handler

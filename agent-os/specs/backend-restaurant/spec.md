@@ -431,3 +431,833 @@ deleteProduct(id: string): Promise<void>
 - Audit log viewer UI
 - Bulk product import/export
 - Advanced analytics dashboard
+
+---
+
+# Specification: Indonesian Cuisine Localization & System Improvements
+
+## Goal
+Transform the Modern Steak POS system into a production-ready Indonesian steakhouse platform with proper localization (IDR currency, Indonesian menu items), complete unused features, fix critical bugs, and enhance admin portal functionality.
+
+## Priority Classification
+- 🔴 **CRITICAL** - Must fix before production (blocking issues)
+- 🟡 **HIGH** - Important for launch (1-2 weeks)
+- 🟢 **MEDIUM** - Enhances user experience (2-4 weeks)
+- 🔵 **LOW** - Nice to have (future iterations)
+
+## User Stories
+- As an Indonesian restaurant owner, I want all prices displayed in Rupiah (IDR) so that my staff and customers see familiar currency
+- As a restaurant admin, I want to manage Indonesian steak menu items so that the system reflects our actual offerings
+- As a staff member, I want to use the system in Bahasa Indonesia so that I can work more efficiently
+- As an admin, I want to view customer contact form submissions so that I can respond to inquiries
+- As a manager, I want to track inventory levels so that I can prevent stockouts
+- As any staff, I want to receive real notifications so that I stay informed of important events
+
+---
+
+## 🔴 CRITICAL FIXES (Week 1)
+
+### 1. Currency Localization - IDR Implementation
+
+**Problem:** System inconsistently uses USD in admin/POS interfaces while public website correctly uses IDR.
+
+**Solution:**
+- Update all `formatCurrency` functions to use Indonesian locale and IDR
+- Remove hardcoded USD currency references
+- Ensure consistent formatting: `Rp 250.000` format
+
+**Files to Update:**
+```typescript
+// Format pattern to implement everywhere:
+new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
+}).format(amount)
+
+// Files requiring changes:
+- frontend/src/components/server/ServerInterface.tsx (line ~225)
+- frontend/src/components/counter/CounterInterface.tsx
+- frontend/src/components/kitchen/KitchenDisplay.tsx
+- frontend/src/components/admin/AdminDashboard.tsx
+- frontend/src/components/admin/OrderManagement.tsx
+- frontend/src/components/admin/AdminReports.tsx
+```
+
+**Backend:**
+- Verify `system_settings.currency` default is 'IDR'
+- Update seed data if needed
+
+**Acceptance Criteria:**
+- [ ] All order totals display as "Rp X.XXX"
+- [ ] No USD symbols anywhere in admin/POS
+- [ ] Public website maintains correct IDR formatting
+- [ ] Reports and invoices show IDR
+- [ ] System settings show IDR as default currency
+
+---
+
+### 2. Indonesian Steak Menu - Seed Data Replacement
+
+**Problem:** Database contains Western food (Pizza, Burgers) instead of Indonesian steakhouse items.
+
+**Solution:** Replace `database/init/02_seed_data.sql` with Indonesian cuisine.
+
+**New Menu Structure:**
+
+**Categories:**
+1. **Steak Nusantara** (Indonesian-style steaks)
+2. **Steak Premium** (International cuts)
+3. **Makanan Pembuka** (Appetizers)
+4. **Makanan Pendamping** (Sides)
+5. **Minuman** (Beverages)
+6. **Dessert**
+
+**Sample Products:**
+```sql
+-- Steak Nusantara
+('Rendang Wagyu Steak', 'Wagyu steak dengan bumbu rendang khas Padang', 285000, 'steak-nusantara-id', true),
+('Sate Wagyu Premium', 'Sate wagyu dengan bumbu kacang spesial', 195000, 'steak-nusantara-id', true),
+('Beef Ribs Sambal Matah', 'Iga sapi bakar dengan sambal matah Bali', 245000, 'steak-nusantara-id', true),
+
+-- Steak Premium  
+('Australian Ribeye', 'Ribeye Australia 300gr premium', 325000, 'steak-premium-id', true),
+('Wagyu Tenderloin', 'Tenderloin wagyu A5 250gr', 485000, 'steak-premium-id', true),
+('Tomahawk Steak', 'Tomahawk 800gr untuk 2-3 orang', 725000, 'steak-premium-id', true),
+
+-- Makanan Pembuka
+('Lumpia Isi Daging', 'Lumpia crispy isi daging sapi cincang', 45000, 'appetizer-id', true),
+('Sop Buntut', 'Sup buntut sapi dengan sayuran', 78000, 'appetizer-id', true),
+('Beef Carpaccio', 'Irisan tipis daging sapi mentah dengan truffle', 95000, 'appetizer-id', true),
+
+-- Makanan Pendamping
+('Nasi Goreng Wagyu', 'Nasi goreng dengan potongan wagyu', 65000, 'sides-id', true),
+('Sambal Trio', 'Sambal matah, terasi, dan ijo', 25000, 'sides-id', true),
+('Kentang Goreng Balado', 'French fries dengan balado pedas', 35000, 'sides-id', true),
+('Nasi Putih', 'Nasi putih hangat', 15000, 'sides-id', true),
+
+-- Minuman
+('Es Teh Manis', 'Teh manis dingin', 15000, 'beverages-id', true),
+('Jus Alpukat', 'Jus alpukat segar', 28000, 'beverages-id', true),
+('Es Kelapa Muda', 'Air kelapa muda segar', 22000, 'beverages-id', true),
+('Kopi Susu Gula Aren', 'Kopi susu dengan gula aren', 32000, 'beverages-id', true),
+
+-- Dessert
+('Es Campur Modern', 'Es campur dengan ice cream vanilla', 38000, 'dessert-id', true),
+('Pisang Goreng Cokelat', 'Pisang goreng dengan saus cokelat', 32000, 'dessert-id', true),
+```
+
+**Implementation:**
+1. Create `database/init/03_indonesian_menu.sql`
+2. Clear existing products: `DELETE FROM products; DELETE FROM categories;`
+3. Insert Indonesian categories
+4. Insert Indonesian products with proper pricing in IDR
+5. Update restaurant info to Indonesian steakhouse theme
+
+**Acceptance Criteria:**
+- [ ] All products have Indonesian names
+- [ ] Prices in IDR range (15k - 750k)
+- [ ] Categories reflect Indonesian cuisine structure
+- [ ] Descriptions in Bahasa Indonesia
+- [ ] Menu makes sense for steakhouse concept
+
+---
+
+### 3. Contact Form Submissions - Admin Interface
+
+**Problem:** Customer contact forms submit to database but no admin interface exists to view them.
+
+**Solution:** Create admin page to manage contact submissions.
+
+**Database (Already Exists):**
+```sql
+-- Table: contact_submissions (already created in previous spec)
+```
+
+**Backend Endpoints (NEW):**
+```go
+// File: backend/internal/handlers/contact.go
+
+// GET /api/v1/admin/contacts - List all contact submissions
+// GET /api/v1/admin/contacts/:id - Get specific submission
+// PUT /api/v1/admin/contacts/:id/status - Update status (new, in_progress, resolved, spam)
+// DELETE /api/v1/admin/contacts/:id - Delete submission
+```
+
+**Frontend Pages (NEW):**
+```typescript
+// File: frontend/src/routes/admin/contacts.tsx
+// File: frontend/src/components/admin/ContactSubmissions.tsx
+
+Features:
+- Table view with columns: Date, Name, Email, Subject, Status, Actions
+- Filter by status: All, New, In Progress, Resolved
+- Search by name/email/subject
+- Click row to view full message
+- Mark as resolved/spam buttons
+- Reply via email button (opens mailto with pre-filled recipient)
+- Delete with confirmation
+- Pagination (50 per page)
+- Export to CSV functionality
+```
+
+**Status Workflow:**
+- **new** (default) - Unread submission
+- **in_progress** - Admin reviewing/responding
+- **resolved** - Issue closed
+- **spam** - Marked as spam
+
+**Acceptance Criteria:**
+- [ ] Admin can view all contact submissions
+- [ ] Can filter and search submissions
+- [ ] Can mark status (new → in_progress → resolved)
+- [ ] Can delete spam submissions
+- [ ] Email link opens mail client with recipient
+- [ ] New submissions badge shows count in sidebar
+
+---
+
+### 4. Tax Rate Configuration - 11% VAT for Indonesia
+
+**Problem:** Tax rate hardcoded to 10%, but Indonesian VAT is 11%.
+
+**Solution:**
+1. Update system settings default: `tax_rate = 11.00`
+2. Make order calculation read from `system_settings.tax_rate`
+3. Remove hardcoded `0.10` multipliers
+
+**Files to Update:**
+```go
+// backend/internal/handlers/orders.go
+// Current (wrong):
+taxAmount := subtotal * 0.10
+
+// New (correct):
+taxRate, _ := getSettingFloat("tax_rate") // reads from system_settings
+taxAmount := subtotal * (taxRate / 100)
+```
+
+**Frontend Settings:**
+```typescript
+// AdminSettings.tsx
+// Add validation: tax_rate must be 0-100
+// Show as percentage in UI
+// Default to 11 for Indonesian setup
+```
+
+**Acceptance Criteria:**
+- [ ] Default tax rate is 11%
+- [ ] Order totals calculate with correct tax
+- [ ] Admin can change tax rate in settings
+- [ ] Changes persist to database
+- [ ] Old orders maintain their original tax rate
+
+---
+
+## 🟡 HIGH PRIORITY (Week 2)
+
+### 5. Inventory Management System
+
+**Problem:** `inventory` table exists but no handlers or UI to manage stock.
+
+**Solution:** Complete inventory management implementation.
+
+**Backend Handlers (NEW):**
+```go
+// File: backend/internal/handlers/inventory.go
+
+type InventoryHandler struct {
+    db *sql.DB
+}
+
+// GET /api/v1/inventory - List all inventory with current stock
+// GET /api/v1/inventory/:product_id - Get inventory for specific product
+// POST /api/v1/inventory/adjust - Adjust stock (add/remove with reason)
+// GET /api/v1/inventory/low-stock - Get items below minimum threshold
+// GET /api/v1/inventory/history/:product_id - Stock movement history
+```
+
+**Frontend Pages (NEW):**
+```typescript
+// File: frontend/src/routes/admin/inventory.tsx
+// File: frontend/src/components/admin/InventoryManagement.tsx
+
+Features:
+- Table view: Product, Category, Current Stock, Min Stock, Max Stock, Status
+- Color coding: Green (OK), Yellow (Low), Red (Out of Stock)
+- "Adjust Stock" button per item opens modal:
+  - Operation: Add or Remove
+  - Quantity input
+  - Reason dropdown: Purchase, Sale, Spoilage, Manual Adjustment, Inventory Count
+  - Notes textarea
+- Bulk import from CSV
+- Low stock alert badge in header
+- Stock history modal per product
+- Export current inventory to CSV
+```
+
+**Database Enhancement:**
+```sql
+-- Add inventory_history table for audit trail
+CREATE TABLE inventory_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    operation VARCHAR(20) NOT NULL, -- 'add', 'remove'
+    quantity INTEGER NOT NULL,
+    previous_stock INTEGER NOT NULL,
+    new_stock INTEGER NOT NULL,
+    reason VARCHAR(50) NOT NULL,
+    notes TEXT,
+    adjusted_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Notifications:**
+- Generate notification when stock falls below minimum
+- Daily inventory report for managers
+
+**Acceptance Criteria:**
+- [ ] Can view current stock for all products
+- [ ] Can add/remove stock with reason tracking
+- [ ] Low stock items highlighted in red
+- [ ] Stock history viewable per product
+- [ ] Notifications sent when stock is low
+- [ ] CSV import/export working
+
+---
+
+### 6. System Settings UI Completion
+
+**Problem:** AdminSettings component fetches data but UI is incomplete/placeholder.
+
+**Solution:** Complete the system settings interface with full CRUD functionality.
+
+**Settings to Implement:**
+
+**Restaurant Information:**
+- Restaurant name (editable text)
+- Tagline (text input)
+- Currency (dropdown: IDR, USD, EUR) - locked to IDR for Indonesia
+- Default language (dropdown: id-ID, en-US)
+
+**Financial Settings:**
+- Tax rate (percentage, 0-100, default 11)
+- Service charge (percentage, 0-100, default 5)
+- Tax calculation method (inclusive/exclusive)
+- Enable rounding (yes/no)
+
+**Receipt Settings:**
+- Receipt header text (textarea, 200 chars)
+- Receipt footer text (textarea, 200 chars)
+- Show restaurant logo (checkbox)
+- Paper size (58mm, 80mm)
+- Print customer copy automatically (checkbox)
+
+**System Configuration:**
+- Backup frequency (hourly, daily, weekly)
+- Data retention (days, default 365)
+- Session timeout (minutes, default 60)
+- Enable audit logging (checkbox)
+- Low stock threshold (number, default 10)
+
+**Integration:**
+- Order processing must read tax/service charge from settings
+- Receipt generation must use configured header/footer
+- All settings persist to `system_settings` table
+
+**Acceptance Criteria:**
+- [ ] All settings editable and saveable
+- [ ] Settings used by order/payment/receipt systems
+- [ ] Validation prevents invalid values
+- [ ] Changes persist across restarts
+- [ ] System health shows accurate status
+
+---
+
+### 7. User Edit Functionality
+
+**Problem:** Can create and delete users but cannot edit existing users.
+
+**Solution:** Add edit functionality to staff management.
+
+**Backend (Already Exists):**
+- `PUT /api/v1/admin/users/:id` endpoint exists
+
+**Frontend Updates:**
+```typescript
+// File: frontend/src/components/admin/AdminStaffManagement.tsx
+
+Add:
+- "Edit" button on each user card
+- Edit modal with form:
+  - First name, Last name (editable)
+  - Email (editable)
+  - Username (readonly - security)
+  - Role (dropdown: admin, manager, server, counter, kitchen)
+  - Active status (toggle)
+  - Reset password button (generates temporary password)
+- Form validation matching create user
+- Save updates via PUT endpoint
+```
+
+**Security Considerations:**
+- Cannot edit your own role (prevent lockout)
+- Admin only can change roles
+- Username immutable after creation
+- Password reset generates temporary password, forces change on login
+
+**Acceptance Criteria:**
+- [ ] Edit button opens pre-filled form
+- [ ] Can update name, email, role, active status
+- [ ] Username immutable for security
+- [ ] Validation prevents invalid data
+- [ ] Cannot edit own role
+- [ ] Changes save successfully
+
+---
+
+### 8. Notification System Activation
+
+**Problem:** Notification infrastructure exists but no notifications are actually generated.
+
+**Solution:** Implement notification generation for key events.
+
+**Notification Events:**
+
+**Order Events:**
+```go
+// When order created:
+createNotification(userID, "order", "New Order #1234", 
+    "New dine-in order for Table 5 - 3 items")
+
+// When order status changes:
+createNotification(userID, "order", "Order Ready #1234", 
+    "Order for Table 5 is ready to serve")
+```
+
+**Inventory Events:**
+```go
+// When stock falls below minimum:
+createNotification(adminUsers, "inventory", "Low Stock Alert", 
+    "Wagyu Tenderloin stock is below minimum (3 remaining)")
+
+// Daily inventory report:
+createNotification(managerUsers, "report", "Daily Inventory Report",
+    "5 items low stock, 2 items out of stock")
+```
+
+**Payment Events:**
+```go
+// When payment received:
+createNotification(userID, "payment", "Payment Received #1234",
+    "Payment of Rp 500.000 received for Table 5")
+```
+
+**System Events:**
+```go
+// Database connection issues:
+createNotification(adminUsers, "system", "Database Warning",
+    "Database latency is high (>100ms)")
+
+// Backup completion:
+createNotification(adminUsers, "system", "Backup Complete",
+    "Daily backup completed successfully")
+```
+
+**Implementation:**
+```go
+// File: backend/internal/services/notification.go
+
+type NotificationService struct {
+    db *sql.DB
+}
+
+func (s *NotificationService) Create(userIDs []uuid.UUID, notifType, title, message string) error {
+    // Check user preferences
+    // Check quiet hours
+    // Insert notification
+    // Send email if enabled (future)
+}
+```
+
+**Acceptance Criteria:**
+- [ ] Notifications generated on key events
+- [ ] Respects user preferences
+- [ ] Respects quiet hours setting
+- [ ] Unread badge shows count
+- [ ] Mark as read functionality works
+- [ ] Notification types filter correctly
+
+---
+
+## 🟢 MEDIUM PRIORITY (Week 3)
+
+### 9. Indonesian Language Support (i18n)
+
+**Problem:** All UI text is in English.
+
+**Solution:** Add internationalization with Bahasa Indonesia support.
+
+**Implementation:**
+```bash
+npm install react-i18next i18next
+```
+
+**File Structure:**
+```
+frontend/src/
+  locales/
+    en/
+      common.json
+      orders.json
+      products.json
+    id/
+      common.json
+      orders.json
+      products.json
+  i18n.ts
+```
+
+**Example Translations:**
+```json
+// locales/id/common.json
+{
+  "orders": "Pesanan",
+  "products": "Produk",
+  "categories": "Kategori",
+  "tables": "Meja",
+  "staff": "Staff",
+  "settings": "Pengaturan",
+  "logout": "Keluar",
+  "save": "Simpan",
+  "cancel": "Batal",
+  "delete": "Hapus",
+  "edit": "Edit",
+  "create": "Buat Baru"
+}
+
+// locales/id/orders.json
+{
+  "new_order": "Pesanan Baru",
+  "order_number": "No. Pesanan",
+  "table_number": "No. Meja",
+  "customer_name": "Nama Pelanggan",
+  "order_type": "Tipe Pesanan",
+  "dine_in": "Makan di Tempat",
+  "takeout": "Bawa Pulang",
+  "total": "Total",
+  "subtotal": "Subtotal",
+  "tax": "Pajak",
+  "service_charge": "Service Charge"
+}
+```
+
+**Language Switcher:**
+- Add to header: Flag icon dropdown
+- Options: 🇮🇩 Bahasa | 🇬🇧 English
+- Persist preference to localStorage
+- Default to Indonesian for production
+
+**Acceptance Criteria:**
+- [ ] All UI text translatable
+- [ ] Indonesian translations complete
+- [ ] Language switcher in header
+- [ ] Preference persists
+- [ ] Date/time formatted per locale
+- [ ] Currency respects locale (Rp vs $)
+
+---
+
+### 10. Receipt Thermal Printer Integration
+
+**Problem:** Receipt shows on screen but cannot print to physical printer.
+
+**Solution:** Integrate thermal printer support.
+
+**Printer Library:**
+```bash
+npm install electron-pos-printer
+# or
+npm install escpos escpos-usb
+```
+
+**Implementation:**
+```typescript
+// File: frontend/src/lib/printer.ts
+
+import { PosPrinter } from 'electron-pos-printer';
+
+interface ReceiptData {
+  orderNumber: string;
+  items: OrderItem[];
+  subtotal: number;
+  tax: number;
+  serviceCharge: number;
+  total: number;
+  paymentMethod: string;
+}
+
+export async function printReceipt(data: ReceiptData, printerName?: string) {
+  const options = {
+    preview: false,
+    width: '80mm',
+    margin: '0 0 0 0',
+    copies: 2, // customer + kitchen copy
+    printerName: printerName || 'default',
+    silent: true
+  };
+
+  const receipt = [
+    {
+      type: 'text',
+      value: 'MODERN STEAK INDONESIA',
+      style: 'text-align:center;font-size:20px;font-weight:bold;'
+    },
+    {
+      type: 'text',
+      value: 'Jl. Sudirman No. 123, Jakarta',
+      style: 'text-align:center;'
+    },
+    // ... format receipt content
+  ];
+
+  await PosPrinter.print(receipt, options);
+}
+```
+
+**Settings Integration:**
+- Add printer configuration to system settings
+- Printer name/IP selection
+- Paper size (58mm/80mm)
+- Auto-print option (yes/no)
+- Test print button
+
+**Acceptance Criteria:**
+- [ ] Can print receipt to thermal printer
+- [ ] Receipt formatted correctly (80mm paper)
+- [ ] Prints customer copy + kitchen copy
+- [ ] Auto-print after payment (if enabled)
+- [ ] Test print works from settings
+- [ ] Handles printer errors gracefully
+
+---
+
+### 11. Order Status History Viewer
+
+**Problem:** `order_status_history` table tracks changes but no UI to view them.
+
+**Solution:** Add order history modal/section.
+
+**Frontend Component:**
+```typescript
+// File: frontend/src/components/admin/OrderStatusHistory.tsx
+
+Features:
+- Timeline view of status changes
+- Shows: Status, Changed By, Timestamp, Notes
+- Icons for each status type
+- Color coding (pending=yellow, completed=green, cancelled=red)
+- Accessible from order detail view
+```
+
+**Display Format:**
+```
+Order #1234 Status History
+━━━━━━━━━━━━━━━━━━━━━━━━
+🟢 COMPLETED
+   by: John Doe (Counter)
+   at: Dec 12, 2024 14:30
+   note: Payment received
+
+🔵 READY
+   by: Kitchen Staff
+   at: Dec 12, 2024 14:15
+   note: All items prepared
+
+🟡 PREPARING
+   by: Jane Server
+   at: Dec 12, 2024 13:45
+   note: Order confirmed
+```
+
+**Acceptance Criteria:**
+- [ ] History visible in order detail view
+- [ ] Timeline format with timestamps
+- [ ] Shows who made each change
+- [ ] Color coded by status
+- [ ] Includes change notes if any
+
+---
+
+## 🔵 LOW PRIORITY (Week 4)
+
+### 12. Barcode Product Scanning
+
+**Solution:** Add barcode scanning for faster product selection.
+
+**Database:**
+```sql
+-- Add index to products.barcode column
+CREATE INDEX idx_products_barcode ON products(barcode) WHERE barcode IS NOT NULL;
+```
+
+**Frontend:**
+```typescript
+// Use existing barcode field in products
+// Add scanner input box in ServerStation and CounterInterface
+// On scan, auto-add product to cart
+```
+
+**Acceptance Criteria:**
+- [ ] Barcode input field visible
+- [ ] Scanning adds product instantly
+- [ ] Shows error if barcode not found
+- [ ] Works with USB barcode scanners
+
+---
+
+### 13. Testing Suite Implementation
+
+**Problem:** Only ~2% test coverage.
+
+**Solution:** Add comprehensive testing.
+
+**Backend Tests:**
+```go
+// File: backend/internal/handlers/orders_test.go
+// File: backend/internal/handlers/products_test.go
+// File: backend/internal/handlers/auth_test.go
+
+- Test all CRUD operations
+- Test role-based permissions
+- Test validation errors
+- Test concurrent operations
+```
+
+**Frontend Tests:**
+```typescript
+// Use Vitest + React Testing Library
+
+// File: frontend/src/components/admin/__tests__/OrderManagement.test.tsx
+// File: frontend/src/components/server/__tests__/ServerInterface.test.tsx
+
+- Component rendering tests
+- User interaction tests
+- API integration tests (mocked)
+- Form validation tests
+```
+
+**E2E Tests:**
+```typescript
+// Use Playwright or Cypress
+
+test('Complete order flow', async () => {
+  // Login as server
+  // Select table
+  // Add products to cart
+  // Submit order
+  // Verify order appears in kitchen
+  // Mark items as ready
+  // Process payment
+  // Verify order completed
+});
+```
+
+**Target Coverage:**
+- Backend: >80%
+- Frontend: >70%
+- E2E: Critical flows
+
+---
+
+## Implementation Checklist
+
+### Week 1: Critical Fixes
+- [ ] Update all currency formatting to IDR
+- [ ] Replace seed data with Indonesian menu
+- [ ] Create contact submissions admin page
+- [ ] Fix tax rate to 11%
+- [ ] Test all currency displays
+- [ ] Verify menu data loads correctly
+
+### Week 2: High Priority
+- [ ] Implement inventory management (backend + frontend)
+- [ ] Complete system settings UI
+- [ ] Add user edit functionality
+- [ ] Activate notification generation
+- [ ] Test inventory tracking
+- [ ] Verify notifications work
+
+### Week 3: Medium Priority
+- [ ] Add Indonesian language support (i18n)
+- [ ] Integrate thermal printer
+- [ ] Add order status history viewer
+- [ ] Translation completion
+- [ ] Printer testing
+
+### Week 4: Polish & Testing
+- [ ] Add barcode scanning
+- [ ] Implement test suite (backend/frontend/e2e)
+- [ ] Performance optimization
+- [ ] Documentation updates
+- [ ] Production deployment preparation
+- [ ] User acceptance testing
+
+---
+
+## Success Metrics
+
+**Technical Metrics:**
+- [ ] 0 currency inconsistencies (all IDR)
+- [ ] 100% Indonesian menu items
+- [ ] Test coverage >70%
+- [ ] Page load time <2 seconds
+- [ ] No critical bugs in production
+
+**Business Metrics:**
+- [ ] Staff can use system in Indonesian
+- [ ] Inventory tracking prevents stockouts
+- [ ] Customer inquiries responded within 24 hours
+- [ ] Receipt printing works reliably
+- [ ] System uptime >99.5%
+
+---
+
+## Risk Mitigation
+
+**High Risk:**
+- Currency changes affect all order calculations → Extensive testing required
+- Menu data replacement → Backup current database before migration
+- Printer integration may fail on different hardware → Provide fallback (PDF export)
+
+**Medium Risk:**
+- i18n may miss some strings → Comprehensive text audit needed
+- Notification spam → Implement rate limiting and user preferences
+
+**Low Risk:**
+- Barcode scanner compatibility → Test with multiple scanner models
+- Test implementation time → Can be done iteratively
+
+---
+
+## Production Readiness Criteria
+
+System is production-ready when:
+- ✅ All CRITICAL fixes completed and tested
+- ✅ Currency displays correctly everywhere (IDR)
+- ✅ Menu contains Indonesian steak items
+- ✅ Contact forms visible to admin
+- ✅ Tax calculations correct (11%)
+- ✅ System settings functional
+- ✅ Inventory tracking operational
+- ✅ No TypeScript/Go compilation errors
+- ✅ Database migrations applied successfully
+- ✅ User acceptance testing passed
+- ✅ Performance benchmarks met
+- ✅ Security audit completed
+- ✅ Backup/restore procedures tested
+- ✅ Staff training completed
+
+**Target Launch Date:** 4 weeks from implementation start

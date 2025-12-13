@@ -15,7 +15,9 @@ import {
   UserCog,
   LayoutGrid,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MessageSquare,
+  Package
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
 import apiClient from '@/api/client'
@@ -59,6 +61,20 @@ const adminSections = [
     icon: <Settings className="w-5 h-5" />,
     description: 'System configuration',
     href: '/admin/settings'
+  },
+  {
+    id: 'contacts',
+    label: 'Contact Messages',
+    icon: <MessageSquare className="w-5 h-5" />,
+    description: 'Customer contact submissions',
+    href: '/admin/contacts'
+  },
+  {
+    id: 'inventory',
+    label: 'Inventory',
+    icon: <Package className="w-5 h-5" />,
+    description: 'Stock management and tracking',
+    href: '/admin/inventory'
   },
   {
     id: 'staff',

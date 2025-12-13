@@ -9,17 +9,22 @@ import (
 
 	"pos-public/internal/middleware"
 	"pos-public/internal/models"
+	"pos-public/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type OrderHandler struct {
-	db *sql.DB
+	db              *sql.DB
+	notificationSvc *services.NotificationService
 }
 
 func NewOrderHandler(db *sql.DB) *OrderHandler {
-	return &OrderHandler{db: db}
+	return &OrderHandler{
+		db:              db,
+		notificationSvc: services.NewNotificationService(db),
+	}
 }
 
 // GetOrders retrieves all orders with pagination and filtering
@@ -281,8 +286,20 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		subtotal += price * float64(item.Quantity)
 	}
 
-	// Calculate tax (10% for example)
-	taxRate := 0.10
+	// Get tax rate from system settings (default 11% Indonesian VAT)
+	var taxRateStr string
+	taxQuery := `SELECT setting_value FROM system_settings WHERE setting_key = 'tax_rate'`
+	err = tx.QueryRow(taxQuery).Scan(&taxRateStr)
+	if err != nil {
+		// Fallback to 11% if setting not found
+		taxRateStr = "11.00"
+	}
+
+	taxRate := 0.11 // Default Indonesian VAT
+	if rate, err := strconv.ParseFloat(taxRateStr, 64); err == nil {
+		taxRate = rate / 100.0 // Convert percentage to decimal
+	}
+
 	taxAmount := subtotal * taxRate
 	totalAmount := subtotal + taxAmount
 
@@ -360,6 +377,17 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		})
 		return
 	}
+
+	// Send notification to kitchen staff about new order
+	var tableInfo string
+	if req.TableID != nil {
+		var tableNumber string
+		h.db.QueryRow("SELECT table_number FROM dining_tables WHERE id = $1", *req.TableID).Scan(&tableNumber)
+		tableInfo = fmt.Sprintf("Meja %s", tableNumber)
+	} else {
+		tableInfo = req.OrderType
+	}
+	go h.notificationSvc.NotifyOrderCreated(orderNumber, tableInfo)
 
 	// Fetch and return the created order
 	order, err := h.getOrderByID(orderID)
