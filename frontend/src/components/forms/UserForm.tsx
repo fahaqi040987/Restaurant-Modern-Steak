@@ -155,8 +155,7 @@ export function UserForm({ user, onSuccess, onCancel, mode = 'create' }: UserFor
                 placeholder="Enter username"
                 autoComplete="username"
                 description="Used for logging into the system"
-                disabled={isEditing}
-                readOnly={isEditing}
+                disabled={Boolean(isEditing)}
               />
 
               <TextInputField

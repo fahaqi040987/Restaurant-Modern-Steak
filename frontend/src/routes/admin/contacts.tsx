@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tantml:react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import ContactSubmissions from '@/components/admin/ContactSubmissions'
 
 export const Route = createFileRoute('/admin/contacts')({

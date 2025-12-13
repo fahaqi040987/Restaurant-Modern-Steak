@@ -133,6 +133,15 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		admin.POST("/inventory/adjust", inventoryHandler.AdjustStock)
 		admin.GET("/inventory/history/:product_id", inventoryHandler.GetStockHistory)
 
+		// Ingredients management (raw materials)
+		admin.GET("/ingredients", getIngredients(db))
+		admin.POST("/ingredients", createIngredient(db))
+		admin.PUT("/ingredients/:id", updateIngredient(db))
+		admin.DELETE("/ingredients/:id", deleteIngredient(db))
+		admin.POST("/ingredients/:id/restock", restockIngredient(db))
+		admin.GET("/ingredients/:id/history", getIngredientHistory(db))
+		admin.GET("/ingredients/low-stock", getLowStockIngredients(db))
+
 		// Menu management with pagination
 		admin.GET("/products", productHandler.GetProducts) // Use existing paginated handler
 		admin.GET("/categories", getAdminCategories(db))   // Add pagination
@@ -1828,6 +1837,514 @@ func getAdminTables(db *sql.DB) gin.HandlerFunc {
 				"total":        total,
 				"total_pages":  totalPages,
 			},
+		})
+	}
+}
+
+// Ingredients Management Handlers
+
+// Get all ingredients with pagination
+func getIngredients(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+		perPage, _ := strconv.Atoi(c.DefaultQuery("per_page", "20"))
+		search := c.Query("search")
+		lowStockOnly := c.Query("low_stock") == "true"
+
+		if page < 1 {
+			page = 1
+		}
+		if perPage < 1 || perPage > 100 {
+			perPage = 20
+		}
+
+		offset := (page - 1) * perPage
+
+		// Build query
+		queryBuilder := "SELECT id, name, description, unit, current_stock, minimum_stock, maximum_stock, unit_cost, supplier, is_active, last_restocked_at, created_at FROM ingredients WHERE 1=1"
+		countQuery := "SELECT COUNT(*) FROM ingredients WHERE 1=1"
+		args := []interface{}{}
+		argCount := 0
+
+		if search != "" {
+			argCount++
+			queryBuilder += fmt.Sprintf(" AND (name ILIKE $%d OR description ILIKE $%d)", argCount, argCount)
+			countQuery += fmt.Sprintf(" AND (name ILIKE $%d OR description ILIKE $%d)", argCount, argCount)
+			args = append(args, "%"+search+"%")
+		}
+
+		if lowStockOnly {
+			queryBuilder += " AND current_stock <= minimum_stock"
+			countQuery += " AND current_stock <= minimum_stock"
+		}
+
+		// Get total count
+		var total int
+		err := db.QueryRow(countQuery, args...).Scan(&total)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to count ingredients",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		// Get paginated results
+		queryBuilder += fmt.Sprintf(" ORDER BY name LIMIT $%d OFFSET $%d", argCount+1, argCount+2)
+		args = append(args, perPage, offset)
+
+		rows, err := db.Query(queryBuilder, args...)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to fetch ingredients",
+				"error":   err.Error(),
+			})
+			return
+		}
+		defer rows.Close()
+
+		var ingredients []map[string]interface{}
+		for rows.Next() {
+			var id, name, unit string
+			var description, supplier sql.NullString
+			var currentStock, minimumStock, maximumStock, unitCost sql.NullFloat64
+			var isActive bool
+			var lastRestockedAt sql.NullTime
+			var createdAt time.Time
+
+			err := rows.Scan(&id, &name, &description, &unit, &currentStock, &minimumStock, &maximumStock, &unitCost, &supplier, &isActive, &lastRestockedAt, &createdAt)
+			if err != nil {
+				continue
+			}
+
+			ingredient := map[string]interface{}{
+				"id":            id,
+				"name":          name,
+				"description":   description.String,
+				"unit":          unit,
+				"current_stock": currentStock.Float64,
+				"minimum_stock": minimumStock.Float64,
+				"maximum_stock": maximumStock.Float64,
+				"unit_cost":     unitCost.Float64,
+				"supplier":      supplier.String,
+				"is_active":     isActive,
+				"created_at":    createdAt,
+			}
+
+			if lastRestockedAt.Valid {
+				ingredient["last_restocked_at"] = lastRestockedAt.Time
+			}
+
+			ingredients = append(ingredients, ingredient)
+		}
+
+		totalPages := (total + perPage - 1) / perPage
+
+		c.JSON(200, gin.H{
+			"success": true,
+			"message": "Ingredients retrieved successfully",
+			"data":    ingredients,
+			"meta": gin.H{
+				"current_page": page,
+				"per_page":     perPage,
+				"total":        total,
+				"total_pages":  totalPages,
+			},
+		})
+	}
+}
+
+// Create a new ingredient
+func createIngredient(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req map[string]interface{}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(400, gin.H{
+				"success": false,
+				"message": "Invalid request format",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		// Required fields
+		name, _ := req["name"].(string)
+		unit, _ := req["unit"].(string)
+
+		if name == "" || unit == "" {
+			c.JSON(400, gin.H{
+				"success": false,
+				"message": "Name and unit are required",
+			})
+			return
+		}
+
+		// Optional fields
+		description, _ := req["description"].(string)
+		supplier, _ := req["supplier"].(string)
+		currentStock, _ := req["current_stock"].(float64)
+		minimumStock, _ := req["minimum_stock"].(float64)
+		maximumStock, _ := req["maximum_stock"].(float64)
+		unitCost, _ := req["unit_cost"].(float64)
+
+		var id string
+		err := db.QueryRow(`
+			INSERT INTO ingredients (name, description, unit, current_stock, minimum_stock, maximum_stock, unit_cost, supplier)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			RETURNING id
+		`, name, description, unit, currentStock, minimumStock, maximumStock, unitCost, supplier).Scan(&id)
+
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to create ingredient",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		c.JSON(201, gin.H{
+			"success": true,
+			"message": "Ingredient created successfully",
+			"data":    gin.H{"id": id},
+		})
+	}
+}
+
+// Update an existing ingredient
+func updateIngredient(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		var req map[string]interface{}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(400, gin.H{
+				"success": false,
+				"message": "Invalid request format",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		// Build dynamic update query
+		updates := []string{}
+		args := []interface{}{}
+		argCount := 0
+
+		if name, ok := req["name"].(string); ok && name != "" {
+			argCount++
+			updates = append(updates, fmt.Sprintf("name = $%d", argCount))
+			args = append(args, name)
+		}
+
+		if description, ok := req["description"].(string); ok {
+			argCount++
+			updates = append(updates, fmt.Sprintf("description = $%d", argCount))
+			args = append(args, description)
+		}
+
+		if unit, ok := req["unit"].(string); ok && unit != "" {
+			argCount++
+			updates = append(updates, fmt.Sprintf("unit = $%d", argCount))
+			args = append(args, unit)
+		}
+
+		if minimumStock, ok := req["minimum_stock"].(float64); ok {
+			argCount++
+			updates = append(updates, fmt.Sprintf("minimum_stock = $%d", argCount))
+			args = append(args, minimumStock)
+		}
+
+		if maximumStock, ok := req["maximum_stock"].(float64); ok {
+			argCount++
+			updates = append(updates, fmt.Sprintf("maximum_stock = $%d", argCount))
+			args = append(args, maximumStock)
+		}
+
+		if unitCost, ok := req["unit_cost"].(float64); ok {
+			argCount++
+			updates = append(updates, fmt.Sprintf("unit_cost = $%d", argCount))
+			args = append(args, unitCost)
+		}
+
+		if supplier, ok := req["supplier"].(string); ok {
+			argCount++
+			updates = append(updates, fmt.Sprintf("supplier = $%d", argCount))
+			args = append(args, supplier)
+		}
+
+		if isActive, ok := req["is_active"].(bool); ok {
+			argCount++
+			updates = append(updates, fmt.Sprintf("is_active = $%d", argCount))
+			args = append(args, isActive)
+		}
+
+		if len(updates) == 0 {
+			c.JSON(400, gin.H{
+				"success": false,
+				"message": "No fields to update",
+			})
+			return
+		}
+
+		argCount++
+		args = append(args, id)
+		query := fmt.Sprintf("UPDATE ingredients SET %s WHERE id = $%d", strings.Join(updates, ", "), argCount)
+
+		result, err := db.Exec(query, args...)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to update ingredient",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			c.JSON(404, gin.H{
+				"success": false,
+				"message": "Ingredient not found",
+			})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"success": true,
+			"message": "Ingredient updated successfully",
+		})
+	}
+}
+
+// Delete an ingredient
+func deleteIngredient(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		result, err := db.Exec("DELETE FROM ingredients WHERE id = $1", id)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to delete ingredient",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			c.JSON(404, gin.H{
+				"success": false,
+				"message": "Ingredient not found",
+			})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"success": true,
+			"message": "Ingredient deleted successfully",
+		})
+	}
+}
+
+// Restock an ingredient
+func restockIngredient(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		var req map[string]interface{}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(400, gin.H{
+				"success": false,
+				"message": "Invalid request format",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		quantity, ok := req["quantity"].(float64)
+		if !ok || quantity <= 0 {
+			c.JSON(400, gin.H{
+				"success": false,
+				"message": "Valid quantity is required",
+			})
+			return
+		}
+
+		notes, _ := req["notes"].(string)
+		userID := c.GetString("user_id")
+
+		// Start transaction
+		tx, err := db.Begin()
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to start transaction",
+			})
+			return
+		}
+		defer tx.Rollback()
+
+		// Get current stock
+		var currentStock float64
+		err = tx.QueryRow("SELECT current_stock FROM ingredients WHERE id = $1", id).Scan(&currentStock)
+		if err != nil {
+			c.JSON(404, gin.H{
+				"success": false,
+				"message": "Ingredient not found",
+			})
+			return
+		}
+
+		newStock := currentStock + quantity
+
+		// Update stock
+		_, err = tx.Exec(`
+			UPDATE ingredients 
+			SET current_stock = $1, last_restocked_at = CURRENT_TIMESTAMP 
+			WHERE id = $2
+		`, newStock, id)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to update stock",
+			})
+			return
+		}
+
+		// Record history
+		_, err = tx.Exec(`
+			INSERT INTO ingredient_stock_history (ingredient_id, type, quantity, previous_stock, new_stock, notes, performed_by)
+			VALUES ($1, 'restock', $2, $3, $4, $5, $6)
+		`, id, quantity, currentStock, newStock, notes, userID)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to record history",
+			})
+			return
+		}
+
+		tx.Commit()
+
+		c.JSON(200, gin.H{
+			"success": true,
+			"message": "Ingredient restocked successfully",
+			"data": gin.H{
+				"previous_stock": currentStock,
+				"new_stock":      newStock,
+				"quantity_added": quantity,
+			},
+		})
+	}
+}
+
+// Get ingredient stock history
+func getIngredientHistory(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		rows, err := db.Query(`
+			SELECT h.id, h.type, h.quantity, h.previous_stock, h.new_stock, h.notes, h.created_at,
+				u.first_name, u.last_name
+			FROM ingredient_stock_history h
+			LEFT JOIN users u ON h.performed_by = u.id
+			WHERE h.ingredient_id = $1
+			ORDER BY h.created_at DESC
+			LIMIT 100
+		`, id)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to fetch history",
+			})
+			return
+		}
+		defer rows.Close()
+
+		var history []map[string]interface{}
+		for rows.Next() {
+			var historyID, historyType string
+			var quantity, previousStock, newStock float64
+			var notes sql.NullString
+			var createdAt time.Time
+			var firstName, lastName sql.NullString
+
+			err := rows.Scan(&historyID, &historyType, &quantity, &previousStock, &newStock, &notes, &createdAt, &firstName, &lastName)
+			if err != nil {
+				continue
+			}
+
+			record := map[string]interface{}{
+				"id":             historyID,
+				"type":           historyType,
+				"quantity":       quantity,
+				"previous_stock": previousStock,
+				"new_stock":      newStock,
+				"notes":          notes.String,
+				"created_at":     createdAt,
+			}
+
+			if firstName.Valid && lastName.Valid {
+				record["performed_by"] = firstName.String + " " + lastName.String
+			}
+
+			history = append(history, record)
+		}
+
+		c.JSON(200, gin.H{
+			"success": true,
+			"message": "History retrieved successfully",
+			"data":    history,
+		})
+	}
+}
+
+// Get low stock ingredients
+func getLowStockIngredients(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		rows, err := db.Query(`
+			SELECT id, name, unit, current_stock, minimum_stock
+			FROM ingredients
+			WHERE current_stock <= minimum_stock AND is_active = true
+			ORDER BY (current_stock / NULLIF(minimum_stock, 0)) ASC
+		`)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to fetch low stock ingredients",
+			})
+			return
+		}
+		defer rows.Close()
+
+		var ingredients []map[string]interface{}
+		for rows.Next() {
+			var id, name, unit string
+			var currentStock, minimumStock float64
+
+			err := rows.Scan(&id, &name, &unit, &currentStock, &minimumStock)
+			if err != nil {
+				continue
+			}
+
+			ingredients = append(ingredients, map[string]interface{}{
+				"id":            id,
+				"name":          name,
+				"unit":          unit,
+				"current_stock": currentStock,
+				"minimum_stock": minimumStock,
+				"deficit":       minimumStock - currentStock,
+			})
+		}
+
+		c.JSON(200, gin.H{
+			"success": true,
+			"message": "Low stock ingredients retrieved successfully",
+			"data":    ingredients,
 		})
 	}
 }

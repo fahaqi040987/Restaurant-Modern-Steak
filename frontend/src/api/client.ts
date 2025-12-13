@@ -90,6 +90,27 @@ class APIClient {
     }
   }
 
+  // Generic HTTP methods for backward compatibility
+  async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'GET', url });
+  }
+
+  async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'POST', url, data });
+  }
+
+  async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'PUT', url, data });
+  }
+
+  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'DELETE', url });
+  }
+
+  async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'PATCH', url, data });
+  }
+
   // Authentication endpoints
   async login(credentials: LoginRequest): Promise<APIResponse<LoginResponse>> {
     return this.request({
@@ -324,7 +345,7 @@ class APIClient {
 
   async updateUser(id: string, userData: any): Promise<APIResponse<User>> {
     return this.request({
-      method: 'PATCH',
+      method: 'PUT',
       url: `/admin/users/${id}`,
       data: userData,
     });
@@ -619,6 +640,103 @@ class APIClient {
       throw new Error('Failed to submit contact form');
     }
     return response.data;
+  }
+
+  // ============================================
+  // INGREDIENTS MANAGEMENT
+  // ============================================
+
+  /**
+   * Get all ingredients with pagination
+   * @param page - Page number (default: 1)
+   * @param perPage - Items per page (default: 20)
+   * @param search - Search query
+   * @param lowStockOnly - Filter to show only low stock items
+   * @returns Paginated list of ingredients
+   */
+  async getIngredients(params?: { page?: number; per_page?: number; search?: string; low_stock?: boolean }): Promise<PaginatedResponse<any>> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/ingredients',
+      params,
+    });
+  }
+
+  /**
+   * Create a new ingredient
+   * @param ingredientData - Ingredient data
+   * @returns Created ingredient
+   */
+  async createIngredient(ingredientData: any): Promise<APIResponse> {
+    return this.request({
+      method: 'POST',
+      url: '/admin/ingredients',
+      data: ingredientData,
+    });
+  }
+
+  /**
+   * Update an existing ingredient
+   * @param id - Ingredient ID
+   * @param ingredientData - Updated ingredient data
+   * @returns Success response
+   */
+  async updateIngredient(id: string, ingredientData: any): Promise<APIResponse> {
+    return this.request({
+      method: 'PUT',
+      url: `/admin/ingredients/${id}`,
+      data: ingredientData,
+    });
+  }
+
+  /**
+   * Delete an ingredient
+   * @param id - Ingredient ID
+   * @returns Success response
+   */
+  async deleteIngredient(id: string): Promise<APIResponse> {
+    return this.request({
+      method: 'DELETE',
+      url: `/admin/ingredients/${id}`,
+    });
+  }
+
+  /**
+   * Restock an ingredient
+   * @param id - Ingredient ID
+   * @param quantity - Quantity to add
+   * @param notes - Optional notes
+   * @returns Updated stock information
+   */
+  async restockIngredient(id: string, quantity: number, notes?: string): Promise<APIResponse> {
+    return this.request({
+      method: 'POST',
+      url: `/admin/ingredients/${id}/restock`,
+      data: { quantity, notes },
+    });
+  }
+
+  /**
+   * Get ingredient stock history
+   * @param id - Ingredient ID
+   * @returns Stock history records
+   */
+  async getIngredientHistory(id: string): Promise<APIResponse> {
+    return this.request({
+      method: 'GET',
+      url: `/admin/ingredients/${id}/history`,
+    });
+  }
+
+  /**
+   * Get low stock ingredients
+   * @returns List of ingredients below minimum stock
+   */
+  async getLowStockIngredients(): Promise<APIResponse> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/ingredients/low-stock',
+    });
   }
 
   // Utility methods

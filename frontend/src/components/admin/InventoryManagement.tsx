@@ -42,8 +42,10 @@ import {
   XCircle,
   Download,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  PackageOpen
 } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import { showSuccessToast, showErrorToast } from '@/lib/toast-helpers'
@@ -296,7 +298,18 @@ export default function InventoryManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {inventory.map((item) => (
+              {inventory.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-[400px] p-0">
+                    <EmptyState
+                      icon={PackageOpen}
+                      title={t('inventory.noItems', 'Belum ada item inventori')}
+                      description={t('inventory.noItemsDescription', 'Sistem inventori siap digunakan. Item akan muncul secara otomatis saat produk ditambahkan dengan informasi stok.')}
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                inventory.map((item) => (
                 <TableRow key={item.product_id} className={item.status === 'out' ? 'bg-red-50' : item.status === 'low' ? 'bg-yellow-50' : ''}>
                   <TableCell className="font-medium">{item.product_name}</TableCell>
                   <TableCell>{item.category_name}</TableCell>
@@ -328,7 +341,8 @@ export default function InventoryManagement() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+              )}
             </TableBody>
           </Table>
         </div>

@@ -15,6 +15,7 @@ import {
   Table,
   Users
 } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
 import apiClient from '@/api/client'
 import { toastHelpers } from '@/lib/toast-helpers'
 import { UserForm } from '@/components/forms/UserForm'
@@ -225,21 +226,26 @@ export function AdminStaffManagement() {
         ) : filteredUsers.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
-              <div className="text-center py-8">
-                <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No staff members</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  {searchTerm ? 'No staff members match your search.' : 'Get started by adding a new staff member.'}
-                </p>
-                {!searchTerm && (
-                  <div className="mt-6">
-                    <Button onClick={() => setShowCreateForm(true)} className="gap-2">
-                      <UserPlus className="h-4 w-4" />
-                      Add New Staff
-                    </Button>
-                  </div>
-                )}
-              </div>
+              <EmptyState
+                icon={Users}
+                title={searchTerm ? 'Tidak ada staff ditemukan' : 'Belum ada staff'}
+                description={
+                  searchTerm
+                    ? 'Tidak ada staff yang cocok dengan pencarian. Coba kata kunci lain.'
+                    : 'Mulai dengan menambahkan staff baru untuk mengelola restoran Anda.'
+                }
+                action={
+                  searchTerm
+                    ? {
+                        label: 'Hapus Pencarian',
+                        onClick: () => setSearchTerm(''),
+                      }
+                    : {
+                        label: 'Tambah Staff Baru',
+                        onClick: () => setShowCreateForm(true),
+                      }
+                }
+              />
             </CardContent>
           </Card>
         ) : (

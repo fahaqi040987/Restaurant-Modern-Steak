@@ -72,7 +72,14 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: (data: CreateProductData) => apiClient.createProduct(data),
+    mutationFn: (data: CreateProductData) => {
+      // Convert category_id to string for API
+      const apiData = {
+        ...data,
+        category_id: data.category_id.toString(),
+      };
+      return apiClient.createProduct(apiData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['products'] })
@@ -88,7 +95,14 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
 
   // Update mutation  
   const updateMutation = useMutation({
-    mutationFn: (data: UpdateProductData) => apiClient.updateProduct(data.id.toString(), data),
+    mutationFn: (data: UpdateProductData) => {
+      // Convert category_id to string for API
+      const apiData = {
+        ...data,
+        category_id: data.category_id ? data.category_id.toString() : undefined,
+      };
+      return apiClient.updateProduct(data.id.toString(), apiData);
+    },
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['products'] })

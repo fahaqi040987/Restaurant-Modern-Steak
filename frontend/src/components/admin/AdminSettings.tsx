@@ -28,10 +28,12 @@ import {
   CheckCircle2,
   XCircle,
   Info,
-  Languages
+  Languages,
+  Palette
 } from 'lucide-react'
 import apiClient from '@/api/client'
 import { toastHelpers } from '@/lib/toast-helpers'
+import { useTheme } from '@/components/theme-provider'
 
 type SystemSettings = Record<string, any>
 
@@ -39,6 +41,7 @@ export function AdminSettings() {
   const { t, i18n } = useTranslation()
   const queryClient = useQueryClient()
   const [settings, setSettings] = useState<SystemSettings>({})
+  const { theme, setTheme } = useTheme()
 
   // Fetch settings from backend
   const { data: settingsData, isLoading: isLoadingSettings } = useQuery({
@@ -75,7 +78,15 @@ export function AdminSettings() {
   // Save settings mutation
   const saveSettingsMutation = useMutation({
     mutationFn: async (newSettings: SystemSettings) => {
-      const response = await apiClient.updateSettings(newSettings)
+      // Parse numeric fields before sending to backend
+      const parsedSettings = {
+        ...newSettings,
+        tax_rate: newSettings.tax_rate ? parseFloat(newSettings.tax_rate) : 0,
+        service_charge: newSettings.service_charge ? parseFloat(newSettings.service_charge) : 0,
+        enable_rounding: newSettings.enable_rounding === 'true' || newSettings.enable_rounding === true,
+      }
+      
+      const response = await apiClient.updateSettings(parsedSettings)
       if (!response.success) {
         throw new Error(response.message)
       }
@@ -169,6 +180,47 @@ export function AdminSettings() {
           </div>
           <p className="text-xs text-muted-foreground mt-2">
             Current: {i18n.language === 'id-ID' ? 'Bahasa Indonesia' : 'English (US)'}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Theme Toggle */}
+      <Card className="border-2 border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="w-5 h-5" />
+            Appearance
+          </CardTitle>
+          <CardDescription>
+            Customize the look and feel of the interface
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Button
+              variant={theme === 'light' ? 'default' : 'outline'}
+              onClick={() => setTheme('light')}
+              className="flex-1"
+            >
+              ☀️ Light
+            </Button>
+            <Button
+              variant={theme === 'dark' ? 'default' : 'outline'}
+              onClick={() => setTheme('dark')}
+              className="flex-1"
+            >
+              🌙 Dark
+            </Button>
+            <Button
+              variant={theme === 'system' ? 'default' : 'outline'}
+              onClick={() => setTheme('system')}
+              className="flex-1"
+            >
+              💻 System
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Current theme: {theme === 'system' ? 'System Default' : theme.charAt(0).toUpperCase() + theme.slice(1)}
           </p>
         </CardContent>
       </Card>

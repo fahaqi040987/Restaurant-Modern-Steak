@@ -265,6 +265,39 @@
     "notFound": "Data tidak ditemukan",
     "unauthorized": "Anda tidak memiliki akses",
     "serverError": "Kesalahan server. Silakan coba lagi nanti.",
-    "timeout": "Permintaan timeout. Silakan coba lagi."
+    "timeout": "Permintaan timeout. Silakan coba lagi.",
+    "connectionLost": "Koneksi terputus. Mencoba menyambung kembali...",
+    "connectionRestored": "Koneksi pulih! Sinkronisasi data...",
+    "retrying": "Mencoba lagi... (percobaan {{count}})",
+    "retryFailed": "Gagal setelah {{count}} percobaan. Silakan coba lagi.",
+    "somethingWentWrong": "Terjadi kesalahan yang tidak terduga",
+    "pleaseTryAgain": "Silakan coba lagi atau hubungi administrator",
+    "errorBoundary": {
+      "title": "Terjadi Kesalahan",
+      "description": "Maaf, terjadi kesalahan yang tidak terduga. Silakan coba lagi atau hubungi administrator jika masalah berlanjut.",
+      "tryAgain": "Coba Lagi",
+      "goHome": "Kembali ke Beranda",
+      "support": "Jika masalah berlanjut, silakan hubungi tim dukungan kami."
+    },
+    "offline": {
+      "title": "Tidak ada koneksi internet",
+      "description": "Beberapa fitur mungkin tidak tersedia. Perubahan akan disimpan saat koneksi pulih.",
+      "backOnline": "Anda kembali online!",
+      "changesWillSync": "Perubahan akan disinkronkan secara otomatis."
+    },
+    "codes": {
+      "400": "Permintaan tidak valid",
+      "401": "Sesi Anda telah berakhir. Silakan masuk kembali.",
+      "403": "Anda tidak memiliki izin untuk mengakses ini",
+      "404": "Halaman atau data tidak ditemukan",
+      "408": "Permintaan timeout. Silakan coba lagi.",
+      "409": "Konflik data. Silakan muat ulang halaman.",
+      "422": "Data yang dikirim tidak valid",
+      "429": "Terlalu banyak permintaan. Silakan tunggu sebentar.",
+      "500": "Kesalahan server internal",
+      "502": "Gateway error. Server sedang tidak tersedia.",
+      "503": "Layanan tidak tersedia. Silakan coba lagi nanti.",
+      "504": "Gateway timeout. Server tidak merespon."
+    }
   }
 }

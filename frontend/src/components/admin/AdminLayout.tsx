@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { UserMenu } from '@/components/ui/user-menu'
+import { ThemeToggle } from '@/components/theme-toggle'
 // import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card' // Removed - not used in simplified layout
 import { 
   LayoutDashboard, 
@@ -237,6 +238,13 @@ export function AdminLayout({ user }: AdminLayoutProps) {
             
             {/* Spacer to push logout to bottom */}
             <div className="flex-1"></div>
+            
+            {/* Theme Toggle */}
+            {(!sidebarCollapsed || (isMobile || isTablet)) && (
+              <div className="px-3 mb-4">
+                <ThemeToggle />
+              </div>
+            )}
             
             {/* User Menu */}
             <div className={isTablet ? 'mt-6' : 'mt-4'}>

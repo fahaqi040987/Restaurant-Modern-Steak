@@ -1,8 +1,12 @@
 import React, { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
-import { RouterProvider, createRouter } from '@tantml:react-router'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/toaster'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { OfflineIndicator } from '@/components/OfflineIndicator'
+import { ThemeProvider } from '@/components/theme-provider'
+import { queryClient } from '@/lib/queryClient'
 import './i18n' // Import i18n configuration
 import './index.css'
 
@@ -11,16 +15,6 @@ import { routeTree } from './routeTree.gen'
 
 // Create a new router instance
 const router = createRouter({ routeTree })
-
-// Create a query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-})
 
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {
@@ -35,10 +29,15 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-        <Toaster />
-      </QueryClientProvider>
+      <ErrorBoundary>
+        <ThemeProvider defaultTheme="system" storageKey="pos-theme">
+          <QueryClientProvider client={queryClient}>
+            <OfflineIndicator />
+            <RouterProvider router={router} />
+            <Toaster />
+          </QueryClientProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
     </StrictMode>,
   )
 }

@@ -28,7 +28,8 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Trash2, Eye, Calendar, Filter, Mail, Phone, User } from 'lucide-react'
+import { Trash2, Eye, Calendar, Filter, Mail, Phone, User, Inbox } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import { showSuccessToast, showErrorToast } from '@/lib/toast-helpers'
@@ -237,7 +238,34 @@ export default function ContactSubmissions() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {contacts.map((contact) => (
+              {contacts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-[400px] p-0">
+                    <EmptyState
+                      icon={Inbox}
+                      title={
+                        statusFilter !== 'all'
+                          ? 'Tidak ada pesan dengan status ini'
+                          : 'Belum ada pesan kontak'
+                      }
+                      description={
+                        statusFilter !== 'all'
+                          ? 'Tidak ada pesan kontak yang cocok dengan filter status. Coba pilih status lain.'
+                          : 'Pesan dari formulir kontak website akan muncul di sini. Anda akan mendapat notifikasi saat ada pesan baru.'
+                      }
+                      action={
+                        statusFilter !== 'all'
+                          ? {
+                              label: 'Lihat Semua Pesan',
+                              onClick: () => setStatusFilter('all'),
+                            }
+                          : undefined
+                      }
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                contacts.map((contact) => (
                 <TableRow key={contact.id}>
                   <TableCell>
                     {format(new Date(contact.created_at), 'dd MMM yyyy HH:mm', {
@@ -262,7 +290,8 @@ export default function ContactSubmissions() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+              )}
             </TableBody>
           </Table>
         </div>

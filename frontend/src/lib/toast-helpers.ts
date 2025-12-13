@@ -162,3 +162,8 @@ export const toastHelpers = {
   }
 }
 
+// Legacy exports for backward compatibility
+export const showSuccessToast = toastHelpers.success
+export const showErrorToast = toastHelpers.error
+export const showWarningToast = toastHelpers.warning
+export const showInfoToast = toastHelpers.info

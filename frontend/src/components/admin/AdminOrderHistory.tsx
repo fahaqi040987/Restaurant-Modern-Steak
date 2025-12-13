@@ -11,7 +11,9 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Receipt,
 } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,16 +83,17 @@ export function AdminOrderHistory() {
       }
       
       const orders = (response.data || []) as OrderHistoryItem[];
+      const meta = response.meta || {};
       
       return {
         orders: orders.map((order: any) => ({
           ...order,
           table_number: order.table?.table_number || order.table_number,
         })),
-        total: response.total || 0,
-        page: response.page || 1,
-        page_size: response.limit || 20,
-        total_pages: Math.ceil((response.total || 0) / (response.limit || 20)),
+        total: meta.total || 0,
+        page: meta.current_page || 1,
+        page_size: meta.per_page || 20,
+        total_pages: meta.total_pages || Math.ceil((meta.total || 0) / (meta.per_page || 20)),
       };
     },
   });
@@ -305,8 +308,29 @@ export function AdminOrderHistory() {
               <TableBody>
                 {!ordersData?.orders || ordersData.orders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      {t('orders.noOrders', 'Tidak ada pesanan')}
+                    <TableCell colSpan={8} className="h-[400px] p-0">
+                      <EmptyState
+                        icon={Receipt}
+                        title={t('orders.noOrders', 'Tidak ada pesanan')}
+                        description={
+                          filters.search || filters.status || filters.startDate
+                            ? t('orders.noOrdersFiltered', 'Tidak ada pesanan yang cocok dengan filter. Coba ubah kriteria pencarian.')
+                            : t('orders.noOrdersYet', 'Belum ada pesanan. Pesanan baru akan muncul di sini.')
+                        }
+                        action={
+                          filters.search || filters.status || filters.startDate
+                            ? {
+                                label: t('common.clearFilters', 'Hapus Filter'),
+                                onClick: () => {
+                                  setFilters({
+                                    page: 1,
+                                    pageSize: 20,
+                                  })
+                                },
+                              }
+                            : undefined
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (
