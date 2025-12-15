@@ -40,7 +40,7 @@ interface ReceiptData {
 
 class ReceiptPrinterService {
   private settings: ReceiptSettings = {
-    restaurant_name: 'Modern Steak Restaurant',
+    restaurant_name: 'Steak Kenangan',
     paper_size: '80mm',
     currency: 'IDR',
     tax_rate: 11,

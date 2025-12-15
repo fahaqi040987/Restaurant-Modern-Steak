@@ -244,7 +244,7 @@ export function AdminSettings() {
                 id="restaurant_name"
                 value={settings.restaurant_name || ''}
                 onChange={(e) => updateSetting('restaurant_name', e.target.value)}
-                placeholder="Modern Steak"
+                placeholder="Steak Kenangan"
               />
               <p className="text-xs text-muted-foreground">Nama yang ditampilkan di POS dan struk</p>
             </div>

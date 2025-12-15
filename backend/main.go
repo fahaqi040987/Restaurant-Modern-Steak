@@ -65,9 +65,8 @@ func main() {
 	// Initialize health handler for comprehensive health checks
 	healthHandler := handlers.NewHealthHandler(db)
 
-	// Health check endpoints (no authentication required)
-	router.GET("/health", healthHandler.GetSystemHealth)        // Simple health check
-	router.GET("/api/v1/health", healthHandler.GetSystemHealth) // API v1 health check
+	// Health check endpoint at root level (for Docker health checks)
+	router.GET("/health", healthHandler.GetSystemHealth)
 
 	// Initialize API routes
 	apiRoutes := router.Group("/api/v1")

@@ -111,7 +111,7 @@ INSERT INTO payments (order_id, payment_method, amount, status, processed_by, pr
 -- Update order 3 status to completed since payment is done
 UPDATE orders SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE order_number = 'ORD003';
 
--- Insert default restaurant configuration (Modern Steak branding)
+-- Insert default restaurant configuration (Steak Kenangan branding)
 INSERT INTO restaurant_info (
     name,
     tagline,
@@ -132,7 +132,7 @@ INSERT INTO restaurant_info (
     logo_url,
     hero_image_url
 ) VALUES (
-    'Modern Steak',
+    'Steak Kenangan',
     'Where Tradition Meets Innovation',
     'Experience the finest cuts of premium steak prepared with modern culinary techniques. Our chefs combine time-honored traditions with innovative cooking methods to deliver an unforgettable dining experience. From dry-aged ribeyes to wagyu specialties, every dish is crafted with passion and precision.',
     'Jl. Sudirman No. 123, Senayan',

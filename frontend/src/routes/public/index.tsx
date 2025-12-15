@@ -237,7 +237,7 @@ function PublicLandingPage() {
               </h2>
               <p className="text-[var(--public-text-secondary)] mb-6 leading-relaxed">
                 {restaurantInfo?.description ||
-                  'At Modern Steak, we believe in the perfect combination of premium ingredients, masterful cooking techniques, and warm hospitality. Every dish tells a story of our passion for exceptional cuisine.'}
+                  'At Steak Kenangan, we believe in the perfect combination of premium ingredients, masterful cooking techniques, and warm hospitality. Every dish tells a story of our passion for exceptional cuisine.'}
               </p>
               <Button
                 asChild

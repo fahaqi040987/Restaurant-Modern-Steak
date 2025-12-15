@@ -31,7 +31,7 @@ function PublicAboutPage() {
             </h1>
             <p className="text-lg text-[var(--public-text-secondary)] leading-relaxed">
               {restaurantInfo?.description ||
-                'Welcome to Modern Steak, where culinary excellence meets warm hospitality. Our journey began with a simple passion: to serve the finest steaks in an atmosphere that feels like home.'}
+                'Welcome to Steak Kenangan, where culinary excellence meets warm hospitality. Our journey began with a simple passion: to serve the finest steaks in an atmosphere that feels like home.'}
             </p>
           </div>
         </div>
@@ -49,7 +49,7 @@ function PublicAboutPage() {
                 Our <span className="text-[var(--public-secondary)]">Mission</span>
               </h2>
               <p className="text-[var(--public-text-secondary)] mb-4 leading-relaxed">
-                At Modern Steak, we are committed to providing an exceptional dining experience that goes beyond just great food. We believe in sourcing the highest quality ingredients, supporting local suppliers, and creating dishes that celebrate the art of cooking.
+                At Steak Kenangan, we are committed to providing an exceptional dining experience that goes beyond just great food. We believe in sourcing the highest quality ingredients, supporting local suppliers, and creating dishes that celebrate the art of cooking.
               </p>
               <p className="text-[var(--public-text-secondary)] leading-relaxed">
                 Every cut of meat is carefully selected, aged to perfection, and prepared by our skilled chefs who bring decades of combined experience to your plate. We take pride in every dish that leaves our kitchen.
@@ -61,7 +61,7 @@ function PublicAboutPage() {
               <blockquote className="text-xl text-[var(--public-text-primary)] italic mb-4" style={{ fontFamily: 'var(--public-font-heading)' }}>
                 "The secret of great steak lies not just in the cut, but in the care, the timing, and the passion we put into every preparation."
               </blockquote>
-              <cite className="text-[var(--public-text-secondary)]">— Head Chef, Modern Steak</cite>
+              <cite className="text-[var(--public-text-secondary)]">— Head Chef, Steak Kenangan</cite>
             </Card>
           </div>
         </div>
@@ -127,7 +127,7 @@ function PublicAboutPage() {
               The <span className="text-[var(--public-secondary)]">Experience</span>
             </h2>
             <p className="text-[var(--public-text-secondary)] mb-8 leading-relaxed">
-              From the moment you step through our doors, you'll be greeted by the warm ambiance of rich wood, soft lighting, and the enticing aroma of perfectly grilled steaks. Whether you're celebrating a special occasion or enjoying a casual dinner, Modern Steak provides the perfect setting.
+              From the moment you step through our doors, you'll be greeted by the warm ambiance of rich wood, soft lighting, and the enticing aroma of perfectly grilled steaks. Whether you're celebrating a special occasion or enjoying a casual dinner, Steak Kenangan provides the perfect setting.
             </p>
             <p className="text-[var(--public-text-secondary)] mb-8 leading-relaxed">
               Our carefully curated wine selection complements our menu beautifully, and our knowledgeable staff is always ready to guide you to the perfect pairing.
@@ -143,7 +143,7 @@ function PublicAboutPage() {
             className="text-2xl md:text-3xl font-bold text-[var(--public-text-primary)] mb-4"
             style={{ fontFamily: 'var(--public-font-heading)' }}
           >
-            Ready to Experience <span className="text-[var(--public-secondary)]">Modern Steak</span>?
+            Ready to Experience <span className="text-[var(--public-secondary)]">Steak Kenangan</span>?
           </h2>
           <p className="text-[var(--public-text-secondary)] mb-8">
             We'd love to welcome you to our table. Contact us to make a reservation or simply drop by.

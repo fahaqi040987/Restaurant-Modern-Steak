@@ -69,7 +69,7 @@ Create a public-facing B2C restaurant website that showcases the restaurant bran
 - Full-width hero image with overlay text
 - Smooth scroll animations
 - Responsive grid for featured items
-- Dark/elegant theme matching "Modern Steak" branding
+- Dark/elegant theme matching "Steak Kenangan" branding
 
 #### 3.1.2 About Us Page
 **Priority:** High

@@ -28,10 +28,6 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	publicHandler := handlers.NewPublicHandler(db)
 	inventoryHandler := handlers.NewInventoryHandler(db)
 	ingredientsHandler := handlers.NewIngredientsHandler(db)
-	healthHandler := handlers.NewHealthHandler(db)
-
-	// Health check endpoint (no authentication required, part of API v1)
-	router.GET("/health", healthHandler.GetSystemHealth)
 
 	// Public routes (no authentication required)
 	public := router.Group("/")

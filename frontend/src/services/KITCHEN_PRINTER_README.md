@@ -58,7 +58,7 @@ function OrderComponent({ order }) {
     <KitchenPrintButton
       orderData={kitchenTicketData}
       settings={{
-        restaurant_name: 'Modern Steak Restaurant',
+        restaurant_name: 'Steak Kenangan',
         paper_size: '80mm',
         show_prices: false,
         auto_print_kitchen: true,
@@ -77,7 +77,7 @@ import kitchenPrinter from '@/services/kitchenPrinter';
 
 // Update settings
 kitchenPrinter.updateSettings({
-  restaurant_name: 'Modern Steak Restaurant',
+  restaurant_name: 'Steak Kenangan',
   paper_size: '80mm',
   show_prices: false,
   auto_print_kitchen: true,

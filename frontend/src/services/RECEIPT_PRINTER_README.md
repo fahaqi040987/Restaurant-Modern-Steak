@@ -67,7 +67,7 @@ import { ReceiptPrintButton } from '@/components/payment/ReceiptPrintButton';
     cashier_name: "Admin"
   }}
   settings={{
-    restaurant_name: "Modern Steak",
+    restaurant_name: "Steak Kenangan",
     receipt_header: "Thank you for dining with us!",
     receipt_footer: "Visit us again soon!",
     paper_size: "80mm",
@@ -115,7 +115,7 @@ Receipt settings are automatically pulled from AdminSettings:
 ```tsx
 // From settings table
 {
-  restaurant_name: "Modern Steak Restaurant",
+  restaurant_name: "Steak Kenangan",
   receipt_header: "Terima kasih sudah makan di sini!",
   receipt_footer: "Kunjungi kami lagi!",
   paper_size: "80mm",

@@ -206,7 +206,7 @@ export function PublicFooter({ restaurantInfo }: PublicFooterProps) {
         <div className="mt-12 pt-8 border-t border-[var(--public-border)]">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-xs text-[var(--public-text-muted)]">
-              © {new Date().getFullYear()} Modern Steak. All rights reserved.
+              © {new Date().getFullYear()} Steak Kenangan. All rights reserved.
             </p>
             <a
               href="/staff"

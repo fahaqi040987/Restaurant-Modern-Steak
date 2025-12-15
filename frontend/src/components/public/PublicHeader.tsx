@@ -65,7 +65,7 @@ export function PublicHeader() {
         <Link
           to="/"
           className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-secondary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--public-primary)]"
-          aria-label="Modern Steak - Home"
+          aria-label="Steak Kenangan - Home"
         >
           <span
             className="font-serif text-xl font-semibold tracking-wide text-[var(--public-text-primary)]"

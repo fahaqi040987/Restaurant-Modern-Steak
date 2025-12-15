@@ -3,7 +3,7 @@
 **Status:** ✅ **COMPLETED** (Dec 15, 2025)
 
 ## Goal
-Create a public-facing restaurant website that showcases the Modern Steak brand, provides essential customer information (hours, location, contact), displays the menu, and offers a seamless staff login portal to access the existing POS system.
+Create a public-facing restaurant website that showcases the Steak Kenangan brand, provides essential customer information (hours, location, contact), displays the menu, and offers a seamless staff login portal to access the existing POS system.
 
 ## Implementation Summary
 
@@ -462,7 +462,7 @@ deleteProduct(id: string): Promise<void>
 # Specification: Indonesian Cuisine Localization & System Improvements
 
 ## Goal
-Transform the Modern Steak POS system into a production-ready Indonesian steakhouse platform with proper localization (IDR currency, Indonesian menu items), complete unused features, fix critical bugs, and enhance admin portal functionality.
+Transform the Steak Kenangan POS system into a production-ready Indonesian steakhouse platform with proper localization (IDR currency, Indonesian menu items), complete unused features, fix critical bugs, and enhance admin portal functionality.
 
 ## Priority Classification
 - 🔴 **CRITICAL** - Must fix before production (blocking issues)
@@ -1270,7 +1270,7 @@ export async function printReceipt(data: ReceiptData, printerName?: string) {
   const receipt = [
     {
       type: 'text',
-      value: 'MODERN STEAK INDONESIA',
+      value: 'STEAK KENANGAN',
       style: 'text-align:center;font-size:20px;font-weight:bold;'
     },
     {

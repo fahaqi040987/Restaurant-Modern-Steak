@@ -32,7 +32,7 @@ interface KitchenTicketData {
 
 class KitchenPrinterService {
   private settings: KitchenTicketSettings = {
-    restaurant_name: 'Modern Steak Restaurant',
+    restaurant_name: 'Steak Kenangan',
     paper_size: '80mm',
     show_prices: false,
     auto_print_kitchen: false,

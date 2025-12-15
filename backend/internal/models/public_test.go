@@ -8,14 +8,14 @@ import (
 // TestRestaurantInfoCreation tests RestaurantInfo model with required fields
 func TestRestaurantInfoCreation(t *testing.T) {
 	info := RestaurantInfo{
-		Name:    "Modern Steak",
+		Name:    "Steak Kenangan",
 		Address: "123 Main Street",
 		Phone:   "+62 21 1234 5678",
 		Email:   "info@modernsteak.com",
 	}
 
-	if info.Name != "Modern Steak" {
-		t.Errorf("expected name 'Modern Steak', got '%s'", info.Name)
+	if info.Name != "Steak Kenangan" {
+		t.Errorf("expected name 'Steak Kenangan', got '%s'", info.Name)
 	}
 	if info.Address != "123 Main Street" {
 		t.Errorf("expected address '123 Main Street', got '%s'", info.Address)
@@ -73,10 +73,10 @@ func TestContactSubmissionCreation(t *testing.T) {
 // TestIsOpenNowCalculation tests "Open Now" calculation logic based on current time and operating hours
 func TestIsOpenNowCalculation(t *testing.T) {
 	tests := []struct {
-		name        string
-		hours       OperatingHours
-		checkTime   time.Time
-		expected    bool
+		name      string
+		hours     OperatingHours
+		checkTime time.Time
+		expected  bool
 	}{
 		{
 			name: "Open during business hours",

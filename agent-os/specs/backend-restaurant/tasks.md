@@ -3,7 +3,7 @@
 ## Overview
 Total Tasks: 5 Task Groups (approximately 32 sub-tasks)
 
-This feature creates a public-facing B2C restaurant website that showcases the Modern Steak brand, provides essential customer information (hours, location, contact), displays the menu, and offers a staff login portal to access the existing POS system.
+This feature creates a public-facing B2C restaurant website that showcases the Steak Kenangan brand, provides essential customer information (hours, location, contact), displays the menu, and offers a staff login portal to access the existing POS system.
 
 **Implementation Status:**
 - Database schema: COMPLETE (restaurant_info, operating_hours, contact_submissions tables)
@@ -167,7 +167,7 @@ The database schema and public API endpoints have already been implemented:
     - Operating hours summary (abbreviated format)
     - Contact info: phone (tel: link), email (mailto: link), address
     - Social media icons: Instagram, Facebook, Twitter (external links)
-    - Copyright notice: "(c) 2024 Modern Steak. All rights reserved."
+    - Copyright notice: "(c) 2024 Steak Kenangan. All rights reserved."
     - Subtle "Staff Portal" link at bottom
   - [x] 3.4 Create OpenStatusBadge component
     - File: `frontend/src/components/public/OpenStatusBadge.tsx`

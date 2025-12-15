@@ -44,7 +44,7 @@ export function RoleBasedLayout({ user }: RoleBasedLayoutProps) {
 
   const handleLogout = () => {
     apiClient.clearAuth()
-    window.location.href = '/login'
+    window.location.href = '/public'
   }
 
   const getRoleConfig = (role: string) => {
