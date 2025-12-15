@@ -500,6 +500,15 @@ class APIClient {
   // Notifications endpoints (Protected - Auth Required)
   // ===========================================
 
+  async getUnreadCounts(): Promise<APIResponse<{
+    notifications: number;
+  }>> {
+    return this.request({
+      method: 'GET',
+      url: '/notifications/counts/unread',
+    });
+  }
+
   async getNotifications(filters?: {
     type?: string;
     is_read?: boolean;
@@ -736,6 +745,21 @@ class APIClient {
     return this.request({
       method: 'GET',
       url: '/admin/ingredients/low-stock',
+    });
+  }
+
+  // ===========================================
+  // Contact Submissions (Admin - Auth Required)
+  // ===========================================
+
+  /**
+   * Get new contacts count for badge
+   * @returns Count of new contact submissions
+   */
+  async getNewContactsCount(): Promise<APIResponse<{ new_contacts: number }>> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/contacts/counts/new',
     });
   }
 

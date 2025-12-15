@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { UserMenu } from '@/components/ui/user-menu'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { useBadgeCounts } from '@/hooks/useBadgeCounts'
 // import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card' // Removed - not used in simplified layout
 import { 
   LayoutDashboard, 
@@ -16,7 +18,9 @@ import {
   BarChart3,
   UserCog,
   Store,
-  LayoutGrid
+  LayoutGrid,
+  Bell,
+  Mail
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
 import apiClient from '@/api/client'
@@ -34,6 +38,8 @@ import { AdminSettings } from './AdminSettings'
 import { AdminMenuManagement } from './AdminMenuManagement'
 import { AdminTableManagement } from './AdminTableManagement'
 import { AdminReports } from './AdminReports'
+import { NotificationsPage } from './NotificationsPage'
+import ContactSubmissions from './ContactSubmissions'
 
 interface AdminLayoutProps {
   user: UserType
@@ -44,56 +50,80 @@ const adminSections = [
     id: 'dashboard',
     label: 'Dashboard',
     icon: <LayoutDashboard className="w-5 h-5" />,
-    description: 'Overview and statistics'
+    description: 'Overview and statistics',
+    showBadge: false
   },
-
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    icon: <Bell className="w-5 h-5" />,
+    description: 'System notifications',
+    showBadge: true,
+    badgeKey: 'notifications' as const
+  },
+  {
+    id: 'contacts',
+    label: 'Contact Messages',
+    icon: <Mail className="w-5 h-5" />,
+    description: 'Customer inquiries',
+    showBadge: true,
+    badgeKey: 'newContacts' as const
+  },
   {
     id: 'server',
     label: 'Server Interface',
     icon: <Users className="w-5 h-5" />,
-    description: 'Server order interface'
+    description: 'Server order interface',
+    showBadge: false
   },
   {
     id: 'counter',
     label: 'Counter/Checkout',
     icon: <CreditCard className="w-5 h-5" />,
-    description: 'Payment processing'
+    description: 'Payment processing',
+    showBadge: false
   },
   {
     id: 'kitchen',
     label: 'Kitchen Display',
     icon: <ChefHat className="w-5 h-5" />,
-    description: 'Kitchen order display'
+    description: 'Kitchen order display',
+    showBadge: false
   },
   {
     id: 'settings',
     label: 'Settings',
     icon: <Settings className="w-5 h-5" />,
-    description: 'System configuration'
+    description: 'System configuration',
+    showBadge: false
   },
   {
     id: 'staff',
     label: 'Manage Staff',
     icon: <UserCog className="w-5 h-5" />,
-    description: 'User and role management'
+    description: 'User and role management',
+    showBadge: false
   },
   {
     id: 'menu',
     label: 'Manage Menu',
     icon: <Menu className="w-5 h-5" />,
-    description: 'Categories and products'
+    description: 'Categories and products',
+    showBadge: false
   },
   {
     id: 'tables',
     label: 'Manage Tables',
     icon: <LayoutGrid className="w-5 h-5" />,
-    description: 'Dining table setup'
+    description: 'Dining table setup',
+    showBadge: false
   },
   {
     id: 'reports',
     label: 'View Reports',
     icon: <BarChart3 className="w-5 h-5" />,
-    description: 'Sales and analytics'
+    description: 'Sales and analytics',
+    showBadge: false
   }
 ]
 
@@ -102,6 +132,9 @@ export function AdminLayout({ user }: AdminLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
+  
+  // Fetch badge counts with auto-refresh
+  const badgeCounts = useBadgeCounts()
 
   // Responsive breakpoint detection
   useEffect(() => {
@@ -125,6 +158,10 @@ export function AdminLayout({ user }: AdminLayoutProps) {
     switch (currentSection) {
       case 'dashboard':
         return <AdminDashboard />
+      case 'notifications':
+        return <NotificationsPage />
+      case 'contacts':
+        return <ContactSubmissions />
       case 'server':
         return <ServerInterface />
       case 'counter':
@@ -212,7 +249,7 @@ export function AdminLayout({ user }: AdminLayoutProps) {
                 <Button
                   key={section.id}
                   variant={currentSection === section.id ? 'default' : 'ghost'}
-                  className={`w-full justify-start transition-colors ${
+                  className={`w-full justify-start transition-colors relative ${
                     sidebarCollapsed && !isMobile && !isTablet ? 'px-2' : 'px-4'
                   } ${
                     isTablet ? 'h-12 text-base' : 'h-10 text-sm'
@@ -230,7 +267,24 @@ export function AdminLayout({ user }: AdminLayoutProps) {
                     {section.icon}
                   </span>
                   {(!sidebarCollapsed || isMobile || isTablet) && (
-                    <span className={`${isTablet ? 'ml-4' : 'ml-3'}`}>{section.label}</span>
+                    <span className={`${isTablet ? 'ml-4' : 'ml-3'} flex-1 text-left`}>{section.label}</span>
+                  )}
+                  {/* Badge for notifications and contacts */}
+                  {section.showBadge && section.badgeKey && (!sidebarCollapsed || isMobile || isTablet) && (
+                    badgeCounts[section.badgeKey] > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="ml-auto h-5 min-w-[20px] px-1.5 text-xs"
+                      >
+                        {badgeCounts[section.badgeKey]}
+                      </Badge>
+                    )
+                  )}
+                  {/* Small dot indicator when collapsed */}
+                  {section.showBadge && section.badgeKey && sidebarCollapsed && !isMobile && !isTablet && (
+                    badgeCounts[section.badgeKey] > 0 && (
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+                    )
                   )}
                 </Button>
               ))}
@@ -239,10 +293,11 @@ export function AdminLayout({ user }: AdminLayoutProps) {
             {/* Spacer to push logout to bottom */}
             <div className="flex-1"></div>
             
-            {/* Theme Toggle */}
+            {/* Theme Toggle & Language Switcher */}
             {(!sidebarCollapsed || (isMobile || isTablet)) && (
-              <div className="px-3 mb-4">
+              <div className="px-3 mb-4 flex items-center gap-2">
                 <ThemeToggle />
+                <LanguageSwitcher />
               </div>
             )}
             

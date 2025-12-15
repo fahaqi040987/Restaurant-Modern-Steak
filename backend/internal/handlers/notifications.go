@@ -11,6 +11,42 @@ import (
 	"github.com/google/uuid"
 )
 
+// GetUnreadCounts returns the count of unread notifications for the current user
+func GetUnreadCounts(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, exists := c.Get("user_id")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"message": "Unauthorized",
+			})
+			return
+		}
+
+		// Count unread notifications
+		var notificationCount int
+		err := db.QueryRow(`
+			SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND is_read = false
+		`, userID).Scan(&notificationCount)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "Failed to fetch notification count",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data": gin.H{
+				"notifications": notificationCount,
+			},
+		})
+	}
+}
+
 // GetNotifications returns all notifications for the current user
 func GetNotifications(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {

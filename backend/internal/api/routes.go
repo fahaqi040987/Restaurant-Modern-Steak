@@ -27,6 +27,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	tableHandler := handlers.NewTableHandler(db)
 	publicHandler := handlers.NewPublicHandler(db)
 	inventoryHandler := handlers.NewInventoryHandler(db)
+	ingredientsHandler := handlers.NewIngredientsHandler(db)
 
 	// Public routes (no authentication required)
 	public := router.Group("/")
@@ -59,6 +60,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 
 		// Notification routes
 		protected.GET("/notifications", handlers.GetNotifications(db))
+		protected.GET("/notifications/counts/unread", handlers.GetUnreadCounts(db)) // Badge counter
 		protected.PUT("/notifications/:id/read", handlers.MarkNotificationRead(db))
 		protected.DELETE("/notifications/:id", handlers.DeleteNotification(db))
 		protected.GET("/notifications/preferences", handlers.GetNotificationPreferences(db))
@@ -79,6 +81,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		// Order routes (general view for all roles)
 		protected.GET("/orders", orderHandler.GetOrders)
 		protected.GET("/orders/:id", orderHandler.GetOrder)
+		protected.GET("/orders/:id/status-history", orderHandler.GetOrderStatusHistory)
 		protected.PATCH("/orders/:id/status", orderHandler.UpdateOrderStatus)
 
 		// Payment routes (counter/admin only)
@@ -123,6 +126,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		contactHandler := handlers.NewHandler(db)
 		admin.GET("/contacts", contactHandler.GetContactSubmissions)
 		admin.GET("/contacts/:id", contactHandler.GetContactSubmission)
+		admin.GET("/contacts/counts/new", contactHandler.GetNewContactsCount) // Badge counter
 		admin.PUT("/contacts/:id/status", contactHandler.UpdateContactStatus)
 		admin.DELETE("/contacts/:id", contactHandler.DeleteContactSubmission)
 
@@ -134,13 +138,14 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		admin.GET("/inventory/history/:product_id", inventoryHandler.GetStockHistory)
 
 		// Ingredients management (raw materials)
-		admin.GET("/ingredients", getIngredients(db))
-		admin.POST("/ingredients", createIngredient(db))
-		admin.PUT("/ingredients/:id", updateIngredient(db))
-		admin.DELETE("/ingredients/:id", deleteIngredient(db))
-		admin.POST("/ingredients/:id/restock", restockIngredient(db))
-		admin.GET("/ingredients/:id/history", getIngredientHistory(db))
-		admin.GET("/ingredients/low-stock", getLowStockIngredients(db))
+		admin.GET("/ingredients", ingredientsHandler.GetIngredients)
+		admin.GET("/ingredients/low-stock", ingredientsHandler.GetLowStockIngredients)
+		admin.GET("/ingredients/:id", ingredientsHandler.GetIngredient)
+		admin.POST("/ingredients", ingredientsHandler.CreateIngredient)
+		admin.PUT("/ingredients/:id", ingredientsHandler.UpdateIngredient)
+		admin.DELETE("/ingredients/:id", ingredientsHandler.DeleteIngredient)
+		admin.POST("/ingredients/restock", ingredientsHandler.RestockIngredient)
+		admin.GET("/ingredients/:id/history", ingredientsHandler.GetIngredientHistory)
 
 		// Menu management with pagination
 		admin.GET("/products", productHandler.GetProducts) // Use existing paginated handler

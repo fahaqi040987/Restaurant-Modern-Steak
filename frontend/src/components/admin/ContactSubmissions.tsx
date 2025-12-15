@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/api/client'
+import { jsonToCSV, downloadCSV } from '@/lib/csv-utils'
 import {
   Table,
   TableBody,
@@ -28,7 +29,7 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Trash2, Eye, Calendar, Filter, Mail, Phone, User, Inbox } from 'lucide-react'
+import { Trash2, Eye, Calendar, Filter, Mail, Phone, User, Inbox, Download } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
@@ -148,6 +149,22 @@ export default function ContactSubmissions() {
     }
   }
 
+  const handleExportCSV = () => {
+    const csvData = jsonToCSV(contacts, [
+      { key: 'created_at', label: 'Tanggal' },
+      { key: 'name', label: 'Nama' },
+      { key: 'email', label: 'Email' },
+      { key: 'phone', label: 'Telepon' },
+      { key: 'subject', label: 'Subjek' },
+      { key: 'message', label: 'Pesan' },
+      { key: 'status', label: 'Status' },
+    ])
+    
+    const timestamp = new Date().toISOString().split('T')[0]
+    downloadCSV(csvData, `contact-submissions-${timestamp}`)
+    showSuccessToast('Data berhasil diekspor ke CSV')
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -155,6 +172,10 @@ export default function ContactSubmissions() {
           <h1 className="text-2xl font-bold">Pesan Kontak</h1>
           <p className="text-muted-foreground">Kelola pesan dari formulir kontak</p>
         </div>
+        <Button onClick={handleExportCSV} variant="outline" disabled={contacts.length === 0}>
+          <Download size={16} className="mr-2" />
+          Export CSV
+        </Button>
       </div>
 
       {/* Filters */}

@@ -732,3 +732,59 @@ func (h *OrderHandler) generateOrderNumber() string {
 	timestamp := time.Now().Format("20060102")
 	return fmt.Sprintf("ORD%s%04d", timestamp, time.Now().UnixNano()%10000)
 }
+
+// OrderStatusHistoryRecord represents a status change entry
+type OrderStatusHistoryRecord struct {
+	ID             string    `json:"id"`
+	OrderID        string    `json:"order_id"`
+	PreviousStatus string    `json:"previous_status"`
+	NewStatus      string    `json:"new_status"`
+	ChangedBy      string    `json:"changed_by"` // username
+	Notes          string    `json:"notes"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+// GetOrderStatusHistory retrieves status change history for an order
+func (h *OrderHandler) GetOrderStatusHistory(c *gin.Context) {
+	orderID := c.Param("id")
+
+	query := `
+		SELECT 
+			osh.id, osh.order_id, 
+			COALESCE(osh.previous_status, '') as previous_status, 
+			osh.new_status,
+			COALESCE(u.username, 'System') as changed_by,
+			COALESCE(osh.notes, '') as notes,
+			osh.created_at
+		FROM order_status_history osh
+		LEFT JOIN users u ON osh.changed_by = u.id
+		WHERE osh.order_id = $1
+		ORDER BY osh.created_at ASC
+	`
+
+	rows, err := h.db.Query(query, orderID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch order status history"})
+		return
+	}
+	defer rows.Close()
+
+	var history []OrderStatusHistoryRecord
+	for rows.Next() {
+		var record OrderStatusHistoryRecord
+		err := rows.Scan(
+			&record.ID, &record.OrderID, &record.PreviousStatus,
+			&record.NewStatus, &record.ChangedBy, &record.Notes, &record.CreatedAt,
+		)
+		if err != nil {
+			continue
+		}
+		history = append(history, record)
+	}
+
+	if history == nil {
+		history = []OrderStatusHistoryRecord{}
+	}
+
+	c.JSON(http.StatusOK, history)
+}

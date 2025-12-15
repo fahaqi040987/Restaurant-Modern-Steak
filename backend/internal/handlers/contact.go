@@ -20,6 +20,30 @@ func NewHandler(db *sql.DB) *Handler {
 	return &Handler{db: db}
 }
 
+// GetNewContactsCount returns the count of new (unread) contact submissions
+func (h *Handler) GetNewContactsCount(c *gin.Context) {
+	var count int
+	err := h.db.QueryRow(`
+		SELECT COUNT(*) FROM contact_submissions WHERE status = 'new'
+	`).Scan(&count)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed to fetch new contacts count",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"new_contacts": count,
+		},
+	})
+}
+
 // GetContactSubmissions retrieves all contact form submissions with optional filtering
 func (h *Handler) GetContactSubmissions(c *gin.Context) {
 	status := c.Query("status")

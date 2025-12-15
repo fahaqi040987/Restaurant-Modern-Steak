@@ -24,10 +24,15 @@ import { Route as AdminStaffRouteImport } from './routes/admin/staff'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminServerRouteImport } from './routes/admin/server'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
+import { Route as AdminProfileRouteImport } from './routes/admin/profile'
+import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminMenuRouteImport } from './routes/admin/menu'
 import { Route as AdminKitchenRouteImport } from './routes/admin/kitchen'
+import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
+import { Route as AdminIngredientsRouteImport } from './routes/admin/ingredients'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminCounterRouteImport } from './routes/admin/counter'
+import { Route as AdminContactsRouteImport } from './routes/admin/contacts'
 
 const StaffRoute = StaffRouteImport.update({
   id: '/staff',
@@ -104,6 +109,16 @@ const AdminReportsRoute = AdminReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminProfileRoute = AdminProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMenuRoute = AdminMenuRouteImport.update({
   id: '/menu',
   path: '/menu',
@@ -112,6 +127,16 @@ const AdminMenuRoute = AdminMenuRouteImport.update({
 const AdminKitchenRoute = AdminKitchenRouteImport.update({
   id: '/kitchen',
   path: '/kitchen',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInventoryRoute = AdminInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminIngredientsRoute = AdminIngredientsRouteImport.update({
+  id: '/ingredients',
+  path: '/ingredients',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
@@ -124,6 +149,11 @@ const AdminCounterRoute = AdminCounterRouteImport.update({
   path: '/counter',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminContactsRoute = AdminContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,10 +161,15 @@ export interface FileRoutesByFullPath {
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
   '/staff': typeof StaffRoute
+  '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/ingredients': typeof AdminIngredientsRoute
+  '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
   '/admin/menu': typeof AdminMenuRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/profile': typeof AdminProfileRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/server': typeof AdminServerRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -151,10 +186,15 @@ export interface FileRoutesByTo {
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
   '/staff': typeof StaffRoute
+  '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/ingredients': typeof AdminIngredientsRoute
+  '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
   '/admin/menu': typeof AdminMenuRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/profile': typeof AdminProfileRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/server': typeof AdminServerRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -173,10 +213,15 @@ export interface FileRoutesById {
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
   '/staff': typeof StaffRoute
+  '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/ingredients': typeof AdminIngredientsRoute
+  '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
   '/admin/menu': typeof AdminMenuRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/profile': typeof AdminProfileRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/server': typeof AdminServerRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -196,10 +241,15 @@ export interface FileRouteTypes {
     | '/kitchen'
     | '/login'
     | '/staff'
+    | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
+    | '/admin/ingredients'
+    | '/admin/inventory'
     | '/admin/kitchen'
     | '/admin/menu'
+    | '/admin/notifications'
+    | '/admin/profile'
     | '/admin/reports'
     | '/admin/server'
     | '/admin/settings'
@@ -216,10 +266,15 @@ export interface FileRouteTypes {
     | '/kitchen'
     | '/login'
     | '/staff'
+    | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
+    | '/admin/ingredients'
+    | '/admin/inventory'
     | '/admin/kitchen'
     | '/admin/menu'
+    | '/admin/notifications'
+    | '/admin/profile'
     | '/admin/reports'
     | '/admin/server'
     | '/admin/settings'
@@ -237,10 +292,15 @@ export interface FileRouteTypes {
     | '/kitchen'
     | '/login'
     | '/staff'
+    | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
+    | '/admin/ingredients'
+    | '/admin/inventory'
     | '/admin/kitchen'
     | '/admin/menu'
+    | '/admin/notifications'
+    | '/admin/profile'
     | '/admin/reports'
     | '/admin/server'
     | '/admin/settings'
@@ -372,6 +432,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/profile': {
+      id: '/admin/profile'
+      path: '/profile'
+      fullPath: '/admin/profile'
+      preLoaderRoute: typeof AdminProfileRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/menu': {
       id: '/admin/menu'
       path: '/menu'
@@ -384,6 +458,20 @@ declare module '@tanstack/react-router' {
       path: '/kitchen'
       fullPath: '/admin/kitchen'
       preLoaderRoute: typeof AdminKitchenRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/inventory': {
+      id: '/admin/inventory'
+      path: '/inventory'
+      fullPath: '/admin/inventory'
+      preLoaderRoute: typeof AdminInventoryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ingredients': {
+      id: '/admin/ingredients'
+      path: '/ingredients'
+      fullPath: '/admin/ingredients'
+      preLoaderRoute: typeof AdminIngredientsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/dashboard': {
@@ -400,14 +488,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCounterRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/contacts': {
+      id: '/admin/contacts'
+      path: '/contacts'
+      fullPath: '/admin/contacts'
+      preLoaderRoute: typeof AdminContactsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminContactsRoute: typeof AdminContactsRoute
   AdminCounterRoute: typeof AdminCounterRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminIngredientsRoute: typeof AdminIngredientsRoute
+  AdminInventoryRoute: typeof AdminInventoryRoute
   AdminKitchenRoute: typeof AdminKitchenRoute
   AdminMenuRoute: typeof AdminMenuRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminProfileRoute: typeof AdminProfileRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminServerRoute: typeof AdminServerRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -417,10 +517,15 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminContactsRoute: AdminContactsRoute,
   AdminCounterRoute: AdminCounterRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminIngredientsRoute: AdminIngredientsRoute,
+  AdminInventoryRoute: AdminInventoryRoute,
   AdminKitchenRoute: AdminKitchenRoute,
   AdminMenuRoute: AdminMenuRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminProfileRoute: AdminProfileRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminServerRoute: AdminServerRoute,
   AdminSettingsRoute: AdminSettingsRoute,
