@@ -64,6 +64,7 @@ interface TextInputFieldProps<T extends FieldValues> {
   description?: string
   type?: 'text' | 'email' | 'password' | 'tel'
   autoComplete?: string
+  disabled?: boolean
 }
 
 export function TextInputField<T extends FieldValues>({
@@ -74,6 +75,7 @@ export function TextInputField<T extends FieldValues>({
   description,
   type = 'text',
   autoComplete,
+  disabled,
 }: TextInputFieldProps<T>) {
   return (
     <FormField
@@ -87,6 +89,7 @@ export function TextInputField<T extends FieldValues>({
               type={type}
               placeholder={placeholder}
               autoComplete={autoComplete}
+              disabled={disabled}
               {...field}
             />
           </FormControl>
@@ -209,6 +212,7 @@ interface SelectFieldProps<T extends FieldValues> {
   placeholder?: string
   description?: string
   options: SelectOption[]
+  disabled?: boolean
 }
 
 export function SelectField<T extends FieldValues>({
@@ -218,6 +222,7 @@ export function SelectField<T extends FieldValues>({
   placeholder = "Select an option",
   description,
   options,
+  disabled,
 }: SelectFieldProps<T>) {
   return (
     <FormField
@@ -226,7 +231,11 @@ export function SelectField<T extends FieldValues>({
       render={({ field }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select 
+            onValueChange={field.onChange} 
+            defaultValue={field.value}
+            disabled={disabled}
+          >
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder={placeholder} />

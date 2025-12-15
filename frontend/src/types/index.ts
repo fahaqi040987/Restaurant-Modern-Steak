@@ -49,6 +49,7 @@ export interface Category {
   name: string;
   description?: string;
   color?: string;
+  image_url?: string;
   sort_order: number;
   is_active: boolean;
   created_at: string;
@@ -141,6 +142,9 @@ export interface UpdateOrderStatusRequest {
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'served' | 'completed' | 'cancelled';
   notes?: string;
 }
+
+// Order status type
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'served' | 'completed' | 'cancelled';
 
 // Payment Types
 export interface Payment {
@@ -238,10 +242,12 @@ export interface LocationStats {
 
 // Filter and Query Types
 export interface OrderFilters {
-  status?: string;
+  status?: string | string[];
   order_type?: string;
   page?: number;
   per_page?: number;
+  limit?: number;
+  offset?: number;
 }
 
 export interface ProductFilters {
@@ -256,5 +262,93 @@ export interface TableFilters {
   location?: string;
   occupied_only?: boolean;
   available_only?: boolean;
+}
+
+// ===========================================
+// Public API Types (B2C Website)
+// ===========================================
+
+/**
+ * Public menu item returned by GET /api/v1/public/menu
+ * Includes category_name for display purposes
+ */
+export interface PublicMenuItem {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  image_url: string | null;
+  category_id: string;
+  category_name: string;
+}
+
+/**
+ * Public category returned by GET /api/v1/public/categories
+ */
+export interface PublicCategory {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string | null;
+  sort_order: number;
+}
+
+/**
+ * Operating hours for a restaurant
+ * Part of RestaurantInfo response
+ */
+export interface OperatingHours {
+  id: string;
+  restaurant_info_id: string;
+  day_of_week: number; // 0=Sunday, 6=Saturday
+  open_time: string;   // HH:MM:SS format
+  close_time: string;  // HH:MM:SS format
+  is_closed: boolean;
+}
+
+/**
+ * Restaurant information returned by GET /api/v1/public/restaurant
+ * Includes operating_hours array and computed is_open_now flag
+ */
+export interface RestaurantInfo {
+  id: string;
+  name: string;
+  tagline: string | null;
+  description: string | null;
+  address: string;
+  city: string | null;
+  postal_code: string | null;
+  country: string | null;
+  phone: string;
+  email: string;
+  whatsapp: string | null;
+  map_latitude: number | null;
+  map_longitude: number | null;
+  google_maps_url: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  twitter_url: string | null;
+  logo_url: string | null;
+  hero_image_url: string | null;
+  is_open_now: boolean;
+  operating_hours: OperatingHours[];
+}
+
+/**
+ * Contact form submission data for POST /api/v1/public/contact
+ */
+export interface ContactFormData {
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+}
+
+/**
+ * Response from contact form submission
+ */
+export interface ContactFormResponse {
+  id: string;
 }
 

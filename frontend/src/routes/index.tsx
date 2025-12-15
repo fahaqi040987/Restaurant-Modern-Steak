@@ -21,14 +21,15 @@ function HomePage() {
       return apiClient.getCurrentUser()
     },
     retry: 1,
-    enabled: false, // Temporarily disable server verification
-    onError: (error) => {
-      console.error('getCurrentUser failed:', error)
-      // Clear auth and redirect to login
-      apiClient.clearAuth()
-      window.location.href = '/login'
-    }
+    enabled: false // Temporarily disable server verification
   })
+
+  // Handle errors separately
+  if (error) {
+    console.error('getCurrentUser failed:', error)
+    apiClient.clearAuth()
+    window.location.href = '/public'
+  }
 
   useEffect(() => {
     console.log('Loading user from localStorage...')
@@ -65,11 +66,11 @@ function HomePage() {
     )
   }
 
-  // Check authentication - ONLY after localStorage is loaded
+  // Redirect to public website by default (no authentication required)
   console.log('Checking auth - isAuthenticated:', apiClient.isAuthenticated(), 'user:', user)
   if (!apiClient.isAuthenticated() || !user) {
-    console.log('Not authenticated, redirecting to login')
-    return <Navigate to="/login" />
+    console.log('Not authenticated, redirecting to public website')
+    return <Navigate to="/public" />
   }
 
   // Redirect admin users to admin panel

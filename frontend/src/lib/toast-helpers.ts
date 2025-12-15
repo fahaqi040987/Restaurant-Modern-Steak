@@ -111,6 +111,20 @@ export const toastHelpers = {
     )
   },
 
+  productDeleted: (productName: string) => {
+    return toastHelpers.success(
+      "Product Deleted",
+      `"${productName}" has been deleted from the menu.`
+    )
+  },
+
+  categoryDeleted: (categoryName: string) => {
+    return toastHelpers.success(
+      "Category Deleted",
+      `Category "${categoryName}" has been deleted successfully.`
+    )
+  },
+
   tableCreated: (tableNumber: string) => {
     return toastHelpers.success(
       "Table Created",
@@ -148,3 +162,8 @@ export const toastHelpers = {
   }
 }
 
+// Legacy exports for backward compatibility
+export const showSuccessToast = toastHelpers.success
+export const showErrorToast = toastHelpers.error
+export const showWarningToast = toastHelpers.warning
+export const showInfoToast = toastHelpers.info

@@ -14,8 +14,10 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  Settings
+  Settings,
+  Table as TableIcon
 } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
 import apiClient from '@/api/client'
 import { toastHelpers } from '@/lib/toast-helpers'
 import { TableForm } from '@/components/forms/TableForm'
@@ -344,23 +346,29 @@ export function AdminTableManagement() {
       ) : filteredTables.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
-            <div className="text-center py-8">
-              <Settings className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No tables found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {searchTerm || filterStatus !== 'all' 
-                  ? 'No tables match your current filters.' 
-                  : 'Get started by adding your first table.'}
-              </p>
-              {!searchTerm && filterStatus === 'all' && (
-                <div className="mt-6">
-                  <Button onClick={() => setViewMode('table-form')} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Table
-                  </Button>
-                </div>
-              )}
-            </div>
+            <EmptyState
+              icon={TableIcon}
+              title={searchTerm || filterStatus !== 'all' ? 'Tidak ada meja ditemukan' : 'Belum ada meja'}
+              description={
+                searchTerm || filterStatus !== 'all'
+                  ? 'Tidak ada meja yang cocok dengan filter. Coba ubah kriteria pencarian atau filter status.'
+                  : 'Mulai dengan menambahkan meja pertama untuk restoran Anda.'
+              }
+              action={
+                searchTerm || filterStatus !== 'all'
+                  ? {
+                      label: 'Hapus Filter',
+                      onClick: () => {
+                        setSearchTerm('')
+                        setFilterStatus('all')
+                      },
+                    }
+                  : {
+                      label: 'Tambah Meja',
+                      onClick: () => setViewMode('table-form'),
+                    }
+              }
+            />
           </CardContent>
         </Card>
       ) : (

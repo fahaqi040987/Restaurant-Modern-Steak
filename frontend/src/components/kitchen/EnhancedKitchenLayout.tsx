@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,6 +34,8 @@ export function EnhancedKitchenLayout({ user }: EnhancedKitchenLayoutProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [previousOrderIds, setPreviousOrderIds] = useState<Set<string>>(new Set());
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  
+  const queryClient = useQueryClient();
 
   // Initialize sound service
   useEffect(() => {
@@ -50,31 +52,35 @@ export function EnhancedKitchenLayout({ user }: EnhancedKitchenLayoutProps) {
     queryKey: ['enhancedKitchenOrders'],
     queryFn: () => apiClient.getKitchenOrders('all'),
     refetchInterval: autoRefresh ? 3000 : false, // 3-second refresh for balance
-    select: (data) => data.data || [],
-    onSuccess: (data) => {
-      setLastRefresh(new Date());
-      
-      // Check for new orders and play sound
-      const currentOrders = data || [];
-      const currentOrderIds = new Set(currentOrders.map((order: Order) => order.id));
-      const newOrderIds = currentOrders
-        .filter((order: Order) => !previousOrderIds.has(order.id) && order.status === 'confirmed')
-        .map((order: Order) => order.id);
-      
-      // Play sound for new orders
-      newOrderIds.forEach(async (orderId) => {
-        try {
-          await kitchenSoundService.playNewOrderSound(orderId);
-        } catch (error) {
-          console.error('Failed to play new order sound:', error);
-        }
-      });
-      
-      setPreviousOrderIds(currentOrderIds);
-    },
+    select: (data) => data.data || []
   });
 
   const orders = ordersResponse || [];
+
+  // Handle new orders and sound notifications
+  React.useEffect(() => {
+    if (!orders) return;
+    
+    setLastRefresh(new Date());
+    
+    // Check for new orders and play sound
+    const currentOrders = orders as Order[];
+    const currentOrderIds = new Set(currentOrders.map((order) => order.id));
+    const newOrderIds = currentOrders
+      .filter((order) => !previousOrderIds.has(order.id) && order.status === 'confirmed')
+      .map((order) => order.id);
+    
+    // Play sound for new orders
+    newOrderIds.forEach(async (orderId: string) => {
+      try {
+        await kitchenSoundService.playNewOrderSound(orderId);
+      } catch (error) {
+        console.error('Failed to play new order sound:', error);
+      }
+    });
+    
+    setPreviousOrderIds(currentOrderIds);
+  }, [orders, previousOrderIds]);
 
   // Group orders by status for better organization
   const ordersByStatus = {
@@ -97,25 +103,62 @@ export function EnhancedKitchenLayout({ user }: EnhancedKitchenLayoutProps) {
     }).length,
   };
 
-  // Handle order status updates
+  // Handle order status updates with optimistic update
   const handleOrderStatusUpdate = useCallback(async (orderId: string, newStatus: string) => {
+    // Optimistically update the UI immediately
+    const previousOrders = queryClient.getQueryData(['enhancedKitchenOrders']);
+    
+    queryClient.setQueryData(['enhancedKitchenOrders'], (old: any) => {
+      if (!old?.data) return old;
+      return {
+        ...old,
+        data: old.data.map((order: Order) =>
+          order.id === orderId ? { ...order, status: newStatus } : order
+        ),
+      };
+    });
+
     try {
-      await apiClient.updateOrderStatus(orderId, newStatus);
+      await apiClient.updateOrderStatus(orderId, newStatus as any);
       refetch();
     } catch (error) {
+      // Rollback on error
+      queryClient.setQueryData(['enhancedKitchenOrders'], previousOrders);
       console.error('Failed to update order status:', error);
     }
-  }, [refetch]);
+  }, [refetch, queryClient]);
 
-  // Handle order item status updates
+  // Handle order item status updates with optimistic update
   const handleOrderItemStatusUpdate = useCallback(async (orderId: string, itemId: string, newStatus: string) => {
+    // Optimistically update the UI immediately
+    const previousOrders = queryClient.getQueryData(['enhancedKitchenOrders']);
+    
+    queryClient.setQueryData(['enhancedKitchenOrders'], (old: any) => {
+      if (!old?.data) return old;
+      return {
+        ...old,
+        data: old.data.map((order: Order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                items: order.items?.map((item) =>
+                  item.id === itemId ? { ...item, status: newStatus } : item
+                ),
+              }
+            : order
+        ),
+      };
+    });
+
     try {
       await apiClient.updateOrderItemStatus(orderId, itemId, newStatus);
       refetch();
     } catch (error) {
+      // Rollback on error
+      queryClient.setQueryData(['enhancedKitchenOrders'], previousOrders);
       console.error('Failed to update order item status:', error);
     }
-  }, [refetch]);
+  }, [refetch, queryClient]);
 
   // Manual refresh
   const handleRefresh = useCallback(() => {

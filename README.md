@@ -1,6 +1,6 @@
-# 🍽️ Complete POS System - Professional Restaurant Management
+# 🍽️ Steak Kenangan - Complete Restaurant Management System
 
-> **A modern, enterprise-grade Point of Sale system built for the next generation of restaurants**
+> **A modern, enterprise-grade Point of Sale system for Steak Kenangan Indonesian Steakhouse**
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker&logoColor=white)](https://docker.com)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
@@ -10,6 +10,12 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql&logoColor=white)](https://postgresql.org)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.13-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![AI Enhanced](https://img.shields.io/badge/AI_Enhanced-Claude_Sonnet_4-9C3AE0?logo=openai&logoColor=white)](https://cursor.sh)
+
+## 🌟 **About Steak Kenangan**
+
+**Steak Kenangan** is a premium Indonesian steakhouse that combines the finest international beef cuts with authentic Indonesian flavors. Our digital transformation project brings enterprise-grade restaurant management technology to enhance operations and customer experience.
+
+Follow us on Instagram: [@steakkenangan](https://instagram.com/steakkenangan)
 
 ## 🌟 **Built with Modern Technologies**
 

@@ -15,8 +15,10 @@ import {
   Table,
   Grid3X3,
   DollarSign,
-  Clock
+  Clock,
+  UtensilsCrossed
 } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
 import apiClient from '@/api/client'
 import { toastHelpers } from '@/lib/toast-helpers'
 import { ProductForm } from '@/components/forms/ProductForm'
@@ -287,21 +289,26 @@ export function AdminMenuManagement() {
             ) : products.length === 0 ? (
               <Card>
                 <CardContent className="pt-6">
-                  <div className="text-center py-8">
-                    <Package className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No products</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {searchTerm ? 'No products match your search.' : 'Get started by adding your first product.'}
-                    </p>
-                    {!searchTerm && (
-                      <div className="mt-6">
-                        <Button onClick={() => setShowCreateProductForm(true)} className="gap-2">
-                          <Plus className="h-4 w-4" />
-                          Add Product
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                  <EmptyState
+                    icon={UtensilsCrossed}
+                    title={searchTerm ? 'Tidak ada produk ditemukan' : 'Belum ada produk'}
+                    description={
+                      searchTerm
+                        ? 'Tidak ada produk yang cocok dengan pencarian. Coba kata kunci lain atau hapus filter.'
+                        : 'Mulai dengan menambahkan produk pertama ke menu restoran Anda.'
+                    }
+                    action={
+                      searchTerm
+                        ? {
+                            label: 'Hapus Pencarian',
+                            onClick: () => setSearchTerm(''),
+                          }
+                        : {
+                            label: 'Tambah Produk',
+                            onClick: () => setShowCreateProductForm(true),
+                          }
+                    }
+                  />
                 </CardContent>
               </Card>
             ) : (
@@ -425,21 +432,26 @@ export function AdminMenuManagement() {
             ) : categories.length === 0 ? (
               <Card>
                 <CardContent className="pt-6">
-                  <div className="text-center py-8">
-                    <Tag className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No categories</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {categorySearch ? 'No categories match your search.' : 'Get started by adding your first category.'}
-                    </p>
-                    {!categorySearch && (
-                      <div className="mt-6">
-                        <Button onClick={() => setShowCreateCategoryForm(true)} className="gap-2">
-                          <Plus className="h-4 w-4" />
-                          Add Category
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                  <EmptyState
+                    icon={Tag}
+                    title={categorySearch ? 'Tidak ada kategori ditemukan' : 'Belum ada kategori'}
+                    description={
+                      categorySearch
+                        ? 'Tidak ada kategori yang cocok dengan pencarian. Coba kata kunci lain.'
+                        : 'Buat kategori untuk mengelompokkan produk menu Anda dengan lebih baik.'
+                    }
+                    action={
+                      categorySearch
+                        ? {
+                            label: 'Hapus Pencarian',
+                            onClick: () => setCategorySearch(''),
+                          }
+                        : {
+                            label: 'Tambah Kategori',
+                            onClick: () => setShowCreateCategoryForm(true),
+                          }
+                    }
+                  />
                 </CardContent>
               </Card>
             ) : (

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { ButtonLoadingSpinner } from '@/components/ui/loading-spinner'
 import { 
   CheckCircle, 
   X, 
@@ -61,6 +62,9 @@ export function PaymentConfirmationModal({
     mutationFn: async (orderData: CreateOrderRequest) => {
       const response = await apiClient.createOrder(orderData)
       return response
+    },
+    onError: (error) => {
+      console.error('Order creation failed:', error);
     }
   })
 
@@ -68,6 +72,14 @@ export function PaymentConfirmationModal({
     mutationFn: async ({ orderId, payment }: { orderId: string, payment: ProcessPaymentRequest }) => {
       const response = await apiClient.processPayment(orderId, payment)
       return response
+    },
+    onSuccess: () => {
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    },
+    onError: (error) => {
+      console.error('Payment processing failed:', error);
     }
   })
 
@@ -184,8 +196,8 @@ export function PaymentConfirmationModal({
         {currentStep === 'processing' && (
           <Card className="bg-white">
             <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Processing Payment</h3>
+              <ButtonLoadingSpinner />
+              <h3 className="text-lg font-semibold mb-2 mt-4">Processing Payment</h3>
               <p className="text-gray-600">
                 {createOrderMutation.isPending && 'Creating order...'}
                 {processPaymentMutation.isPending && 'Processing payment...'}

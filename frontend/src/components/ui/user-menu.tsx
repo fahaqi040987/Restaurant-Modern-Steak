@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useNavigate } from "@tanstack/react-router"
 import { User, Settings, Bell, LogOut } from "lucide-react"
 import {
   DropdownMenu,
@@ -20,9 +21,23 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ user, collapsed = false, size = "md" }: UserMenuProps) {
+  const navigate = useNavigate()
+
   const handleLogout = () => {
     apiClient.clearAuth()
     window.location.href = '/login'
+  }
+
+  const handleProfile = () => {
+    navigate({ to: '/admin/profile' })
+  }
+
+  const handleSettings = () => {
+    navigate({ to: '/admin/settings' })
+  }
+
+  const handleNotifications = () => {
+    navigate({ to: '/admin/notifications' })
   }
 
   const sizeClasses = {
@@ -69,15 +84,15 @@ export function UserMenu({ user, collapsed = false, size = "md" }: UserMenuProps
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={handleProfile}>
             <User className="mr-2 h-4 w-4" />
             <span>Profile</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={handleSettings}>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={handleNotifications}>
             <Bell className="mr-2 h-4 w-4" />
             <span>Notifications</span>
           </DropdownMenuItem>
@@ -121,15 +136,15 @@ export function UserMenu({ user, collapsed = false, size = "md" }: UserMenuProps
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleProfile}>
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSettings}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleNotifications}>
           <Bell className="mr-2 h-4 w-4" />
           <span>Notifications</span>
         </DropdownMenuItem>

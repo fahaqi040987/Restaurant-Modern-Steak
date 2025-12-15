@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,8 @@ import { createUserSchema, updateUserSchema, type CreateUserData, type UpdateUse
 import { toastHelpers } from '@/lib/toast-helpers'
 import apiClient from '@/api/client'
 import type { User } from '@/types'
-import { X } from 'lucide-react'
+import { X, AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface UserFormProps {
   user?: User // If provided, we're editing; otherwise creating
@@ -26,6 +27,17 @@ interface UserFormProps {
 export function UserForm({ user, onSuccess, onCancel, mode = 'create' }: UserFormProps) {
   const queryClient = useQueryClient()
   const isEditing = mode === 'edit' && user
+
+  // Get current user to prevent self-role-edit
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const response = await apiClient.getCurrentUser()
+      return response.data
+    },
+  })
+
+  const isEditingSelf = isEditing && currentUser && user.id === currentUser.id
 
   // Choose the appropriate schema and default values
   const schema = isEditing ? updateUserSchema : createUserSchema
@@ -143,6 +155,7 @@ export function UserForm({ user, onSuccess, onCancel, mode = 'create' }: UserFor
                 placeholder="Enter username"
                 autoComplete="username"
                 description="Used for logging into the system"
+                disabled={Boolean(isEditing)}
               />
 
               <TextInputField
@@ -166,6 +179,14 @@ export function UserForm({ user, onSuccess, onCancel, mode = 'create' }: UserFor
             </div>
 
             {/* Role Selection */}
+            {isEditingSelf && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Anda tidak dapat mengubah role sendiri untuk mencegah lockout sistem
+                </AlertDescription>
+              </Alert>
+            )}
             <SelectField
               control={form.control}
               name="role"
@@ -173,7 +194,18 @@ export function UserForm({ user, onSuccess, onCancel, mode = 'create' }: UserFor
               placeholder="Select user role"
               options={roleOptions}
               description="Determines what features the user can access"
+              disabled={isEditingSelf}
             />
+
+            {/* Username readonly for security */}
+            {isEditing && (
+              <Alert variant="default" className="bg-blue-50 border-blue-200">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  Username tidak dapat diubah setelah akun dibuat untuk alasan keamanan
+                </AlertDescription>
+              </Alert>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">

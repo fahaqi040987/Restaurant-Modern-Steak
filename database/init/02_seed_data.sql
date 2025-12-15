@@ -76,8 +76,8 @@ INSERT INTO dining_tables (table_number, seating_capacity, location) VALUES
 ('TAKEOUT', 1, 'Takeout Counter');
 
 -- Insert initial inventory
-INSERT INTO inventory (product_id, current_stock, minimum_stock, maximum_stock, unit_cost) 
-SELECT 
+INSERT INTO inventory (product_id, current_stock, minimum_stock, maximum_stock, unit_cost)
+SELECT
     id as product_id,
     50 as current_stock,
     10 as minimum_stock,
@@ -111,3 +111,72 @@ INSERT INTO payments (order_id, payment_method, amount, status, processed_by, pr
 -- Update order 3 status to completed since payment is done
 UPDATE orders SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE order_number = 'ORD003';
 
+-- Insert default restaurant configuration (Steak Kenangan branding)
+INSERT INTO restaurant_info (
+    name,
+    tagline,
+    description,
+    address,
+    city,
+    postal_code,
+    country,
+    phone,
+    email,
+    whatsapp,
+    map_latitude,
+    map_longitude,
+    google_maps_url,
+    instagram_url,
+    facebook_url,
+    twitter_url,
+    logo_url,
+    hero_image_url
+) VALUES (
+    'Steak Kenangan',
+    'Where Tradition Meets Innovation',
+    'Experience the finest cuts of premium steak prepared with modern culinary techniques. Our chefs combine time-honored traditions with innovative cooking methods to deliver an unforgettable dining experience. From dry-aged ribeyes to wagyu specialties, every dish is crafted with passion and precision.',
+    'Jl. Sudirman No. 123, Senayan',
+    'Jakarta Selatan',
+    '12190',
+    'Indonesia',
+    '+62 21 1234 5678',
+    'info@modernsteak.com',
+    '+62 812 3456 7890',
+    -6.2088,
+    106.8456,
+    'https://maps.google.com/?q=-6.2088,106.8456',
+    'https://instagram.com/modernsteak',
+    'https://facebook.com/modernsteak',
+    'https://twitter.com/modernsteak',
+    '/images/logo.png',
+    '/images/hero-steak.jpg'
+);
+
+-- Insert operating hours for all 7 days
+-- Sunday (0) - Closed
+INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
+SELECT id, 0, '10:00:00', '20:00:00', true FROM restaurant_info LIMIT 1;
+
+-- Monday (1)
+INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
+SELECT id, 1, '11:00:00', '22:00:00', false FROM restaurant_info LIMIT 1;
+
+-- Tuesday (2)
+INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
+SELECT id, 2, '11:00:00', '22:00:00', false FROM restaurant_info LIMIT 1;
+
+-- Wednesday (3)
+INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
+SELECT id, 3, '11:00:00', '22:00:00', false FROM restaurant_info LIMIT 1;
+
+-- Thursday (4)
+INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
+SELECT id, 4, '11:00:00', '22:00:00', false FROM restaurant_info LIMIT 1;
+
+-- Friday (5) - Extended hours
+INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
+SELECT id, 5, '11:00:00', '23:00:00', false FROM restaurant_info LIMIT 1;
+
+-- Saturday (6) - Extended hours, earlier opening
+INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
+SELECT id, 6, '10:00:00', '23:00:00', false FROM restaurant_info LIMIT 1;

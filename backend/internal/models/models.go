@@ -171,6 +171,34 @@ type ProcessPaymentRequest struct {
 	ReferenceNumber *string `json:"reference_number"`
 }
 
+// CreateProductRequest represents the request to create a product
+type CreateProductRequest struct {
+	CategoryID      uuid.UUID `json:"category_id" binding:"required"`
+	Name            string    `json:"name" binding:"required"`
+	Description     *string   `json:"description"`
+	Price           float64   `json:"price" binding:"required,gt=0"`
+	ImageURL        *string   `json:"image_url"`
+	Barcode         *string   `json:"barcode"`
+	SKU             *string   `json:"sku"`
+	IsAvailable     *bool     `json:"is_available"`
+	PreparationTime *int      `json:"preparation_time"`
+	SortOrder       *int      `json:"sort_order"`
+}
+
+// UpdateProductRequest represents the request to update a product
+type UpdateProductRequest struct {
+	CategoryID      *uuid.UUID `json:"category_id"`
+	Name            *string    `json:"name"`
+	Description     *string    `json:"description"`
+	Price           *float64   `json:"price"`
+	ImageURL        *string    `json:"image_url"`
+	Barcode         *string    `json:"barcode"`
+	SKU             *string    `json:"sku"`
+	IsAvailable     *bool      `json:"is_available"`
+	PreparationTime *int       `json:"preparation_time"`
+	SortOrder       *int       `json:"sort_order"`
+}
+
 // LoginRequest represents the login request
 type LoginRequest struct {
 	Username string `json:"username"`
@@ -205,4 +233,70 @@ type MetaData struct {
 	PerPage     int `json:"per_page"`
 	Total       int `json:"total"`
 	TotalPages  int `json:"total_pages"`
+}
+
+// SystemSetting represents a system configuration setting
+type SystemSetting struct {
+	ID           uuid.UUID  `json:"id" db:"id"`
+	SettingKey   string     `json:"setting_key" db:"setting_key"`
+	SettingValue string     `json:"setting_value" db:"setting_value"`
+	SettingType  string     `json:"setting_type" db:"setting_type"`
+	Description  *string    `json:"description,omitempty" db:"description"`
+	Category     *string    `json:"category,omitempty" db:"category"`
+	UpdatedBy    *uuid.UUID `json:"updated_by,omitempty" db:"updated_by"`
+	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
+	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
+}
+
+// SystemSettings is a map of setting keys to values
+type SystemSettings map[string]interface{}
+
+// UpdateSystemSettingRequest represents a request to update a setting
+type UpdateSystemSettingRequest struct {
+	SettingValue string `json:"setting_value" binding:"required"`
+}
+
+// BatchUpdateSettingsRequest represents a request to update multiple settings
+type BatchUpdateSettingsRequest map[string]string
+
+// Notification represents a user notification
+type Notification struct {
+	ID        uuid.UUID  `json:"id" db:"id"`
+	UserID    uuid.UUID  `json:"user_id" db:"user_id"`
+	Type      string     `json:"type" db:"type"`
+	Title     string     `json:"title" db:"title"`
+	Message   string     `json:"message" db:"message"`
+	IsRead    bool       `json:"is_read" db:"is_read"`
+	ReadAt    *time.Time `json:"read_at,omitempty" db:"read_at"`
+	CreatedAt time.Time  `json:"created_at" db:"created_at"`
+}
+
+// NotificationPreferences represents user notification preferences
+type NotificationPreferences struct {
+	ID                uuid.UUID `json:"id" db:"id"`
+	UserID            uuid.UUID `json:"user_id" db:"user_id"`
+	EmailEnabled      bool      `json:"email_enabled" db:"email_enabled"`
+	TypesEnabled      string    `json:"types_enabled" db:"types_enabled"` // JSON string
+	QuietHoursStart   *string   `json:"quiet_hours_start,omitempty" db:"quiet_hours_start"`
+	QuietHoursEnd     *string   `json:"quiet_hours_end,omitempty" db:"quiet_hours_end"`
+	NotificationEmail *string   `json:"notification_email,omitempty" db:"notification_email"`
+	CreatedAt         time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// CreateNotificationRequest represents a request to create a notification
+type CreateNotificationRequest struct {
+	UserID  uuid.UUID `json:"user_id" binding:"required"`
+	Type    string    `json:"type" binding:"required"`
+	Title   string    `json:"title" binding:"required"`
+	Message string    `json:"message" binding:"required"`
+}
+
+// UpdateNotificationPreferencesRequest represents a request to update notification preferences
+type UpdateNotificationPreferencesRequest struct {
+	EmailEnabled      bool    `json:"email_enabled"`
+	TypesEnabled      string  `json:"types_enabled"`
+	QuietHoursStart   *string `json:"quiet_hours_start"`
+	QuietHoursEnd     *string `json:"quiet_hours_end"`
+	NotificationEmail *string `json:"notification_email"`
 }

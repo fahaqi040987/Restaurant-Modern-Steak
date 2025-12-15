@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"net/http"
 
-	"pos-backend/internal/middleware"
-	"pos-backend/internal/models"
+	"pos-public/internal/middleware"
+	"pos-public/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -48,7 +48,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		FROM users 
 		WHERE username = $1 AND is_active = true
 	`
-	
+
 	err := h.db.QueryRow(query, req.Username).Scan(
 		&user.ID, &user.Username, &user.Email, &user.PasswordHash,
 		&user.FirstName, &user.LastName, &user.Role, &user.IsActive,
@@ -124,7 +124,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		FROM users 
 		WHERE id = $1
 	`
-	
+
 	err := h.db.QueryRow(query, userID).Scan(
 		&user.ID, &user.Username, &user.Email,
 		&user.FirstName, &user.LastName, &user.Role, &user.IsActive,
@@ -171,3 +171,167 @@ func stringPtr(s string) *string {
 	return &s
 }
 
+// GetUserProfile returns the current user's profile
+func (h *AuthHandler) GetUserProfile(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, models.APIResponse{
+			Success: false,
+			Message: "Unauthorized",
+		})
+		return
+	}
+
+	var user models.User
+	query := `
+		SELECT id, username, email, first_name, last_name, role, is_active, created_at, updated_at 
+		FROM users 
+		WHERE id = $1
+	`
+	err := h.db.QueryRow(query, userID).Scan(
+		&user.ID, &user.Username, &user.Email,
+		&user.FirstName, &user.LastName, &user.Role,
+		&user.IsActive, &user.CreatedAt, &user.UpdatedAt,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Failed to retrieve user profile",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.APIResponse{
+		Success: true,
+		Message: "Profile retrieved successfully",
+		Data:    user,
+	})
+}
+
+// UpdateUserProfile updates the current user's profile
+func (h *AuthHandler) UpdateUserProfile(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, models.APIResponse{
+			Success: false,
+			Message: "Unauthorized",
+		})
+		return
+	}
+
+	var req struct {
+		FirstName string `json:"first_name" binding:"required"`
+		LastName  string `json:"last_name" binding:"required"`
+		Email     string `json:"email" binding:"required,email"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Success: false,
+			Message: "Invalid request body",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	_, err := h.db.Exec(`
+		UPDATE users
+		SET first_name = $1, last_name = $2, email = $3, updated_at = NOW()
+		WHERE id = $4
+	`, req.FirstName, req.LastName, req.Email, userID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Failed to update profile",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.APIResponse{
+		Success: true,
+		Message: "Profile updated successfully",
+	})
+}
+
+// ChangePassword changes the current user's password
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, models.APIResponse{
+			Success: false,
+			Message: "Unauthorized",
+		})
+		return
+	}
+
+	var req struct {
+		CurrentPassword string `json:"current_password" binding:"required"`
+		NewPassword     string `json:"new_password" binding:"required,min=6"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Success: false,
+			Message: "Invalid request body",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	// Get current password hash
+	var currentHash string
+	err := h.db.QueryRow("SELECT password_hash FROM users WHERE id = $1", userID).Scan(&currentHash)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Failed to retrieve user",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(currentHash), []byte(req.CurrentPassword)); err != nil {
+		c.JSON(http.StatusUnauthorized, models.APIResponse{
+			Success: false,
+			Message: "Current password is incorrect",
+		})
+		return
+	}
+
+	// Hash new password
+	newHash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Failed to hash password",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	// Update password
+	_, err = h.db.Exec(`
+		UPDATE users
+		SET password_hash = $1, updated_at = NOW()
+		WHERE id = $2
+	`, string(newHash), userID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Failed to update password",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.APIResponse{
+		Success: true,
+		Message: "Password changed successfully",
+	})
+}

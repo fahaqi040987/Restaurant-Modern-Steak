@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CardSkeleton } from '@/components/ui/loading-skeletons';
 import { 
   RefreshCw, 
   Volume2, 
@@ -76,7 +77,7 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
   // Handle order status update
   const handleOrderStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      await apiClient.updateOrderStatus(orderId, newStatus);
+      await apiClient.updateOrderStatus(orderId, newStatus as any);
       refetch();
     } catch (error) {
       console.error('Failed to update order status:', error);
@@ -682,11 +683,8 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
 
           <TabsContent value="active-orders" className="space-y-6">
             {isLoading ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                  <p className="text-gray-500">Loading kitchen orders...</p>
-                </div>
+              <div className="p-6">
+                <CardSkeleton count={6} />
               </div>
             ) : error ? (
               <div className="flex items-center justify-center h-64">

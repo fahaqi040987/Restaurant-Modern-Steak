@@ -27,7 +27,7 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
   if (!isOpen) return null
 
   const formatShortcut = (shortcut: ShortcutInfo) => {
-    const keys = []
+    const keys: string[] = []
     if (shortcut.ctrl) keys.push('Ctrl')
     if (shortcut.shift) keys.push('Shift')
     if (shortcut.alt) keys.push('Alt')

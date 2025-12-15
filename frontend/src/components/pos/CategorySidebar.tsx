@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Grid3x3, Loader2 } from 'lucide-react'
 import type { Category } from '@/types'
 
@@ -18,9 +19,21 @@ export function CategorySidebar({
 }: CategorySidebarProps) {
   if (isLoading) {
     return (
-      <div className="p-4">
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      <div className="h-full flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <Grid3x3 className="w-5 h-5 text-gray-600" />
+            <h3 className="font-semibold text-gray-900">Categories</h3>
+          </div>
+        </div>
+        <div className="p-4 space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 p-3">
+              <Skeleton className="w-8 h-8 rounded-lg" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="w-12 h-5" />
+            </div>
+          ))}
         </div>
       </div>
     )

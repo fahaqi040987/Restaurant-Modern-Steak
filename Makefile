@@ -255,7 +255,7 @@ status:
 	@docker volume ls -f name=pos || echo "No POS volumes found"
 	@echo ""
 	@echo "$(BLUE)Network Connectivity:$(NC)"
-	@if [ -n "$$(docker ps -q -f name=pos-backend)" ]; then \
+	@if [ -n "$$(docker ps -q -f name=pos-public)" ]; then \
 		echo "✅ Backend: Available"; \
 	else \
 		echo "❌ Backend: Not running"; \

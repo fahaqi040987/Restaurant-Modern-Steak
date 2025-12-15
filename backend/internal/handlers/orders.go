@@ -7,19 +7,24 @@ import (
 	"strconv"
 	"time"
 
-	"pos-backend/internal/middleware"
-	"pos-backend/internal/models"
+	"pos-public/internal/middleware"
+	"pos-public/internal/models"
+	"pos-public/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type OrderHandler struct {
-	db *sql.DB
+	db              *sql.DB
+	notificationSvc *services.NotificationService
 }
 
 func NewOrderHandler(db *sql.DB) *OrderHandler {
-	return &OrderHandler{db: db}
+	return &OrderHandler{
+		db:              db,
+		notificationSvc: services.NewNotificationService(db),
+	}
 }
 
 // GetOrders retrieves all orders with pagination and filtering
@@ -88,7 +93,7 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 	argIndex++
 	queryBuilder += fmt.Sprintf(" ORDER BY o.created_at DESC LIMIT $%d", argIndex)
 	args = append(args, perPage)
-	
+
 	argIndex++
 	queryBuilder += fmt.Sprintf(" OFFSET $%d", argIndex)
 	args = append(args, offset)
@@ -281,8 +286,20 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		subtotal += price * float64(item.Quantity)
 	}
 
-	// Calculate tax (10% for example)
-	taxRate := 0.10
+	// Get tax rate from system settings (default 11% Indonesian VAT)
+	var taxRateStr string
+	taxQuery := `SELECT setting_value FROM system_settings WHERE setting_key = 'tax_rate'`
+	err = tx.QueryRow(taxQuery).Scan(&taxRateStr)
+	if err != nil {
+		// Fallback to 11% if setting not found
+		taxRateStr = "11.00"
+	}
+
+	taxRate := 0.11 // Default Indonesian VAT
+	if rate, err := strconv.ParseFloat(taxRateStr, 64); err == nil {
+		taxRate = rate / 100.0 // Convert percentage to decimal
+	}
+
 	taxAmount := subtotal * taxRate
 	totalAmount := subtotal + taxAmount
 
@@ -360,6 +377,17 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		})
 		return
 	}
+
+	// Send notification to kitchen staff about new order
+	var tableInfo string
+	if req.TableID != nil {
+		var tableNumber string
+		h.db.QueryRow("SELECT table_number FROM dining_tables WHERE id = $1", *req.TableID).Scan(&tableNumber)
+		tableInfo = fmt.Sprintf("Meja %s", tableNumber)
+	} else {
+		tableInfo = req.OrderType
+	}
+	go h.notificationSvc.NotifyOrderCreated(orderNumber, tableInfo)
 
 	// Fetch and return the created order
 	order, err := h.getOrderByID(orderID)
@@ -501,7 +529,7 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 	}
 
 	// If order is completed or cancelled, free up the table
-	if (req.Status == "completed" || req.Status == "cancelled") {
+	if req.Status == "completed" || req.Status == "cancelled" {
 		_, err = tx.Exec(`
 			UPDATE dining_tables 
 			SET is_occupied = false 
@@ -705,3 +733,58 @@ func (h *OrderHandler) generateOrderNumber() string {
 	return fmt.Sprintf("ORD%s%04d", timestamp, time.Now().UnixNano()%10000)
 }
 
+// OrderStatusHistoryRecord represents a status change entry
+type OrderStatusHistoryRecord struct {
+	ID             string    `json:"id"`
+	OrderID        string    `json:"order_id"`
+	PreviousStatus string    `json:"previous_status"`
+	NewStatus      string    `json:"new_status"`
+	ChangedBy      string    `json:"changed_by"` // username
+	Notes          string    `json:"notes"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+// GetOrderStatusHistory retrieves status change history for an order
+func (h *OrderHandler) GetOrderStatusHistory(c *gin.Context) {
+	orderID := c.Param("id")
+
+	query := `
+		SELECT 
+			osh.id, osh.order_id, 
+			COALESCE(osh.previous_status, '') as previous_status, 
+			osh.new_status,
+			COALESCE(u.username, 'System') as changed_by,
+			COALESCE(osh.notes, '') as notes,
+			osh.created_at
+		FROM order_status_history osh
+		LEFT JOIN users u ON osh.changed_by = u.id
+		WHERE osh.order_id = $1
+		ORDER BY osh.created_at ASC
+	`
+
+	rows, err := h.db.Query(query, orderID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch order status history"})
+		return
+	}
+	defer rows.Close()
+
+	var history []OrderStatusHistoryRecord
+	for rows.Next() {
+		var record OrderStatusHistoryRecord
+		err := rows.Scan(
+			&record.ID, &record.OrderID, &record.PreviousStatus,
+			&record.NewStatus, &record.ChangedBy, &record.Notes, &record.CreatedAt,
+		)
+		if err != nil {
+			continue
+		}
+		history = append(history, record)
+	}
+
+	if history == nil {
+		history = []OrderStatusHistoryRecord{}
+	}
+
+	c.JSON(http.StatusOK, history)
+}

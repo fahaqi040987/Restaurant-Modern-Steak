@@ -1,8 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { 
   Settings, 
   Database, 
@@ -11,43 +23,105 @@ import {
   DollarSign,
   Printer,
   Save,
-  RotateCcw
+  RotateCcw,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Info,
+  Languages,
+  Palette
 } from 'lucide-react'
+import apiClient from '@/api/client'
+import { toastHelpers } from '@/lib/toast-helpers'
+import { useTheme } from '@/components/theme-provider'
+
+type SystemSettings = Record<string, any>
 
 export function AdminSettings() {
-  const [settings, setSettings] = useState({
-    restaurant_name: 'My Restaurant',
-    currency: 'USD',
-    tax_rate: '10.00',
-    service_charge: '5.00',
-    receipt_header: 'Thank you for dining with us!',
-    receipt_footer: 'Visit again soon!',
-    notification_email: 'admin@restaurant.com',
-    backup_frequency: 'daily',
-    theme: 'light',
-    language: 'en'
+  const { t, i18n } = useTranslation()
+  const queryClient = useQueryClient()
+  const [settings, setSettings] = useState<SystemSettings>({})
+  const { theme, setTheme } = useTheme()
+
+  // Fetch settings from backend
+  const { data: settingsData, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn: async () => {
+      const response = await apiClient.getSettings()
+      if (!response.success) {
+        throw new Error(response.message)
+      }
+      return response.data as SystemSettings
+    },
+  })
+
+  // Fetch system health
+  const { data: healthData, isLoading: isLoadingHealth } = useQuery({
+    queryKey: ['system-health'],
+    queryFn: async () => {
+      const response = await apiClient.getSystemHealth()
+      if (!response.success) {
+        throw new Error(response.message)
+      }
+      return response.data
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  })
+
+  // Update local state when data is fetched
+  useEffect(() => {
+    if (settingsData) {
+      setSettings(settingsData)
+    }
+  }, [settingsData])
+
+  // Save settings mutation
+  const saveSettingsMutation = useMutation({
+    mutationFn: async (newSettings: SystemSettings) => {
+      // Parse numeric fields before sending to backend
+      const parsedSettings = {
+        ...newSettings,
+        tax_rate: newSettings.tax_rate ? parseFloat(newSettings.tax_rate) : 0,
+        service_charge: newSettings.service_charge ? parseFloat(newSettings.service_charge) : 0,
+        enable_rounding: newSettings.enable_rounding === 'true' || newSettings.enable_rounding === true,
+      }
+      
+      const response = await apiClient.updateSettings(parsedSettings)
+      if (!response.success) {
+        throw new Error(response.message)
+      }
+      return response
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] })
+      toastHelpers.success('Settings saved successfully!')
+    },
+    onError: (error: Error) => {
+      toastHelpers.error(error.message || 'Failed to save settings')
+    },
   })
 
   const handleSave = () => {
-    // TODO: Implement settings save
-    console.log('Saving settings:', settings)
-    alert('Settings saved successfully!')
+    saveSettingsMutation.mutate(settings)
   }
 
   const handleReset = () => {
-    // Reset to defaults
-    setSettings({
-      restaurant_name: 'My Restaurant',
-      currency: 'USD',
-      tax_rate: '10.00',
-      service_charge: '5.00',
-      receipt_header: 'Thank you for dining with us!',
-      receipt_footer: 'Visit again soon!',
-      notification_email: 'admin@restaurant.com',
-      backup_frequency: 'daily',
-      theme: 'light',
-      language: 'en'
-    })
+    if (settingsData) {
+      setSettings(settingsData)
+      toastHelpers.info('Settings reset to saved values')
+    }
+  }
+
+  const updateSetting = (key: string, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }))
+  }
+
+  if (isLoadingSettings) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (
@@ -55,22 +129,101 @@ export function AdminSettings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">System Settings</h2>
+          <h2 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h2>
           <p className="text-muted-foreground">
-            Configure your restaurant's POS system settings
+            {t('common.loading', 'Configure your restaurant\'s POS system settings')}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleReset}>
+          <Button variant="outline" onClick={handleReset} disabled={saveSettingsMutation.isPending}>
             <RotateCcw className="w-4 h-4 mr-2" />
-            Reset
+            {t('common.cancel', 'Reset')}
           </Button>
-          <Button onClick={handleSave}>
-            <Save className="w-4 h-4 mr-2" />
-            Save Changes
+          <Button onClick={handleSave} disabled={saveSettingsMutation.isPending}>
+            {saveSettingsMutation.isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
+            )}
+            {t('common.save')}
           </Button>
         </div>
       </div>
+
+      {/* Language Switcher */}
+      <Card className="border-2 border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Languages className="w-5 h-5" />
+            {t('settings.language')}
+          </CardTitle>
+          <CardDescription>
+            Switch interface language instantly
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Button
+              variant={i18n.language === 'id-ID' ? 'default' : 'outline'}
+              onClick={() => i18n.changeLanguage('id-ID')}
+              className="flex-1"
+            >
+              🇮🇩 Bahasa Indonesia
+            </Button>
+            <Button
+              variant={i18n.language === 'en-US' ? 'default' : 'outline'}
+              onClick={() => i18n.changeLanguage('en-US')}
+              className="flex-1"
+            >
+              🇺🇸 English
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Current: {i18n.language === 'id-ID' ? 'Bahasa Indonesia' : 'English (US)'}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Theme Toggle */}
+      <Card className="border-2 border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="w-5 h-5" />
+            Appearance
+          </CardTitle>
+          <CardDescription>
+            Customize the look and feel of the interface
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Button
+              variant={theme === 'light' ? 'default' : 'outline'}
+              onClick={() => setTheme('light')}
+              className="flex-1"
+            >
+              ☀️ Light
+            </Button>
+            <Button
+              variant={theme === 'dark' ? 'default' : 'outline'}
+              onClick={() => setTheme('dark')}
+              className="flex-1"
+            >
+              🌙 Dark
+            </Button>
+            <Button
+              variant={theme === 'system' ? 'default' : 'outline'}
+              onClick={() => setTheme('system')}
+              className="flex-1"
+            >
+              💻 System
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Current theme: {theme === 'system' ? 'System Default' : theme.charAt(0).toUpperCase() + theme.slice(1)}
+          </p>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Restaurant Information */}
@@ -78,32 +231,57 @@ export function AdminSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe className="w-5 h-5" />
-              Restaurant Information
+              {t('settings.restaurantInfo')}
             </CardTitle>
             <CardDescription>
-              Basic information about your restaurant
+              {t('settings.restaurantInfo', 'Basic information about your restaurant')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Restaurant Name</label>
+            <div className="space-y-2">
+              <Label htmlFor="restaurant_name">{t('settings.restaurantName')}</Label>
               <Input
-                value={settings.restaurant_name}
-                onChange={(e) => setSettings({...settings, restaurant_name: e.target.value})}
-                placeholder="Enter restaurant name"
+                id="restaurant_name"
+                value={settings.restaurant_name || ''}
+                onChange={(e) => updateSetting('restaurant_name', e.target.value)}
+                placeholder="Steak Kenangan"
               />
+              <p className="text-xs text-muted-foreground">Nama yang ditampilkan di POS dan struk</p>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Language</label>
-              <select
-                className="w-full p-2 border border-input rounded-md bg-background"
-                value={settings.language}
-                onChange={(e) => setSettings({...settings, language: e.target.value})}
+
+            <div className="space-y-2">
+              <Label htmlFor="currency">{t('settings.currency')}</Label>
+              <Select
+                value={settings.currency || 'IDR'}
+                onValueChange={(value) => updateSetting('currency', value)}
               >
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-              </select>
+                <SelectTrigger id="currency">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="IDR">IDR - Rupiah Indonesia</SelectItem>
+                  <SelectItem value="USD">USD - US Dollar</SelectItem>
+                  <SelectItem value="EUR">EUR - Euro</SelectItem>
+                  <SelectItem value="SGD">SGD - Singapore Dollar</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">{t('settings.currency', 'Currency for all transactions')}</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="default_language">{t('settings.language')}</Label>
+              <Select
+                value={settings.default_language || 'id-ID'}
+                onValueChange={(value) => updateSetting('default_language', value)}
+              >
+                <SelectTrigger id="default_language">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="id-ID">Bahasa Indonesia</SelectItem>
+                  <SelectItem value="en-US">English (US)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -113,44 +291,67 @@ export function AdminSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="w-5 h-5" />
-              Financial Settings
+              {t('settings.financial')}
             </CardTitle>
             <CardDescription>
-              Configure currency, taxes, and charges
+              {t('settings.financial', 'Configure currency, taxes, and charges')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Currency</label>
-              <select
-                className="w-full p-2 border border-input rounded-md bg-background"
-                value={settings.currency}
-                onChange={(e) => setSettings({...settings, currency: e.target.value})}
-              >
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-              </select>
-            </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Tax Rate (%)</label>
+              <div className="space-y-2">
+                <Label htmlFor="tax_rate">{t('settings.taxRate')} (%)</Label>
                 <Input
+                  id="tax_rate"
                   type="number"
                   step="0.01"
-                  value={settings.tax_rate}
-                  onChange={(e) => setSettings({...settings, tax_rate: e.target.value})}
+                  min="0"
+                  max="100"
+                  value={settings.tax_rate || ''}
+                  onChange={(e) => updateSetting('tax_rate', e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground">PPN Indonesia: 11%</p>
               </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Service Charge (%)</label>
+              <div className="space-y-2">
+                <Label htmlFor="service_charge">{t('settings.serviceCharge')} (%)</Label>
                 <Input
+                  id="service_charge"
                   type="number"
                   step="0.01"
-                  value={settings.service_charge}
-                  onChange={(e) => setSettings({...settings, service_charge: e.target.value})}
+                  min="0"
+                  max="100"
+                  value={settings.service_charge || ''}
+                  onChange={(e) => updateSetting('service_charge', e.target.value)}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tax_method">{t('settings.taxMethod')}</Label>
+              <Select
+                value={settings.tax_calculation_method || 'exclusive'}
+                onValueChange={(value) => updateSetting('tax_calculation_method', value)}
+              >
+                <SelectTrigger id="tax_method">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="exclusive">{t('settings.exclusive')}</SelectItem>
+                  <SelectItem value="inclusive">{t('settings.inclusive')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="enable_rounding">{t('settings.rounding')}</Label>
+                <p className="text-xs text-muted-foreground">{t('settings.rounding', 'Round total to nearest value')}</p>
+              </div>
+              <Switch
+                id="enable_rounding"
+                checked={settings.enable_rounding === 'true' || settings.enable_rounding === true}
+                onCheckedChange={(checked) => updateSetting('enable_rounding', checked.toString())}
+              />
             </div>
           </CardContent>
         </Card>
@@ -160,28 +361,160 @@ export function AdminSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Printer className="w-5 h-5" />
-              Receipt Settings
+              {t('settings.receipt')}
             </CardTitle>
             <CardDescription>
-              Customize receipt appearance and messages
+              {t('settings.receipt', 'Customize receipt appearance and messages')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Receipt Header</label>
-              <Input
-                value={settings.receipt_header}
-                onChange={(e) => setSettings({...settings, receipt_header: e.target.value})}
-                placeholder="Header message"
+            <div className="space-y-2">
+              <Label htmlFor="receipt_header">{t('settings.receiptHeader')}</Label>
+              <Textarea
+                id="receipt_header"
+                value={settings.receipt_header || ''}
+                onChange={(e) => updateSetting('receipt_header', e.target.value)}
+                placeholder="Terima kasih sudah makan di sini!"
+                rows={2}
+                maxLength={200}
+              />
+              <p className="text-xs text-muted-foreground">Maksimal 200 karakter</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="receipt_footer">{t('settings.receiptFooter')}</Label>
+              <Textarea
+                id="receipt_footer"
+                value={settings.receipt_footer || ''}
+                onChange={(e) => updateSetting('receipt_footer', e.target.value)}
+                placeholder="Kunjungi kami lagi!"
+                rows={2}
+                maxLength={200}
               />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Receipt Footer</label>
+
+            <div className="space-y-2">
+              <Label htmlFor="paper_size">{t('settings.paperSize')}</Label>
+              <Select
+                value={settings.paper_size || '80mm'}
+                onValueChange={(value) => updateSetting('paper_size', value)}
+              >
+                <SelectTrigger id="paper_size">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="58mm">58mm (kecil)</SelectItem>
+                  <SelectItem value="80mm">80mm (standar)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="show_logo">{t('settings.showLogo')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('settings.showLogo', 'Logo at top of receipt')}</p>
+                </div>
+                <Switch
+                  id="show_logo"
+                  checked={settings.show_logo === 'true' || settings.show_logo === true}
+                  onCheckedChange={(checked) => updateSetting('show_logo', checked.toString())}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="auto_print">{t('settings.autoPrint')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('settings.autoPrint', 'Auto print customer copy')}</p>
+                </div>
+                <Switch
+                  id="auto_print"
+                  checked={settings.auto_print_customer_copy === 'true' || settings.auto_print_customer_copy === true}
+                  onCheckedChange={(checked) => updateSetting('auto_print_customer_copy', checked.toString())}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Kitchen Printer Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Printer className="w-5 h-5" />
+              {t('settings.kitchenPrinter', 'Printer Dapur')}
+            </CardTitle>
+            <CardDescription>
+              {t('settings.kitchenPrinter', 'Configure kitchen ticket printing')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="kitchen_paper_size">{t('settings.paperSize')}</Label>
+              <Select
+                value={settings.kitchen_paper_size || '80mm'}
+                onValueChange={(value) => updateSetting('kitchen_paper_size', value)}
+              >
+                <SelectTrigger id="kitchen_paper_size">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="58mm">58mm (kecil)</SelectItem>
+                  <SelectItem value="80mm">80mm (standar)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Ukuran kertas untuk tiket dapur</p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="auto_print_kitchen">{t('settings.autoPrintKitchen', 'Auto Print Dapur')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('settings.autoPrintKitchen', 'Auto print to kitchen on new order')}</p>
+                </div>
+                <Switch
+                  id="auto_print_kitchen"
+                  checked={settings.auto_print_kitchen === 'true' || settings.auto_print_kitchen === true}
+                  onCheckedChange={(checked) => updateSetting('auto_print_kitchen', checked.toString())}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="show_prices_kitchen">{t('settings.showPricesKitchen', 'Tampilkan Harga')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('settings.showPricesKitchen', 'Show item prices on kitchen tickets')}</p>
+                </div>
+                <Switch
+                  id="show_prices_kitchen"
+                  checked={settings.show_prices_kitchen === 'true' || settings.show_prices_kitchen === true}
+                  onCheckedChange={(checked) => updateSetting('show_prices_kitchen', checked.toString())}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="kitchen_print_categories">{t('settings.printByCategory', 'Cetak Per Kategori')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('settings.printByCategory', 'Print separate tickets by category')}</p>
+                </div>
+                <Switch
+                  id="kitchen_print_categories"
+                  checked={settings.kitchen_print_categories === 'true' || settings.kitchen_print_categories === true}
+                  onCheckedChange={(checked) => updateSetting('kitchen_print_categories', checked.toString())}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="kitchen_urgent_time">{t('settings.urgentOrderTime', 'Waktu Pesanan Mendesak (menit)')}</Label>
               <Input
-                value={settings.receipt_footer}
-                onChange={(e) => setSettings({...settings, receipt_footer: e.target.value})}
-                placeholder="Footer message"
+                id="kitchen_urgent_time"
+                type="number"
+                min="5"
+                max="60"
+                value={settings.kitchen_urgent_time || '20'}
+                onChange={(e) => updateSetting('kitchen_urgent_time', e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">Pesanan akan ditandai mendesak setelah waktu ini</p>
             </div>
           </CardContent>
         </Card>
@@ -191,76 +524,80 @@ export function AdminSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              System Configuration
+              {t('settings.system')}
             </CardTitle>
             <CardDescription>
-              System behavior and preferences
+              {t('settings.system', 'System behavior and preferences')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Theme</label>
-              <select
-                className="w-full p-2 border border-input rounded-md bg-background"
-                value={settings.theme}
-                onChange={(e) => setSettings({...settings, theme: e.target.value})}
+            <div className="space-y-2">
+              <Label htmlFor="backup_frequency">{t('settings.backupFrequency')}</Label>
+              <Select
+                value={settings.backup_frequency || 'daily'}
+                onValueChange={(value) => updateSetting('backup_frequency', value)}
               >
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="system">System</option>
-              </select>
+                <SelectTrigger id="backup_frequency">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hourly">{t('settings.hourly')}</SelectItem>
+                  <SelectItem value="daily">{t('settings.daily')}</SelectItem>
+                  <SelectItem value="weekly">{t('settings.weekly')}</SelectItem>
+                  <SelectItem value="manual">{t('settings.manual')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Backup Frequency</label>
-              <select
-                className="w-full p-2 border border-input rounded-md bg-background"
-                value={settings.backup_frequency}
-                onChange={(e) => setSettings({...settings, backup_frequency: e.target.value})}
-              >
-                <option value="hourly">Hourly</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="manual">Manual Only</option>
-              </select>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Notifications */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              Notification Settings
-            </CardTitle>
-            <CardDescription>
-              Configure alerts and notifications
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Notification Email</label>
+            <div className="space-y-2">
+              <Label htmlFor="data_retention">{t('settings.dataRetention')}</Label>
               <Input
-                type="email"
-                value={settings.notification_email}
-                onChange={(e) => setSettings({...settings, notification_email: e.target.value})}
-                placeholder="admin@restaurant.com"
+                id="data_retention"
+                type="number"
+                min="30"
+                max="3650"
+                value={settings.data_retention_days || '365'}
+                onChange={(e) => updateSetting('data_retention_days', e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">Berapa lama data disimpan sebelum dihapus otomatis</p>
             </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">Low Stock Alerts</Badge>
+
+            <div className="space-y-2">
+              <Label htmlFor="session_timeout">{t('settings.sessionTimeout')}</Label>
+              <Input
+                id="session_timeout"
+                type="number"
+                min="5"
+                max="480"
+                value={settings.session_timeout || '60'}
+                onChange={(e) => updateSetting('session_timeout', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Logout otomatis setelah tidak aktif</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="low_stock_threshold">{t('settings.lowStockThreshold')}</Label>
+              <Input
+                id="low_stock_threshold"
+                type="number"
+                min="1"
+                max="1000"
+                value={settings.low_stock_threshold || '10'}
+                onChange={(e) => updateSetting('low_stock_threshold', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Notifikasi saat stok di bawah nilai ini</p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="audit_logging">Audit Logging</Label>
+                <p className="text-xs text-muted-foreground">Catat semua aktivitas sistem</p>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">Daily Reports</Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">System Updates</Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">Error Notifications</Badge>
-              </div>
+              <Switch
+                id="audit_logging"
+                checked={settings.enable_audit_logging === 'true' || settings.enable_audit_logging === true}
+                onCheckedChange={(checked) => updateSetting('enable_audit_logging', checked.toString())}
+              />
             </div>
           </CardContent>
         </Card>
@@ -278,32 +615,65 @@ export function AdminSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <Badge variant="outline" className="w-full">
-                Database
-              </Badge>
-              <p className="text-sm text-green-600 mt-1">Connected</p>
+          {isLoadingHealth ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
-            <div className="text-center">
-              <Badge variant="outline" className="w-full">
-                API Server
-              </Badge>
-              <p className="text-sm text-green-600 mt-1">Online</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <Badge variant="outline" className="w-full">
+                  Database
+                </Badge>
+                <div className="flex items-center justify-center gap-1 mt-1">
+                  {healthData?.database === 'connected' ? (
+                    <>
+                      <CheckCircle2 className="h-3 w-3 text-green-600" />
+                      <p className="text-sm text-green-600">Connected</p>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-3 w-3 text-red-600" />
+                      <p className="text-sm text-red-600">Disconnected</p>
+                    </>
+                  )}
+                </div>
+                {healthData?.database_latency_ms && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {healthData.database_latency_ms.toFixed(2)}ms
+                  </p>
+                )}
+              </div>
+              <div className="text-center">
+                <Badge variant="outline" className="w-full">
+                  API Version
+                </Badge>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {healthData?.api_version || 'v1.0.0'}
+                </p>
+              </div>
+              <div className="text-center">
+                <Badge variant="outline" className="w-full">
+                  Last Backup
+                </Badge>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {healthData?.last_backup_at 
+                    ? new Date(healthData.last_backup_at).toLocaleDateString()
+                    : 'Never'
+                  }
+                </p>
+              </div>
+              <div className="text-center">
+                <Badge variant="outline" className="w-full">
+                  Status
+                </Badge>
+                <div className="flex items-center justify-center gap-1 mt-1">
+                  <CheckCircle2 className="h-3 w-3 text-green-600" />
+                  <p className="text-sm text-green-600">Online</p>
+                </div>
+              </div>
             </div>
-            <div className="text-center">
-              <Badge variant="outline" className="w-full">
-                Backup Status
-              </Badge>
-              <p className="text-sm text-green-600 mt-1">Up to date</p>
-            </div>
-            <div className="text-center">
-              <Badge variant="outline" className="w-full">
-                Version
-              </Badge>
-              <p className="text-sm text-muted-foreground mt-1">v1.0.0</p>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

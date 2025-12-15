@@ -261,15 +261,15 @@ docker-compose up --build
 Build and push images for production deployment:
 ```bash
 # Build images
-docker build -t pos-backend:latest ./backend
+docker build -t pos-public:latest ./backend
 docker build -t pos-frontend:latest ./frontend
 
 # Tag for registry
-docker tag pos-backend:latest your-registry/pos-backend:v1.0.0
+docker tag pos-public:latest your-registry/pos-public:v1.0.0
 docker tag pos-frontend:latest your-registry/pos-frontend:v1.0.0
 
 # Push to registry
-docker push your-registry/pos-backend:v1.0.0
+docker push your-registry/pos-public:v1.0.0
 docker push your-registry/pos-frontend:v1.0.0
 ```
 
@@ -333,7 +333,7 @@ docker-compose exec postgres psql -U postgres pos_system
 docker-compose exec backend wget -qO- http://postgres:5432
 
 # Inspect container details
-docker inspect pos-backend
+docker inspect pos-public
 ```
 
 ## 🚀 Production Deployment Strategies
@@ -342,15 +342,15 @@ docker inspect pos-backend
 ```bash
 # ✅ CORRECT: Multi-architecture builds for production
 docker buildx create --name pos-builder --use
-docker buildx build --platform linux/amd64,linux/arm64 -t pos-backend:latest ./backend --push
+docker buildx build --platform linux/amd64,linux/arm64 -t pos-public:latest ./backend --push
 
 # ✅ CORRECT: Semantic versioning for releases
-docker build -t pos-backend:1.2.3 ./backend
-docker build -t pos-backend:latest ./backend
+docker build -t pos-public:1.2.3 ./backend
+docker build -t pos-public:latest ./backend
 
 # Security scanning before deployment
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-  aquasec/trivy image pos-backend:1.2.3
+  aquasec/trivy image pos-public:1.2.3
 ```
 
 ### Production Docker Compose
@@ -380,7 +380,7 @@ services:
     restart: unless-stopped
     
   backend:
-    image: your-registry/pos-backend:${VERSION}
+    image: your-registry/pos-public:${VERSION}
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -1042,7 +1042,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: your-registry/pos-backend:latest
+        image: your-registry/pos-public:latest
         env:
         - name: DB_HOST
           value: postgres-service
@@ -1112,7 +1112,7 @@ docker service scale pos-system_backend=3
 docker service scale pos-system_frontend=2
 
 # Rolling updates
-docker service update --image pos-backend:v1.2.3 pos-system_backend
+docker service update --image pos-public:v1.2.3 pos-system_backend
 ```
 
 ## 🔧 Advanced Deployment Tools

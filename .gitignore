@@ -89,3 +89,12 @@ files/
 # Temporary files
 *.tmp
 *.temp
+
+# Ignore test result snapshots
+test-results/
+playwright-report/
+*SUMMARY*.md
+*summary*.md
+coverage/
+*.coverage.*
+coverage.out

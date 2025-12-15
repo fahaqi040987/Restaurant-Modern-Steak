@@ -128,6 +128,56 @@ CREATE TABLE order_status_history (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Restaurant Info table (singleton configuration for public website)
+CREATE TABLE restaurant_info (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    tagline VARCHAR(200),
+    description TEXT,
+    address VARCHAR(255) NOT NULL,
+    city VARCHAR(100),
+    postal_code VARCHAR(20),
+    country VARCHAR(100),
+    phone VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    whatsapp VARCHAR(50),
+    map_latitude DECIMAL(10, 8),
+    map_longitude DECIMAL(11, 8),
+    google_maps_url VARCHAR(500),
+    instagram_url VARCHAR(255),
+    facebook_url VARCHAR(255),
+    twitter_url VARCHAR(255),
+    logo_url VARCHAR(500),
+    hero_image_url VARCHAR(500),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Operating Hours table (linked to restaurant_info)
+CREATE TABLE operating_hours (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    restaurant_info_id UUID NOT NULL REFERENCES restaurant_info(id) ON DELETE CASCADE,
+    day_of_week INTEGER NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),
+    open_time TIME NOT NULL,
+    close_time TIME NOT NULL,
+    is_closed BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Contact Submissions table (for public website contact form)
+CREATE TABLE contact_submissions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(50),
+    subject VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT false,
+    read_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_orders_created_at ON orders(created_at);
@@ -138,6 +188,17 @@ CREATE INDEX idx_products_category_id ON products(category_id);
 CREATE INDEX idx_products_is_available ON products(is_available);
 CREATE INDEX idx_payments_order_id ON payments(order_id);
 CREATE INDEX idx_inventory_product_id ON inventory(product_id);
+
+-- Restaurant info singleton constraint (only one row allowed)
+CREATE UNIQUE INDEX idx_restaurant_info_singleton ON restaurant_info ((true));
+
+-- Operating hours unique constraint and index
+CREATE UNIQUE INDEX idx_operating_hours_day_unique ON operating_hours (restaurant_info_id, day_of_week);
+CREATE INDEX idx_operating_hours_restaurant_id ON operating_hours (restaurant_info_id);
+
+-- Contact submissions indexes
+CREATE INDEX idx_contact_submissions_created_at ON contact_submissions (created_at DESC);
+CREATE INDEX idx_contact_submissions_is_read ON contact_submissions (is_read);
 
 -- Create triggers for updated_at timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -155,4 +216,5 @@ CREATE TRIGGER update_dining_tables_updated_at BEFORE UPDATE ON dining_tables FO
 CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_order_items_updated_at BEFORE UPDATE ON order_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_inventory_updated_at BEFORE UPDATE ON inventory FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
+CREATE TRIGGER update_restaurant_info_updated_at BEFORE UPDATE ON restaurant_info FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_operating_hours_updated_at BEFORE UPDATE ON operating_hours FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

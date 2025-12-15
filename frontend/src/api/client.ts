@@ -23,6 +23,13 @@ import type {
   OrderFilters,
   ProductFilters,
   TableFilters,
+  OrderStatus,
+  // Public API types (B2C Website)
+  PublicMenuItem,
+  PublicCategory,
+  RestaurantInfo,
+  ContactFormData,
+  ContactFormResponse,
 } from '@/types';
 
 class APIClient {
@@ -81,6 +88,27 @@ class APIClient {
       }
       throw error;
     }
+  }
+
+  // Generic HTTP methods for backward compatibility
+  async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'GET', url });
+  }
+
+  async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'POST', url, data });
+  }
+
+  async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'PUT', url, data });
+  }
+
+  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'DELETE', url });
+  }
+
+  async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'PATCH', url, data });
   }
 
   // Authentication endpoints
@@ -299,10 +327,11 @@ class APIClient {
   }
 
   // User management endpoints (Admin only)
-  async getUsers(): Promise<APIResponse<User[]>> {
+  async getUsers(params?: { page?: number; limit?: number; search?: string }): Promise<APIResponse<User[]>> {
     return this.request({
       method: 'GET',
       url: '/admin/users',
+      params,
     });
   }
 
@@ -316,7 +345,7 @@ class APIClient {
 
   async updateUser(id: string, userData: any): Promise<APIResponse<User>> {
     return this.request({
-      method: 'PATCH',
+      method: 'PUT',
       url: `/admin/users/${id}`,
       data: userData,
     });
@@ -330,11 +359,33 @@ class APIClient {
   }
 
   // Admin-specific product management
-  async createProduct(productData: any): Promise<APIResponse<Product>> {
+  async createProduct(productData: {
+    category_id: string;
+    name: string;
+    description?: string;
+    price: number;
+    image_url?: string;
+    barcode?: string;
+    sku?: string;
+    is_available?: boolean;
+    preparation_time?: number;
+    sort_order?: number;
+  }): Promise<APIResponse<Product>> {
     return this.request({ method: 'POST', url: '/admin/products', data: productData });
   }
 
-  async updateProduct(id: string, productData: any): Promise<APIResponse<Product>> {
+  async updateProduct(id: string, productData: {
+    category_id?: string;
+    name?: string;
+    description?: string;
+    price?: number;
+    image_url?: string;
+    barcode?: string;
+    sku?: string;
+    is_available?: boolean;
+    preparation_time?: number;
+    sort_order?: number;
+  }): Promise<APIResponse<Product>> {
     return this.request({ method: 'PUT', url: `/admin/products/${id}`, data: productData });
   }
 
@@ -409,6 +460,307 @@ class APIClient {
 
   async deleteTable(id: string): Promise<APIResponse> {
     return this.request({ method: 'DELETE', url: `/admin/tables/${id}` });
+  }
+
+  // ===========================================
+  // Profile endpoints (Protected - Auth Required)
+  // ===========================================
+
+  async getUserProfile(): Promise<APIResponse<User>> {
+    return this.request({
+      method: 'GET',
+      url: '/profile',
+    });
+  }
+
+  async updateUserProfile(profileData: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  }): Promise<APIResponse<User>> {
+    return this.request({
+      method: 'PUT',
+      url: '/profile',
+      data: profileData,
+    });
+  }
+
+  async changePassword(passwordData: {
+    current_password: string;
+    new_password: string;
+  }): Promise<APIResponse> {
+    return this.request({
+      method: 'PUT',
+      url: '/profile/password',
+      data: passwordData,
+    });
+  }
+
+  // ===========================================
+  // Notifications endpoints (Protected - Auth Required)
+  // ===========================================
+
+  async getUnreadCounts(): Promise<APIResponse<{
+    notifications: number;
+  }>> {
+    return this.request({
+      method: 'GET',
+      url: '/notifications/counts/unread',
+    });
+  }
+
+  async getNotifications(filters?: {
+    type?: string;
+    is_read?: boolean;
+  }): Promise<APIResponse<any[]>> {
+    return this.request({
+      method: 'GET',
+      url: '/notifications',
+      params: filters,
+    });
+  }
+
+  async markNotificationRead(id: string): Promise<APIResponse> {
+    return this.request({
+      method: 'PUT',
+      url: `/notifications/${id}/read`,
+    });
+  }
+
+  async deleteNotification(id: string): Promise<APIResponse> {
+    return this.request({
+      method: 'DELETE',
+      url: `/notifications/${id}`,
+    });
+  }
+
+  async getNotificationPreferences(): Promise<APIResponse<any>> {
+    return this.request({
+      method: 'GET',
+      url: '/notifications/preferences',
+    });
+  }
+
+  async updateNotificationPreferences(preferences: {
+    email_enabled?: boolean;
+    notification_types?: string[];
+    quiet_hours_start?: string;
+    quiet_hours_end?: string;
+  }): Promise<APIResponse<any>> {
+    return this.request({
+      method: 'PUT',
+      url: '/notifications/preferences',
+      data: preferences,
+    });
+  }
+
+  // ===========================================
+  // System Settings endpoints (Admin - Auth Required)
+  // ===========================================
+
+  async getSettings(): Promise<APIResponse<Record<string, any>>> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/settings',
+    });
+  }
+
+  async updateSettings(settings: Record<string, any>): Promise<APIResponse> {
+    return this.request({
+      method: 'PUT',
+      url: '/admin/settings',
+      data: settings,
+    });
+  }
+
+  async getSystemHealth(): Promise<APIResponse<{
+    database: string;
+    database_latency_ms?: number;
+    api_version: string;
+    last_backup_at?: string;
+  }>> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/health',
+    });
+  }
+
+  // ===========================================
+  // Public API endpoints (B2C Website - No Auth Required)
+  // ===========================================
+
+  /**
+   * Get public menu items with optional filtering
+   * @param categoryId - Filter by category ID
+   * @param search - Search term for menu items
+   * @returns Array of public menu items
+   */
+  async getPublicMenu(categoryId?: string, search?: string): Promise<PublicMenuItem[]> {
+    const response = await this.request<APIResponse<PublicMenuItem[]>>({
+      method: 'GET',
+      url: '/public/menu',
+      params: {
+        ...(categoryId && { category_id: categoryId }),
+        ...(search && { search }),
+      },
+    });
+    return response.data || [];
+  }
+
+  /**
+   * Get public categories
+   * @returns Array of public categories
+   */
+  async getPublicCategories(): Promise<PublicCategory[]> {
+    const response = await this.request<APIResponse<PublicCategory[]>>({
+      method: 'GET',
+      url: '/public/categories',
+    });
+    return response.data || [];
+  }
+
+  /**
+   * Get restaurant information with operating hours
+   * @returns Restaurant info including is_open_now computed field
+   */
+  async getRestaurantInfo(): Promise<RestaurantInfo> {
+    const response = await this.request<APIResponse<RestaurantInfo>>({
+      method: 'GET',
+      url: '/public/restaurant',
+    });
+    if (!response.data) {
+      throw new Error('Restaurant information not found');
+    }
+    return response.data;
+  }
+
+  /**
+   * Submit contact form
+   * @param data - Contact form data (name, email, subject, message required; phone optional)
+   * @returns Contact submission ID
+   */
+  async submitContactForm(data: ContactFormData): Promise<ContactFormResponse> {
+    const response = await this.request<APIResponse<ContactFormResponse>>({
+      method: 'POST',
+      url: '/public/contact',
+      data,
+    });
+    if (!response.data) {
+      throw new Error('Failed to submit contact form');
+    }
+    return response.data;
+  }
+
+  // ============================================
+  // INGREDIENTS MANAGEMENT
+  // ============================================
+
+  /**
+   * Get all ingredients with pagination
+   * @param page - Page number (default: 1)
+   * @param perPage - Items per page (default: 20)
+   * @param search - Search query
+   * @param lowStockOnly - Filter to show only low stock items
+   * @returns Paginated list of ingredients
+   */
+  async getIngredients(params?: { page?: number; per_page?: number; search?: string; low_stock?: boolean }): Promise<PaginatedResponse<any>> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/ingredients',
+      params,
+    });
+  }
+
+  /**
+   * Create a new ingredient
+   * @param ingredientData - Ingredient data
+   * @returns Created ingredient
+   */
+  async createIngredient(ingredientData: any): Promise<APIResponse> {
+    return this.request({
+      method: 'POST',
+      url: '/admin/ingredients',
+      data: ingredientData,
+    });
+  }
+
+  /**
+   * Update an existing ingredient
+   * @param id - Ingredient ID
+   * @param ingredientData - Updated ingredient data
+   * @returns Success response
+   */
+  async updateIngredient(id: string, ingredientData: any): Promise<APIResponse> {
+    return this.request({
+      method: 'PUT',
+      url: `/admin/ingredients/${id}`,
+      data: ingredientData,
+    });
+  }
+
+  /**
+   * Delete an ingredient
+   * @param id - Ingredient ID
+   * @returns Success response
+   */
+  async deleteIngredient(id: string): Promise<APIResponse> {
+    return this.request({
+      method: 'DELETE',
+      url: `/admin/ingredients/${id}`,
+    });
+  }
+
+  /**
+   * Restock an ingredient
+   * @param id - Ingredient ID
+   * @param quantity - Quantity to add
+   * @param notes - Optional notes
+   * @returns Updated stock information
+   */
+  async restockIngredient(id: string, quantity: number, notes?: string): Promise<APIResponse> {
+    return this.request({
+      method: 'POST',
+      url: `/admin/ingredients/${id}/restock`,
+      data: { quantity, notes },
+    });
+  }
+
+  /**
+   * Get ingredient stock history
+   * @param id - Ingredient ID
+   * @returns Stock history records
+   */
+  async getIngredientHistory(id: string): Promise<APIResponse> {
+    return this.request({
+      method: 'GET',
+      url: `/admin/ingredients/${id}/history`,
+    });
+  }
+
+  /**
+   * Get low stock ingredients
+   * @returns List of ingredients below minimum stock
+   */
+  async getLowStockIngredients(): Promise<APIResponse> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/ingredients/low-stock',
+    });
+  }
+
+  // ===========================================
+  // Contact Submissions (Admin - Auth Required)
+  // ===========================================
+
+  /**
+   * Get new contacts count for badge
+   * @returns Count of new contact submissions
+   */
+  async getNewContactsCount(): Promise<APIResponse<{ new_contacts: number }>> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/contacts/counts/new',
+    });
   }
 
   // Utility methods

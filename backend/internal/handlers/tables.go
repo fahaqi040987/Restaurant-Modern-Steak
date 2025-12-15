@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
-	"pos-backend/internal/models"
+	"pos-public/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -344,4 +344,3 @@ func (h *TableHandler) GetTableStatus(c *gin.Context) {
 		Data:    response,
 	})
 }
-

@@ -52,3 +52,8 @@ export function InlineLoading({ text, size = "sm", className }: InlineLoadingPro
     </div>
   )
 }
+
+// Small spinner specifically for buttons
+export function ButtonLoadingSpinner() {
+  return <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+}
