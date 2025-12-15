@@ -6,6 +6,7 @@ import (
 
 	"pos-public/internal/api"
 	"pos-public/internal/database"
+	"pos-public/internal/handlers"
 	"pos-public/internal/middleware"
 
 	"github.com/gin-contrib/cors"
@@ -61,10 +62,12 @@ func main() {
 	// Add authentication middleware to protected routes
 	authMiddleware := middleware.AuthMiddleware()
 
-	// Health check endpoint
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "healthy", "message": "POS API is running"})
-	})
+	// Initialize health handler for comprehensive health checks
+	healthHandler := handlers.NewHealthHandler(db)
+
+	// Health check endpoints (no authentication required)
+	router.GET("/health", healthHandler.GetSystemHealth)        // Simple health check
+	router.GET("/api/v1/health", healthHandler.GetSystemHealth) // API v1 health check
 
 	// Initialize API routes
 	apiRoutes := router.Group("/api/v1")

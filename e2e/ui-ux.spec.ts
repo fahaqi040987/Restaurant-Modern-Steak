@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test';
 
 // Helper function to login
 async function loginAsAdmin(page: any) {
-  await page.goto('/');
+  await page.goto('/login');
   await page.fill('input[name="username"]', 'admin');
   await page.fill('input[type="password"]', 'admin123');
   await page.click('button[type="submit"]');
