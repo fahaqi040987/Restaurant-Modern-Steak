@@ -1268,18 +1268,17 @@ export async function printReceipt(data: ReceiptData, printerName?: string) {
   };
 
   const receipt = [
-    {
-      type: 'text',
-      value: 'STEAK KENANGAN',
-      style: 'text-align:center;font-size:20px;font-weight:bold;'
-    },
-    {
-      type: 'text',
-      value: 'Jl. Sudirman No. 123, Jakarta',
-      style: 'text-align:center;'
-    },
-    // ... format receipt content
-  ];
+  {
+    type: 'text',
+    value: restaurantInfo.name,
+    style: 'text-align:center;font-size:20px;font-weight:bold;'
+  },
+  {
+    type: 'text',
+    value: restaurantInfo.address,
+    style: 'text-align:center;'
+  },
+];
 
   await PosPrinter.print(receipt, options);
 }

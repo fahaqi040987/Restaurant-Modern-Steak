@@ -1,13 +1,14 @@
 # Multi-stage build for Go backend
 
 # Build stage
-FROM golang:1.25-alpine AS builder
+# Build stage
+FROM golang:1.23-alpine AS builder
 
 # Set working directory
 WORKDIR /app
 
 # Install git for go mod download
-RUN apk add --no-cache git
+RUN apk update && apk add --no-cache git
 
 # Copy go mod files
 COPY go.mod go.sum ./

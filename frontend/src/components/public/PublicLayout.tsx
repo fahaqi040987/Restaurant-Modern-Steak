@@ -1,11 +1,11 @@
-import { useQuery } from '@tanstack/react-query'
-import { apiClient } from '@/api/client'
-import { PublicHeader } from './PublicHeader'
-import { PublicFooter } from './PublicFooter'
-import '@/styles/public-theme.css'
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/api/client";
+import { PublicHeader } from "./PublicHeader";
+import { PublicFooter } from "./PublicFooter";
+import "@/styles/public-theme.css";
 
 interface PublicLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 /**
@@ -15,11 +15,13 @@ interface PublicLayoutProps {
 export function PublicLayout({ children }: PublicLayoutProps) {
   // Fetch restaurant info for footer
   const { data: restaurantInfo } = useQuery({
-    queryKey: ['restaurantInfo'],
+    queryKey: ["restaurantInfo"],
     queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 30, // 30 minutes - restaurant info rarely changes
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     retry: 1,
-  })
+  });
 
   return (
     <div className="public-theme min-h-screen flex flex-col">
@@ -29,7 +31,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
       </main>
       <PublicFooter restaurantInfo={restaurantInfo} />
     </div>
-  )
+  );
 }
 
-export default PublicLayout
+export default PublicLayout;

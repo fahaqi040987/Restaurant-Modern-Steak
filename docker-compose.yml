@@ -14,6 +14,12 @@ services:
       - ./database/init:/docker-entrypoint-initdb.d
     networks:
       - pos-network
+    # TAMBAHKAN KODE DI BAWAH INI
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pos_system"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Golang Backend API
   backend:
@@ -32,14 +38,22 @@ services:
       - "8080:8080"
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
     networks:
       - pos-network
     volumes:
       - ./backend:/app
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--output-document=-", "http://127.0.0.1:8080/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--output-document=-",
+          "http://127.0.0.1:8080/health",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -71,4 +85,3 @@ volumes:
 networks:
   pos-network:
     driver: bridge
-

@@ -1,9 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Phone,
   Mail,
@@ -13,18 +13,18 @@ import {
   ExternalLink,
   Send,
   CheckCircle,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -32,102 +32,118 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { PublicLayout } from '@/components/public/PublicLayout'
-import { apiClient } from '@/api/client'
-import { cn } from '@/lib/utils'
-import { useToast } from '@/hooks/use-toast'
+} from "@/components/ui/form";
+import { PublicLayout } from "@/components/public/PublicLayout";
+import { apiClient } from "@/api/client";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
-export const Route = createFileRoute('/public/contact')({
+export const Route = createFileRoute("/public/contact")({
   component: PublicContactPage,
-})
+});
 
 // Form validation schema
 const contactFormSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
-  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  name: z.string().min(1, "Name is required").max(100, "Name is too long"),
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
   phone: z.string().optional(),
-  subject: z.string().min(1, 'Please select a subject'),
-  message: z.string().min(10, 'Message must be at least 10 characters').max(1000, 'Message is too long'),
-})
+  subject: z.string().min(1, "Please select a subject"),
+  message: z
+    .string()
+    .min(10, "Message must be at least 10 characters")
+    .max(1000, "Message is too long"),
+});
 
-type ContactFormValues = z.infer<typeof contactFormSchema>
+type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 const SUBJECTS = [
-  { value: 'reservation', label: 'Reservation' },
-  { value: 'feedback', label: 'Feedback' },
-  { value: 'catering', label: 'Catering' },
-  { value: 'general', label: 'General Inquiry' },
-]
+  { value: "reservation", label: "Reservation" },
+  { value: "feedback", label: "Feedback" },
+  { value: "catering", label: "Catering" },
+  { value: "general", label: "General Inquiry" },
+];
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const DAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 function PublicContactPage() {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const { data: restaurantInfo, isLoading } = useQuery({
-    queryKey: ['restaurantInfo'],
+    queryKey: ["restaurantInfo"],
     queryFn: () => apiClient.getRestaurantInfo(),
     staleTime: 1000 * 60 * 30,
-  })
+  });
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      subject: '',
-      message: '',
+      name: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: "",
     },
-  })
+  });
 
   const submitMutation = useMutation({
     mutationFn: (data: ContactFormValues) => apiClient.submitContactForm(data),
     onSuccess: () => {
-      setIsSubmitted(true)
-      form.reset()
+      setIsSubmitted(true);
+      form.reset();
       toast({
-        title: 'Message Sent!',
-        description: 'Thank you for contacting us. We\'ll get back to you soon.',
-      })
+        title: "Message Sent!",
+        description: "Thank you for contacting us. We'll get back to you soon.",
+      });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to send message. Please try again.',
-        variant: 'destructive',
-      })
+        title: "Error",
+        description:
+          error.message || "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
     },
-  })
+  });
 
   const onSubmit = (data: ContactFormValues) => {
-    submitMutation.mutate(data)
-  }
+    submitMutation.mutate(data);
+  };
 
   const copyAddress = async () => {
     if (restaurantInfo?.address) {
-      const fullAddress = `${restaurantInfo.address}${restaurantInfo.city ? `, ${restaurantInfo.city}` : ''}${restaurantInfo.postal_code ? ` ${restaurantInfo.postal_code}` : ''}`
-      await navigator.clipboard.writeText(fullAddress)
+      const fullAddress = `${restaurantInfo.address}${
+        restaurantInfo.city ? `, ${restaurantInfo.city}` : ""
+      }${restaurantInfo.postal_code ? ` ${restaurantInfo.postal_code}` : ""}`;
+      await navigator.clipboard.writeText(fullAddress);
       toast({
-        title: 'Address Copied',
-        description: 'The address has been copied to your clipboard.',
-      })
+        title: "Address Copied",
+        description: "The address has been copied to your clipboard.",
+      });
     }
-  }
+  };
 
   const formatTime = (time: string): string => {
-    const [hourStr, minuteStr] = time.split(':')
-    const hour = parseInt(hourStr, 10)
-    const minute = minuteStr || '00'
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const hour12 = hour % 12 || 12
-    return minute === '00' ? `${hour12} ${ampm}` : `${hour12}:${minute} ${ampm}`
-  }
+    const [hourStr, minuteStr] = time.split(":");
+    const hour = parseInt(hourStr, 10);
+    const minute = minuteStr || "00";
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return minute === "00"
+      ? `${hour12} ${ampm}`
+      : `${hour12}:${minute} ${ampm}`;
+  };
 
-  const today = new Date().getDay()
+  const today = new Date().getDay();
 
   return (
     <PublicLayout>
@@ -136,12 +152,13 @@ function PublicContactPage() {
         <div className="public-container text-center">
           <h1
             className="text-4xl md:text-5xl font-bold text-[var(--public-text-primary)] mb-4"
-            style={{ fontFamily: 'var(--public-font-heading)' }}
+            style={{ fontFamily: "var(--public-font-heading)" }}
           >
             Contact <span className="text-[var(--public-secondary)]">Us</span>
           </h1>
           <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto">
-            We'd love to hear from you. Get in touch for reservations, inquiries, or feedback.
+            We'd love to hear from you. Get in touch for reservations,
+            inquiries, or feedback.
           </p>
         </div>
       </section>
@@ -162,9 +179,11 @@ function PublicContactPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-[var(--public-text-secondary)]">
-                    {restaurantInfo?.address || 'Address loading...'}
+                    {restaurantInfo?.address || "Address loading..."}
                     {restaurantInfo?.city && <>, {restaurantInfo.city}</>}
-                    {restaurantInfo?.postal_code && <> {restaurantInfo.postal_code}</>}
+                    {restaurantInfo?.postal_code && (
+                      <> {restaurantInfo.postal_code}</>
+                    )}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -196,20 +215,20 @@ function PublicContactPage() {
                   </div>
 
                   {/* Google Maps Embed */}
-                  {restaurantInfo?.map_latitude && restaurantInfo?.map_longitude && (
-                    <div className="mt-4 rounded-lg overflow-hidden border border-[var(--public-border)]">
-                      <iframe
-                        src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&zoom=15`}
-                        width="100%"
-                        height="200"
-                        style={{ border: 0 }}
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        title="Restaurant Location"
-                      />
-                    </div>
-                  )}
+                  {restaurantInfo?.map_latitude &&
+                    restaurantInfo?.map_longitude && (
+                      <div className="mt-4 rounded-lg overflow-hidden border border-[var(--public-border)]">
+                        <iframe
+                          key={`${restaurantInfo.map_latitude}-${restaurantInfo.map_longitude}`}
+                          src={`https://www.google.com/maps?q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&z=15&output=embed`}
+                          width="100%"
+                          height="200"
+                          style={{ border: 0 }}
+                          loading="lazy"
+                          title="Restaurant Location"
+                        />
+                      </div>
+                    )}
                 </CardContent>
               </Card>
 
@@ -259,18 +278,18 @@ function PublicContactPage() {
                         <div
                           key={hours.id}
                           className={cn(
-                            'flex justify-between py-2 px-3 rounded',
+                            "flex justify-between py-2 px-3 rounded",
                             hours.day_of_week === today
-                              ? 'bg-[var(--public-secondary)]/10 border border-[var(--public-secondary)]/30'
-                              : ''
+                              ? "bg-[var(--public-secondary)]/10 border border-[var(--public-secondary)]/30"
+                              : ""
                           )}
                         >
                           <span
                             className={cn(
-                              'font-medium',
+                              "font-medium",
                               hours.day_of_week === today
-                                ? 'text-[var(--public-secondary)]'
-                                : 'text-[var(--public-text-primary)]'
+                                ? "text-[var(--public-secondary)]"
+                                : "text-[var(--public-text-primary)]"
                             )}
                           >
                             {DAY_NAMES[hours.day_of_week]}
@@ -280,8 +299,10 @@ function PublicContactPage() {
                           </span>
                           <span className="text-[var(--public-text-secondary)]">
                             {hours.is_closed
-                              ? 'Closed'
-                              : `${formatTime(hours.open_time)} - ${formatTime(hours.close_time)}`}
+                              ? "Closed"
+                              : `${formatTime(hours.open_time)} - ${formatTime(
+                                  hours.close_time
+                                )}`}
                           </span>
                         </div>
                       ))}
@@ -306,7 +327,8 @@ function PublicContactPage() {
                         Thank You!
                       </h3>
                       <p className="text-[var(--public-text-secondary)] mb-4">
-                        Your message has been sent successfully. We'll get back to you soon.
+                        Your message has been sent successfully. We'll get back
+                        to you soon.
                       </p>
                       <Button
                         onClick={() => setIsSubmitted(false)}
@@ -318,7 +340,10 @@ function PublicContactPage() {
                     </div>
                   ) : (
                     <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-6"
+                      >
                         <FormField
                           control={form.control}
                           name="name"
@@ -389,7 +414,10 @@ function PublicContactPage() {
                               <FormLabel className="text-[var(--public-text-primary)]">
                                 Subject <span className="text-red-500">*</span>
                               </FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
                                 <FormControl>
                                   <SelectTrigger className="bg-[var(--public-bg-elevated)] border-[var(--public-border)] text-[var(--public-text-primary)]">
                                     <SelectValue placeholder="Select a subject" />
@@ -460,5 +488,5 @@ function PublicContactPage() {
         </div>
       </section>
     </PublicLayout>
-  )
+  );
 }
