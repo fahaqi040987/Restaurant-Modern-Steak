@@ -1,13 +1,15 @@
-import { createFileRoute, Navigate, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-
-import apiClient from '@/api/client'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { apiClient } from '@/api/client'
 import type { LoginRequest, LoginResponse, APIResponse } from '@/types'
-import { Eye, EyeOff, Store, Users, CreditCard, BarChart3, ChefHat, UserCheck, Settings } from 'lucide-react'
+import '@/styles/public-theme.css'
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -17,11 +19,43 @@ function LoginPage() {
   const router = useRouter()
   const [formData, setFormData] = useState<LoginRequest>({ username: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
 
-  // Check if already authenticated
-  if (apiClient.isAuthenticated()) {
-    return <Navigate to="/" />
+  // Check if already authenticated and redirect
+  useEffect(() => {
+    if (apiClient.isAuthenticated()) {
+      const storedUser = localStorage.getItem('pos_user')
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser)
+          redirectByRole(user.role)
+        } catch {
+          // Invalid stored user, stay on login page
+        }
+      }
+    }
+  }, [])
+
+  const redirectByRole = (role: string) => {
+    switch (role) {
+      case 'admin':
+      case 'manager':
+        router.navigate({ to: '/admin/dashboard' })
+        break
+      case 'kitchen':
+        router.navigate({ to: '/kitchen' })
+        break
+      case 'server':
+        router.navigate({ to: '/admin/server' })
+        break
+      case 'counter':
+      case 'cashier':
+        router.navigate({ to: '/admin/counter' })
+        break
+      default:
+        router.navigate({ to: '/' })
+    }
   }
 
   const loginMutation = useMutation({
@@ -30,29 +64,34 @@ function LoginPage() {
       return response
     },
     onSuccess: (data) => {
-      console.log('Login success:', data)
-      console.log('Current API URL:', import.meta.env.VITE_API_URL)
       if (data.success && data.data) {
         apiClient.setAuthToken(data.data.token)
         localStorage.setItem('pos_user', JSON.stringify(data.data.user))
-        console.log('Auth token set, redirecting to home...')
+
+        // Store remember me preference
+        if (rememberMe) {
+          localStorage.setItem('pos_remember_user', formData.username)
+        } else {
+          localStorage.removeItem('pos_remember_user')
+        }
+
+        // Redirect based on role
         setTimeout(() => {
-          router.navigate({ to: '/' })
+          redirectByRole(data.data!.user.role)
         }, 100)
       } else {
-        console.error('Login failed:', data)
-        setError(data.message || 'Login failed')
+        setError(data.message || 'Login failed. Please check your credentials.')
       }
     },
     onError: (error: any) => {
-      setError(error.message || 'Login failed')
+      setError(error.message || 'Login failed. Please try again.')
     },
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    
+
     if (!formData.username || !formData.password) {
       setError('Username and password are required')
       return
@@ -61,366 +100,150 @@ function LoginPage() {
     loginMutation.mutate(formData)
   }
 
-  const fillDemoCredentials = (username: string, password: string) => {
-    setFormData({ username, password })
-  }
+  // Load remembered username on mount
+  useEffect(() => {
+    const rememberedUser = localStorage.getItem('pos_remember_user')
+    if (rememberedUser) {
+      setFormData((prev) => ({ ...prev, username: rememberedUser }))
+      setRememberMe(true)
+    }
+  }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex">
-      {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 p-12 text-white relative overflow-hidden">
-        <div className="relative z-10 flex flex-col justify-center max-w-lg">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-              <Store className="w-7 h-7" />
-            </div>
-            <h1 className="text-3xl font-bold">POS System</h1>
-          </div>
-          
-          <h2 className="text-4xl font-bold mb-6 leading-tight">
-            Modern Point of Sale
-            <br />
-            <span className="text-blue-200">for Your Business</span>
-          </h2>
-          
-          <p className="text-xl text-blue-100 mb-12 leading-relaxed">
-            Streamline your operations with our complete POS solution. Manage orders, 
-            track inventory, and grow your business with powerful analytics.
-          </p>
-
-          <div className="grid grid-cols-2 gap-6">
-            {[
-              { icon: Users, title: 'Staff Management', desc: 'Role-based access control' },
-              { icon: CreditCard, title: 'Payment Processing', desc: 'Multiple payment methods' },
-              { icon: BarChart3, title: 'Real-time Analytics', desc: 'Business insights' },
-              { icon: Store, title: 'Order Management', desc: 'Kitchen workflow' },
-            ].map((feature, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <feature.icon className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-sm">{feature.title}</h3>
-                  <p className="text-blue-200 text-xs">{feature.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Sponsor Banner */}
-          <div className="mt-12 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 shadow-lg">
-            <div className="text-center mb-3">
-              <div className="inline-flex items-center gap-2 bg-white/20 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-                Sponsored by MadeByAris
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {/* MVP/Project Services */}
-              <div className="bg-white/15 rounded-lg p-3 border border-white/20">
-                <div className="flex items-start gap-2">
-                  <div className="w-6 h-6 bg-white/30 rounded-md flex items-center justify-center flex-shrink-0">
-                    <Store className="w-3 h-3 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white text-sm mb-1">Need a Good MVP or Project?</h3>
-                    <p className="text-xs text-blue-100 mb-2 leading-relaxed">
-                      Professional development services for startups and businesses
-                    </p>
-                    <a 
-                      href="https://madebyaris.com" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-xs font-medium text-blue-200 hover:text-white transition-colors"
-                    >
-                      Visit madebyaris.com →
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Coding Bootcamp */}
-              <div className="bg-white/15 rounded-lg p-3 border border-white/20">
-                <div className="flex items-start gap-2">
-                  <div className="w-6 h-6 bg-white/30 rounded-md flex items-center justify-center flex-shrink-0">
-                    <Users className="w-3 h-3 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white text-sm mb-1">Want to be Good in Vibe Code?</h3>
-                    <p className="text-xs text-blue-100 mb-2 leading-relaxed">
-                      Join our intensive coding bootcamp and level up your skills
-                    </p>
-                    <a 
-                      href="https://bootcamp.madebyaris.com" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-xs font-medium text-blue-200 hover:text-white transition-colors"
-                    >
-                      Join bootcamp.madebyaris.com →
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom tagline */}
-            <div className="mt-3 pt-3 border-t border-white/20">
-              <p className="text-center text-xs text-blue-200">
-                ✨ Building amazing software solutions & empowering developers
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full"
-               style={{
-                 backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
-                 backgroundSize: '50px 50px'
-               }} />
-        </div>
+    <div className="min-h-screen bg-[var(--public-bg-primary)] flex items-center justify-center p-4">
+      {/* Background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a574' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}
+        />
       </div>
 
-      {/* Right Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <Card className="shadow-xl border-0">
-            <CardHeader className="text-center pb-8">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                <Store className="w-8 h-8 text-white" />
+      <Card className="w-full max-w-md relative bg-[var(--public-bg-elevated)] border-[var(--public-border)]">
+        <CardHeader className="text-center pb-2">
+          {/* Logo */}
+          <div className="mb-4">
+            <h1
+              className="text-3xl font-bold text-[var(--public-text-primary)]"
+              style={{ fontFamily: 'var(--public-font-heading)' }}
+            >
+              Modern<span className="text-[var(--public-secondary)]">Steak</span>
+            </h1>
+          </div>
+          <CardTitle className="text-xl text-[var(--public-text-primary)]">
+            Staff Portal
+          </CardTitle>
+          <CardDescription className="text-[var(--public-text-secondary)]">
+            Enter your credentials to access the POS system
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Error Alert */}
+            {error && (
+              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm">{error}</span>
               </div>
-              <CardTitle className="text-2xl font-bold">Restaurant POS Login</CardTitle>
-              <CardDescription className="text-base">
-                🍽️ Choose your role below or sign in manually
-              </CardDescription>
-            </CardHeader>
+            )}
 
-            <CardContent className="space-y-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Username</label>
-                  <Input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                    className="h-11"
-                    autoComplete="username"
-                    disabled={loginMutation.isPending}
-                  />
-                </div>
+            {/* Username Field */}
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-[var(--public-text-primary)]">
+                Username
+              </Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className="bg-[var(--public-bg-primary)] border-[var(--public-border)] text-[var(--public-text-primary)] placeholder:text-[var(--public-text-muted)] focus:border-[var(--public-secondary)] focus:ring-[var(--public-secondary)]"
+                autoComplete="username"
+                autoFocus
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Password</label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.password}
-                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                      className="h-11 pr-10"
-                      autoComplete="current-password"
-                      disabled={loginMutation.isPending}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="bg-gradient-to-r from-red-50 to-red-25 border border-red-200 text-red-700 p-4 rounded-lg text-sm shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                      </div>
-                      <span className="font-medium">Login Failed</span>
-                    </div>
-                    <div className="mt-1 text-xs text-red-600">{error}</div>
-                  </div>
-                )}
-
-                <Button 
-                  type="submit" 
-                  className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-base font-medium transition-all duration-200 shadow-md hover:shadow-lg"
-                  disabled={loginMutation.isPending}
+            {/* Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-[var(--public-text-primary)]">
+                Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="bg-[var(--public-bg-primary)] border-[var(--public-border)] text-[var(--public-text-primary)] placeholder:text-[var(--public-text-muted)] focus:border-[var(--public-secondary)] focus:ring-[var(--public-secondary)] pr-10"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--public-text-muted)] hover:text-[var(--public-text-primary)] transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {loginMutation.isPending ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      Signing In...
-                    </div>
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    'Sign In to POS System'
+                    <Eye className="h-4 w-4" />
                   )}
-                </Button>
-              </form>
-
-              <div className="border-t pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-gray-700">Quick Access Demo Accounts</h3>
-                  <div className="text-xs text-gray-500">Click to login instantly</div>
-                </div>
-                
-                {/* Featured Roles - Server & Cashier */}
-                <div className="mb-4">
-                  <div className="text-xs text-gray-600 mb-2 font-medium">🌟 Featured Roles</div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { 
-                        username: 'server1', 
-                        role: 'Server', 
-                        icon: UserCheck,
-                        bg: 'bg-gradient-to-r from-purple-100 to-purple-50 text-purple-800 border-purple-200', 
-                        desc: '🍽️ Table service & dine-in orders', 
-                        password: 'admin123',
-                        features: ['Table management', 'Order taking', 'Guest service']
-                      },
-                      { 
-                        username: 'counter1', 
-                        role: 'Counter', 
-                        icon: CreditCard,
-                        bg: 'bg-gradient-to-r from-green-100 to-green-50 text-green-800 border-green-200', 
-                        desc: '💰 Payment processing & all orders', 
-                        password: 'admin123',
-                        features: ['All order types', 'Payment processing', 'Receipt printing']
-                      },
-                    ].map((account) => (
-                      <button
-                        key={account.username}
-                        onClick={() => fillDemoCredentials(account.username, account.password)}
-                        className={`p-4 rounded-xl border-2 ${account.bg} hover:scale-105 text-left transition-all duration-200 shadow-sm hover:shadow-md`}
-                        disabled={loginMutation.isPending}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 bg-white/70 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <account.icon className="w-4 h-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="font-semibold text-sm">{account.role}</div>
-                              <div className="text-xs opacity-60 font-mono">{account.password}</div>
-                            </div>
-                            <div className="text-xs mb-2 opacity-80">{account.desc}</div>
-                            <div className="flex flex-wrap gap-1">
-                              {account.features.map((feature, idx) => (
-                                <span key={idx} className="text-[10px] bg-white/50 px-2 py-0.5 rounded-full">
-                                  {feature}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Other Roles */}
-                <div>
-                  <div className="text-xs text-gray-600 mb-2 font-medium">Other Demo Accounts</div>
-                  <div className="grid gap-2">
-                    {[
-                      { username: 'admin', role: 'Admin', icon: Settings, bg: 'bg-red-50 text-red-700 border-red-100', desc: '👑 Full system access', password: 'admin123' },
-                      { username: 'manager1', role: 'Manager', icon: BarChart3, bg: 'bg-blue-50 text-blue-700 border-blue-100', desc: '📊 Management & reports', password: 'admin123' },
-                      { username: 'kitchen1', role: 'Kitchen', icon: ChefHat, bg: 'bg-orange-50 text-orange-700 border-orange-100', desc: '👨‍🍳 Order preparation', password: 'admin123' },
-                    ].map((account) => (
-                      <button
-                        key={account.username}
-                        onClick={() => fillDemoCredentials(account.username, account.password)}
-                        className={`flex items-center justify-between p-3 border rounded-lg ${account.bg} hover:bg-opacity-80 text-left transition-all duration-200`}
-                        disabled={loginMutation.isPending}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 bg-white/70 rounded flex items-center justify-center">
-                            <account.icon className="w-3 h-3" />
-                          </div>
-                          <div>
-                            <div className="font-medium text-sm">{account.role}</div>
-                            <div className="text-xs opacity-70">{account.desc}</div>
-                          </div>
-                        </div>
-                        <div className="text-xs opacity-60 font-mono">{account.password}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Mobile Sponsor Banner */}
-          <div className="mt-8 w-full max-w-md lg:hidden">
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 shadow-lg">
-              <div className="text-center mb-4">
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow-md">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                  Sponsored by MadeByAris
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {/* MVP/Project Services */}
-                <div className="bg-white/70 rounded-xl p-4 border border-amber-200/50">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Store className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 mb-1">Need a Good MVP or Project?</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        Professional development services for startups and businesses
-                      </p>
-                      <a 
-                        href="https://madebyaris.com" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                      >
-                        Visit madebyaris.com →
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Coding Bootcamp */}
-                <div className="bg-white/70 rounded-xl p-4 border border-amber-200/50">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Users className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 mb-1">Want to be Good in Vibe Code?</h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        Join our intensive coding bootcamp and level up your skills
-                      </p>
-                      <a 
-                        href="https://bootcamp.madebyaris.com" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700 transition-colors"
-                      >
-                        Join bootcamp.madebyaris.com →
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom tagline */}
-              <div className="mt-4 pt-4 border-t border-amber-200/50">
-                <p className="text-center text-xs text-gray-500">
-                  ✨ Building amazing software solutions & empowering developers
-                </p>
+                </button>
               </div>
             </div>
+
+            {/* Remember Me */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="remember"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                className="border-[var(--public-border)] data-[state=checked]:bg-[var(--public-secondary)] data-[state=checked]:border-[var(--public-secondary)]"
+              />
+              <Label
+                htmlFor="remember"
+                className="text-sm text-[var(--public-text-secondary)] cursor-pointer"
+              >
+                Remember my username
+              </Label>
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={loginMutation.isPending}
+              className="w-full bg-[var(--public-secondary)] text-[var(--public-text-on-gold)] hover:bg-[var(--public-secondary-light)] font-semibold"
+            >
+              {loginMutation.isPending ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign In
+                </>
+              )}
+            </Button>
+          </form>
+
+          {/* Back to website link */}
+          <div className="mt-6 text-center">
+            <a
+              href="/public"
+              className="text-sm text-[var(--public-text-muted)] hover:text-[var(--public-secondary)] transition-colors"
+            >
+              ← Back to Website
+            </a>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

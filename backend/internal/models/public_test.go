@@ -9,22 +9,22 @@ import (
 func TestRestaurantInfoCreation(t *testing.T) {
 	info := RestaurantInfo{
 		Name:    "Steak Kenangan",
-		Address: "123 Main Street",
+		Address: "Jl. Jenderal Sudirman No. 123",
 		Phone:   "+62 21 1234 5678",
-		Email:   "info@modernsteak.com",
+		Email:   "customercare@steakkenangan.com",
 	}
 
 	if info.Name != "Steak Kenangan" {
 		t.Errorf("expected name 'Steak Kenangan', got '%s'", info.Name)
 	}
-	if info.Address != "123 Main Street" {
-		t.Errorf("expected address '123 Main Street', got '%s'", info.Address)
+	if info.Address != "Jl. Jenderal Sudirman No. 123" {
+		t.Errorf("expected address 'Jl. Jenderal Sudirman No. 123', got '%s'", info.Address)
 	}
 	if info.Phone != "+62 21 1234 5678" {
 		t.Errorf("expected phone '+62 21 1234 5678', got '%s'", info.Phone)
 	}
-	if info.Email != "info@modernsteak.com" {
-		t.Errorf("expected email 'info@modernsteak.com', got '%s'", info.Email)
+	if info.Email != "customercare@steakkenangan.com" {
+		t.Errorf("expected email 'customercare@steakkenangan.com', got '%s'", info.Email)
 	}
 }
 

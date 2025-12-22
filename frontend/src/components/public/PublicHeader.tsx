@@ -92,7 +92,7 @@ export function PublicHeader() {
             asChild
             className="gap-2 text-[var(--public-text-secondary)] hover:text-[var(--public-secondary)] hover:bg-transparent"
           >
-            <a href="/staff">
+            <a href="/login">
               <User className="h-4 w-4" aria-hidden="true" />
               <span>Staff Login</span>
             </a>
@@ -151,7 +151,7 @@ export function PublicHeader() {
               {/* Mobile Staff Login */}
               <div className="mt-4 pt-4 border-t border-[var(--public-border)]">
                 <a
-                  href="/staff"
+                  href="/login"
                   onClick={closeMobileMenu}
                   className="flex items-center gap-2 text-[var(--public-text-secondary)] hover:text-[var(--public-secondary)] transition-colors"
                 >

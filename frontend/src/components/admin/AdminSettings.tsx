@@ -15,9 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { 
-  Settings, 
-  Database, 
+import {
+  Settings,
+  Database,
   Bell,
   Globe,
   DollarSign,
@@ -34,6 +34,7 @@ import {
 import apiClient from '@/api/client'
 import { toastHelpers } from '@/lib/toast-helpers'
 import { useTheme } from '@/components/theme-provider'
+import { receiptPrinter } from '@/services/receiptPrinter'
 
 type SystemSettings = Record<string, any>
 
@@ -85,7 +86,7 @@ export function AdminSettings() {
         service_charge: newSettings.service_charge ? parseFloat(newSettings.service_charge) : 0,
         enable_rounding: newSettings.enable_rounding === 'true' || newSettings.enable_rounding === true,
       }
-      
+
       const response = await apiClient.updateSettings(parsedSettings)
       if (!response.success) {
         throw new Error(response.message)
@@ -114,6 +115,35 @@ export function AdminSettings() {
 
   const updateSetting = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }))
+  }
+
+  // State for test printing
+  const [testPrinting, setTestPrinting] = useState(false)
+
+  // Handle test print
+  const handleTestPrint = async () => {
+    setTestPrinting(true)
+    try {
+      // Update printer settings before test
+      receiptPrinter.updateSettings({
+        restaurant_name: settings.restaurant_name,
+        receipt_header: settings.receipt_header,
+        receipt_footer: settings.receipt_footer,
+        paper_size: settings.paper_size,
+        currency: settings.currency,
+        tax_rate: parseFloat(settings.tax_rate) || 11,
+        printer_name: settings.printer_name,
+        print_copies: parseInt(settings.print_copies) || 1,
+      })
+
+      await receiptPrinter.testPrint()
+      toastHelpers.success('Test print berhasil! Periksa printer Anda.')
+    } catch (error) {
+      console.error('Test print error:', error)
+      toastHelpers.error('Test print gagal. Periksa koneksi printer.')
+    } finally {
+      setTestPrinting(false)
+    }
   }
 
   if (isLoadingSettings) {
@@ -434,6 +464,54 @@ export function AdminSettings() {
                 />
               </div>
             </div>
+
+            {/* Printer Configuration */}
+            <div className="border-t pt-4 mt-4 space-y-4">
+              <h4 className="font-medium text-sm">{t('settings.printerConfig', 'Konfigurasi Printer')}</h4>
+
+              <div className="space-y-2">
+                <Label htmlFor="printer_name">{t('settings.printerName', 'Nama Printer')}</Label>
+                <Input
+                  id="printer_name"
+                  value={settings.printer_name || ''}
+                  onChange={(e) => updateSetting('printer_name', e.target.value)}
+                  placeholder="Default"
+                />
+                <p className="text-xs text-muted-foreground">Nama printer sistem (kosongkan untuk default)</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="print_copies">{t('settings.printCopies', 'Jumlah Salinan')}</Label>
+                <Select
+                  value={settings.print_copies || '1'}
+                  onValueChange={(value) => updateSetting('print_copies', value)}
+                >
+                  <SelectTrigger id="print_copies">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 Salinan</SelectItem>
+                    <SelectItem value="2">2 Salinan (Pelanggan + Dapur)</SelectItem>
+                    <SelectItem value="3">3 Salinan</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Jumlah salinan struk yang dicetak</p>
+              </div>
+
+              <Button
+                onClick={handleTestPrint}
+                variant="outline"
+                className="w-full"
+                disabled={testPrinting}
+              >
+                {testPrinting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Printer className="w-4 h-4 mr-2" />
+                )}
+                {testPrinting ? 'Mencetak...' : t('settings.testPrint', 'Test Print')}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -657,7 +735,7 @@ export function AdminSettings() {
                   Last Backup
                 </Badge>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {healthData?.last_backup_at 
+                  {healthData?.last_backup_at
                     ? new Date(healthData.last_backup_at).toLocaleDateString()
                     : 'Never'
                   }

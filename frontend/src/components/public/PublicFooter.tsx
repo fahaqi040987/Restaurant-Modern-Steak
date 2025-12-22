@@ -209,7 +209,7 @@ export function PublicFooter({ restaurantInfo }: PublicFooterProps) {
               © {new Date().getFullYear()} Steak Kenangan. All rights reserved.
             </p>
             <a
-              href="/staff"
+              href="/login"
               className="text-xs text-[var(--public-text-muted)] hover:text-[var(--public-text-secondary)] transition-colors"
             >
               Staff Portal

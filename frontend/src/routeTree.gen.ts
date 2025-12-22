@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as StaffRouteImport } from './routes/staff'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as KitchenRouteImport } from './routes/kitchen'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -19,6 +18,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as PublicMenuRouteImport } from './routes/public/menu'
 import { Route as PublicContactRouteImport } from './routes/public/contact'
 import { Route as PublicAboutRouteImport } from './routes/public/about'
+import { Route as OrderTableCodeRouteImport } from './routes/order.$tableCode'
 import { Route as AdminTablesRouteImport } from './routes/admin/tables'
 import { Route as AdminStaffRouteImport } from './routes/admin/staff'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
@@ -34,11 +34,6 @@ import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminCounterRouteImport } from './routes/admin/counter'
 import { Route as AdminContactsRouteImport } from './routes/admin/contacts'
 
-const StaffRoute = StaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -82,6 +77,11 @@ const PublicContactRoute = PublicContactRouteImport.update({
 const PublicAboutRoute = PublicAboutRouteImport.update({
   id: '/public/about',
   path: '/public/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderTableCodeRoute = OrderTableCodeRouteImport.update({
+  id: '/order/$tableCode',
+  path: '/order/$tableCode',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTablesRoute = AdminTablesRouteImport.update({
@@ -160,7 +160,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
-  '/staff': typeof StaffRoute
   '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -175,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
+  '/order/$tableCode': typeof OrderTableCodeRoute
   '/public/about': typeof PublicAboutRoute
   '/public/contact': typeof PublicContactRoute
   '/public/menu': typeof PublicMenuRoute
@@ -185,7 +185,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
-  '/staff': typeof StaffRoute
   '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -200,6 +199,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
+  '/order/$tableCode': typeof OrderTableCodeRoute
   '/public/about': typeof PublicAboutRoute
   '/public/contact': typeof PublicContactRoute
   '/public/menu': typeof PublicMenuRoute
@@ -212,7 +212,6 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
-  '/staff': typeof StaffRoute
   '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -227,6 +226,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
+  '/order/$tableCode': typeof OrderTableCodeRoute
   '/public/about': typeof PublicAboutRoute
   '/public/contact': typeof PublicContactRoute
   '/public/menu': typeof PublicMenuRoute
@@ -240,7 +240,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/kitchen'
     | '/login'
-    | '/staff'
     | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
@@ -255,6 +254,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/tables'
+    | '/order/$tableCode'
     | '/public/about'
     | '/public/contact'
     | '/public/menu'
@@ -265,7 +265,6 @@ export interface FileRouteTypes {
     | '/'
     | '/kitchen'
     | '/login'
-    | '/staff'
     | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
@@ -280,6 +279,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/tables'
+    | '/order/$tableCode'
     | '/public/about'
     | '/public/contact'
     | '/public/menu'
@@ -291,7 +291,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/kitchen'
     | '/login'
-    | '/staff'
     | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
@@ -306,6 +305,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/tables'
+    | '/order/$tableCode'
     | '/public/about'
     | '/public/contact'
     | '/public/menu'
@@ -318,7 +318,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   KitchenRoute: typeof KitchenRoute
   LoginRoute: typeof LoginRoute
-  StaffRoute: typeof StaffRoute
+  OrderTableCodeRoute: typeof OrderTableCodeRoute
   PublicAboutRoute: typeof PublicAboutRoute
   PublicContactRoute: typeof PublicContactRoute
   PublicMenuRoute: typeof PublicMenuRoute
@@ -327,13 +327,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/staff': {
-      id: '/staff'
-      path: '/staff'
-      fullPath: '/staff'
-      preLoaderRoute: typeof StaffRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -395,6 +388,13 @@ declare module '@tanstack/react-router' {
       path: '/public/about'
       fullPath: '/public/about'
       preLoaderRoute: typeof PublicAboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order/$tableCode': {
+      id: '/order/$tableCode'
+      path: '/order/$tableCode'
+      fullPath: '/order/$tableCode'
+      preLoaderRoute: typeof OrderTableCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/tables': {
@@ -541,7 +541,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   KitchenRoute: KitchenRoute,
   LoginRoute: LoginRoute,
-  StaffRoute: StaffRoute,
+  OrderTableCodeRoute: OrderTableCodeRoute,
   PublicAboutRoute: PublicAboutRoute,
   PublicContactRoute: PublicContactRoute,
   PublicMenuRoute: PublicMenuRoute,

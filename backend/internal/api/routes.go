@@ -46,6 +46,13 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		publicAPI.POST("/contact", publicHandler.SubmitContactForm)
 	}
 
+	// Customer self-ordering API routes (no authentication required)
+	customerAPI := router.Group("/customer")
+	{
+		customerAPI.GET("/table/:qr_code", publicHandler.GetTableByQRCode)
+		customerAPI.POST("/orders", publicHandler.CreateCustomerOrder)
+	}
+
 	// Protected routes (authentication required)
 	protected := router.Group("/")
 	protected.Use(authMiddleware)
