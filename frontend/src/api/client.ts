@@ -39,7 +39,7 @@ class APIClient {
     const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1';
     console.log('🔧 API Client baseURL:', apiUrl);
     console.log('🔧 Environment VITE_API_URL:', import.meta.env?.VITE_API_URL);
-    
+
     this.client = axios.create({
       baseURL: apiUrl,
       timeout: 30000,
@@ -415,9 +415,9 @@ class APIClient {
       search: params?.search,
       category_id: params?.category_id
     }
-    
-    return this.request({ 
-      method: 'GET', 
+
+    return this.request({
+      method: 'GET',
       url: '/admin/products',
       params: normalizedParams
     });
@@ -432,9 +432,9 @@ class APIClient {
       search: params?.search,
       active_only: params?.active_only
     }
-    
-    return this.request({ 
-      method: 'GET', 
+
+    return this.request({
+      method: 'GET',
       url: '/admin/categories',
       params: normalizedParams
     });
@@ -442,10 +442,10 @@ class APIClient {
 
   // Admin tables endpoint with pagination
   async getAdminTables(params?: { page?: number, limit?: number, search?: string, status?: string }): Promise<APIResponse<DiningTable[]>> {
-    return this.request({ 
-      method: 'GET', 
+    return this.request({
+      method: 'GET',
       url: '/admin/tables',
-      params 
+      params
     });
   }
 
@@ -574,10 +574,20 @@ class APIClient {
   }
 
   async getSystemHealth(): Promise<APIResponse<{
-    database: string;
-    database_latency_ms?: number;
-    api_version: string;
-    last_backup_at?: string;
+    database: {
+      status: string;
+      latency_ms: number;
+      last_check: string;
+    };
+    api: {
+      status: string;
+      version: string;
+    };
+    backup: {
+      status: string;
+      last_backup: string;
+      next_backup: string;
+    };
   }>> {
     return this.request({
       method: 'GET',
@@ -647,6 +657,76 @@ class APIClient {
     });
     if (!response.data) {
       throw new Error('Failed to submit contact form');
+    }
+    return response.data;
+  }
+
+  // ===========================================
+  // Customer Self-Ordering API (No Auth Required)
+  // ===========================================
+
+  /**
+   * Get table info by QR code for customer self-ordering
+   * @param qrCode - QR code scanned from table
+   * @returns Table information
+   */
+  async getTableByQRCode(qrCode: string): Promise<{
+    id: string;
+    table_number: string;
+    seating_capacity: number;
+    location?: string;
+  }> {
+    const response = await this.request<APIResponse<{
+      id: string;
+      table_number: string;
+      seating_capacity: number;
+      location?: string;
+    }>>({
+      method: 'GET',
+      url: `/customer/table/${encodeURIComponent(qrCode)}`,
+    });
+    if (!response.data) {
+      throw new Error('Table not found');
+    }
+    return response.data;
+  }
+
+  /**
+   * Create order from customer self-ordering (no auth required)
+   * @param orderData - Order details including table_id and items
+   * @returns Created order info
+   */
+  async createCustomerOrder(orderData: {
+    table_id: string;
+    customer_name?: string;
+    items: Array<{
+      product_id: string;
+      quantity: number;
+      special_instructions?: string;
+    }>;
+    notes?: string;
+  }): Promise<{
+    order_id: string;
+    order_number: string;
+    table_number: string;
+    subtotal: number;
+    tax_amount: number;
+    total_amount: number;
+  }> {
+    const response = await this.request<APIResponse<{
+      order_id: string;
+      order_number: string;
+      table_number: string;
+      subtotal: number;
+      tax_amount: number;
+      total_amount: number;
+    }>>({
+      method: 'POST',
+      url: '/customer/orders',
+      data: orderData,
+    });
+    if (!response.data) {
+      throw new Error('Failed to create order');
     }
     return response.data;
   }

@@ -61,7 +61,7 @@ export function PublicFooter({ restaurantInfo }: PublicFooterProps) {
                 className="font-serif text-xl font-semibold tracking-wide text-[var(--public-text-primary)]"
                 style={{ fontFamily: 'var(--public-font-heading)' }}
               >
-                Modern<span className="text-[var(--public-secondary)]">Steak</span>
+                Steak<span className="text-[var(--public-secondary)]">Kenangan</span>
               </h3>
             </Link>
             <p className="text-sm text-[var(--public-text-secondary)] leading-relaxed">
@@ -209,7 +209,7 @@ export function PublicFooter({ restaurantInfo }: PublicFooterProps) {
               © {new Date().getFullYear()} Steak Kenangan. All rights reserved.
             </p>
             <a
-              href="/staff"
+              href="/login"
               className="text-xs text-[var(--public-text-muted)] hover:text-[var(--public-text-secondary)] transition-colors"
             >
               Staff Portal

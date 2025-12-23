@@ -49,6 +49,8 @@ Thumbs.db
 # Editor directories and files
 .vscode/
 .idea/
+.cursor/
+.claude/
 *.swp
 *.swo
 *~
@@ -71,6 +73,8 @@ go.sum
 
 # Air build files (Go hot reloading)
 tmp/
+
+specs/
 
 # Frontend files
 .next/
@@ -97,3 +101,8 @@ playwright-report/
 coverage/
 *.coverage.*
 coverage.out
+
+*.github
+*.specify
+
+.venv/

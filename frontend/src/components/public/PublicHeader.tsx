@@ -71,7 +71,7 @@ export function PublicHeader() {
             className="font-serif text-xl font-semibold tracking-wide text-[var(--public-text-primary)]"
             style={{ fontFamily: 'var(--public-font-heading)' }}
           >
-            Modern<span className="text-[var(--public-secondary)]">Steak</span>
+            Steak<span className="text-[var(--public-secondary)]">Kenangan</span>
           </span>
         </Link>
 
@@ -92,7 +92,7 @@ export function PublicHeader() {
             asChild
             className="gap-2 text-[var(--public-text-secondary)] hover:text-[var(--public-secondary)] hover:bg-transparent"
           >
-            <a href="/staff">
+            <a href="/login">
               <User className="h-4 w-4" aria-hidden="true" />
               <span>Staff Login</span>
             </a>
@@ -129,7 +129,7 @@ export function PublicHeader() {
                 className="text-left font-serif text-lg text-[var(--public-text-primary)]"
                 style={{ fontFamily: 'var(--public-font-heading)' }}
               >
-                Modern<span className="text-[var(--public-secondary)]">Steak</span>
+                Steak<span className="text-[var(--public-secondary)]">Kenangan</span>
               </SheetTitle>
             </SheetHeader>
 
@@ -151,7 +151,7 @@ export function PublicHeader() {
               {/* Mobile Staff Login */}
               <div className="mt-4 pt-4 border-t border-[var(--public-border)]">
                 <a
-                  href="/staff"
+                  href="/login"
                   onClick={closeMobileMenu}
                   className="flex items-center gap-2 text-[var(--public-text-secondary)] hover:text-[var(--public-secondary)] transition-colors"
                 >

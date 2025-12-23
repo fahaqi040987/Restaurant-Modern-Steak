@@ -1,26 +1,29 @@
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ButtonLoadingSpinner } from '@/components/ui/loading-spinner'
-import { 
-  CheckCircle, 
-  X, 
-  Receipt, 
-  Printer, 
+import {
+  CheckCircle,
+  X,
+  Receipt,
+  Printer,
   CreditCard,
   Banknote,
   Wallet,
-  Smartphone
+  Smartphone,
+  Loader2
 } from 'lucide-react'
 import { PaymentMethodSelection, type PaymentMethod, type PaymentData } from './PaymentMethodSelection'
 import { formatCurrency } from '@/lib/utils'
 import apiClient from '@/api/client'
-import type { 
-  CartItem, 
-  DiningTable, 
-  CreateOrderRequest, 
+import { receiptPrinter } from '@/services/receiptPrinter'
+import { toastHelpers } from '@/lib/toast-helpers'
+import type {
+  CartItem,
+  DiningTable,
+  CreateOrderRequest,
   CreateOrderItem,
   ProcessPaymentRequest
 } from '@/types'
@@ -56,7 +59,18 @@ export function PaymentConfirmationModal({
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [orderId, setOrderId] = useState<string>('')
   const [receiptData, setReceiptData] = useState<any>(null)
+  const [isPrinting, setIsPrinting] = useState(false)
+  const [autoPrintTriggered, setAutoPrintTriggered] = useState(false)
   const queryClient = useQueryClient()
+
+  // Fetch system settings for auto-print configuration
+  const { data: settingsData } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn: async () => {
+      const response = await apiClient.getSettings()
+      return response.success ? response.data : {}
+    },
+  })
 
   const createOrderMutation = useMutation({
     mutationFn: async (orderData: CreateOrderRequest) => {
@@ -105,7 +119,7 @@ export function PaymentConfirmationModal({
 
       console.log('Creating order...', orderData)
       const orderResponse = await createOrderMutation.mutateAsync(orderData)
-      
+
       if (!orderResponse.success || !orderResponse.data) {
         throw new Error('Failed to create order')
       }
@@ -146,7 +160,7 @@ export function PaymentConfirmationModal({
 
       // Step 4: Success!
       setCurrentStep('success')
-      
+
       // Refresh related queries
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['tables'] })
@@ -159,11 +173,71 @@ export function PaymentConfirmationModal({
     }
   }
 
-  const handlePrintReceipt = () => {
-    // TODO: Implement actual receipt printing
-    console.log('Printing receipt...', receiptData)
-    alert('Receipt printing functionality will be implemented in the next phase!')
+  const handlePrintReceipt = async () => {
+    if (!receiptData || isPrinting) return
+
+    setIsPrinting(true)
+    try {
+      // Update printer settings from system settings
+      receiptPrinter.updateSettings({
+        restaurant_name: settingsData?.restaurant_name || 'Steak Kenangan',
+        receipt_header: settingsData?.receipt_header,
+        receipt_footer: settingsData?.receipt_footer,
+        paper_size: settingsData?.paper_size || '80mm',
+        currency: settingsData?.currency || 'IDR',
+        tax_rate: parseFloat(settingsData?.tax_rate) || 11,
+        print_copies: parseInt(settingsData?.print_copies) || 1,
+      })
+
+      // Prepare receipt data for printer
+      const printData = {
+        order_number: orderId.slice(-8).toUpperCase(),
+        order_date: new Date().toISOString(),
+        order_type: orderType,
+        table_number: selectedTable?.table_number,
+        customer_name: customerName || undefined,
+        items: items.map(item => ({
+          product_name: item.product.name,
+          quantity: item.quantity,
+          unit_price: item.product.price,
+          total_price: item.product.price * item.quantity,
+        })),
+        subtotal,
+        tax_amount: taxAmount,
+        total_amount: totalAmount,
+        payment_method: paymentData?.method,
+        payment_amount: paymentData?.cash_tendered || totalAmount,
+        change_amount: paymentData?.change_amount || 0,
+        cashier_name: 'Staff',
+      }
+
+      // Print with configured number of copies
+      const copies = parseInt(settingsData?.print_copies) || 1
+      await receiptPrinter.printMultipleCopies(printData, copies)
+      toastHelpers.success('Struk berhasil dicetak!')
+    } catch (error) {
+      console.error('Print receipt error:', error)
+      toastHelpers.error('Gagal mencetak struk. Coba lagi.')
+    } finally {
+      setIsPrinting(false)
+    }
   }
+
+  // Auto-print after successful payment if enabled
+  useEffect(() => {
+    if (
+      currentStep === 'success' &&
+      receiptData &&
+      settingsData?.auto_print_customer_copy === 'true' &&
+      !autoPrintTriggered
+    ) {
+      setAutoPrintTriggered(true)
+      // Small delay to ensure UI is rendered
+      setTimeout(() => {
+        handlePrintReceipt()
+      }, 500)
+    }
+  }, [currentStep, receiptData, settingsData, autoPrintTriggered])
 
   const handleComplete = () => {
     onSuccess()
@@ -232,7 +306,7 @@ export function PaymentConfirmationModal({
                   </div>
                   <span className="font-bold">{formatCurrency(totalAmount)}</span>
                 </div>
-                
+
                 {paymentData!.method === 'cash' && paymentData!.cash_tendered && (
                   <div className="text-sm text-gray-600 space-y-1">
                     <div className="flex justify-between">
@@ -299,9 +373,14 @@ export function PaymentConfirmationModal({
                   variant="outline"
                   onClick={handlePrintReceipt}
                   className="flex-1"
+                  disabled={isPrinting}
                 >
-                  <Printer className="w-4 h-4 mr-2" />
-                  Print Receipt
+                  {isPrinting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Printer className="w-4 h-4 mr-2" />
+                  )}
+                  {isPrinting ? 'Mencetak...' : 'Cetak Struk'}
                 </Button>
                 <Button
                   onClick={handleComplete}

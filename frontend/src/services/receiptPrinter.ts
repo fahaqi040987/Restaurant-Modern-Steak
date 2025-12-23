@@ -1,7 +1,25 @@
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 
+// Printer error types for better error handling
+export enum PrinterError {
+  NO_PRINTER = 'NO_PRINTER',
+  PRINT_FAILED = 'PRINT_FAILED',
+  PRINT_CANCELLED = 'PRINT_CANCELLED',
+  TIMEOUT = 'TIMEOUT',
+  UNKNOWN = 'UNKNOWN',
+}
+
+export class PrintError extends Error {
+  constructor(public code: PrinterError, message: string) {
+    super(message);
+    this.name = 'PrintError';
+  }
+}
+
 interface ReceiptSettings {
+  printer_name?: string;
+  print_copies?: number;
   restaurant_name?: string;
   receipt_header?: string;
   receipt_footer?: string;
@@ -58,7 +76,7 @@ class ReceiptPrinterService {
    */
   private formatCurrency(amount: number): string {
     const currency = this.settings.currency || 'IDR';
-    
+
     if (currency === 'IDR') {
       return new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -67,7 +85,7 @@ class ReceiptPrinterService {
         maximumFractionDigits: 0,
       }).format(amount);
     }
-    
+
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,
@@ -348,7 +366,7 @@ class ReceiptPrinterService {
   async printReceipt(data: ReceiptData): Promise<boolean> {
     try {
       const html = this.generateReceiptHTML(data);
-      
+
       // Create a hidden iframe for printing
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
@@ -388,7 +406,7 @@ class ReceiptPrinterService {
   async downloadReceiptAsPDF(data: ReceiptData): Promise<boolean> {
     try {
       const html = this.generateReceiptHTML(data);
-      
+
       // Create a blob and download
       const blob = new Blob([html], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
@@ -411,7 +429,7 @@ class ReceiptPrinterService {
   previewReceipt(data: ReceiptData): void {
     const html = this.generateReceiptHTML(data);
     const previewWindow = window.open('', '_blank', 'width=400,height=600');
-    
+
     if (previewWindow) {
       previewWindow.document.write(html);
       previewWindow.document.close();
@@ -443,6 +461,89 @@ class ReceiptPrinterService {
     // For now, fall back to browser print
     console.log('Thermal printer integration - using browser print fallback');
     return this.printReceipt(data);
+  }
+
+  /**
+   * Print multiple copies of a receipt
+   * @param data Receipt data to print
+   * @param copies Number of copies to print (default: uses settings or 1)
+   */
+  async printMultipleCopies(data: ReceiptData, copies?: number): Promise<boolean> {
+    const numCopies = copies ?? this.settings.print_copies ?? 1;
+
+    for (let i = 0; i < numCopies; i++) {
+      const success = await this.printReceipt(data);
+      if (!success) {
+        throw new PrintError(
+          PrinterError.PRINT_FAILED,
+          `Gagal mencetak struk (copy ${i + 1} dari ${numCopies})`
+        );
+      }
+      // Small delay between copies to prevent printer queue issues
+      if (i < numCopies - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Print a test receipt to verify printer configuration
+   */
+  async testPrint(): Promise<boolean> {
+    const sampleData: ReceiptData = {
+      order_number: 'TEST-001',
+      order_date: new Date().toISOString(),
+      order_type: 'dine_in',
+      table_number: 'T1',
+      customer_name: 'Test Customer',
+      items: [
+        {
+          product_name: 'Rendang Wagyu Steak',
+          quantity: 1,
+          unit_price: 285000,
+          total_price: 285000,
+        },
+        {
+          product_name: 'Es Teh Manis',
+          quantity: 2,
+          unit_price: 15000,
+          total_price: 30000,
+        },
+      ],
+      subtotal: 315000,
+      tax_amount: 34650,
+      service_charge: 15750,
+      total_amount: 365400,
+      payment_method: 'cash',
+      payment_amount: 400000,
+      change_amount: 34600,
+      cashier_name: 'System Test',
+    };
+
+    try {
+      const success = await this.printReceipt(sampleData);
+      if (!success) {
+        throw new PrintError(
+          PrinterError.PRINT_FAILED,
+          'Test print gagal. Periksa koneksi printer.'
+        );
+      }
+      return true;
+    } catch (error) {
+      console.error('Test print error:', error);
+      throw new PrintError(
+        PrinterError.PRINT_FAILED,
+        'Test print gagal. Periksa koneksi printer.'
+      );
+    }
+  }
+
+  /**
+   * Get current printer settings
+   */
+  getSettings(): ReceiptSettings {
+    return { ...this.settings };
   }
 }
 

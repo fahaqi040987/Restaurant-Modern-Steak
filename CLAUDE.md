@@ -4,7 +4,88 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A modern, enterprise-grade Point of Sale (POS) system for restaurant management. Built with Golang backend, React frontend (TanStack Start), and PostgreSQL database.
+A modern, enterprise-grade Point of Sale (POS) system for Indonesian steakhouse restaurant management. Built with Golang backend, React frontend (TanStack Router), and PostgreSQL database.
+
+**Features**:
+- ✅ Public B2C website (menu, contact, restaurant info)
+- ✅ Admin dashboard (orders, products, inventory, staff, reports)
+- ✅ Kitchen display system (real-time order management)
+- ✅ Server station (dine-in orders with table management)
+- ✅ Counter station (payment processing, takeaway orders)
+- ✅ Indonesian localization (IDR currency, Bahasa Indonesia, Indonesian menu)
+- ✅ Dark/Light theme system
+- ✅ i18n support (Indonesian and English)
+- ✅ Comprehensive testing (E2E, unit tests, integration tests)
+
+## Technology Stack
+
+### Backend
+- **Language**: Go 1.21+
+- **Framework**: Gin v1.9.1 (HTTP router)
+- **Database**: PostgreSQL 14+ (lib/pq v1.10.9)
+- **Authentication**: JWT (golang-jwt/jwt/v5 v5.2.0)
+- **Password**: bcrypt (golang.org/x/crypto)
+- **Testing**: testify/mock v1.11.1
+- **CORS**: gin-contrib/cors v1.5.0
+- **Environment**: godotenv v1.5.1
+
+### Frontend
+- **Language**: TypeScript 5+ (strict mode)
+- **Framework**: React 18.3.1
+- **Router**: TanStack Router v1.57.15
+- **State**: TanStack Query v5.56.2 (React Query)
+- **Forms**: React Hook Form v7.62.0 + Zod validation
+- **UI**: Radix UI (@radix-ui/react-*) + shadcn/ui
+- **Styling**: Tailwind CSS + class-variance-authority v0.7.1
+- **i18n**: react-i18next v16.5.0 + i18next v25.7.2
+- **Icons**: lucide-react v0.441.0
+- **Charts**: recharts v2.12.7
+- **Testing**: Vitest + React Testing Library + Playwright
+- **Build**: Vite
+
+### Database
+- **RDBMS**: PostgreSQL 14+ with uuid-ossp extension
+- **Migrations**: Plain SQL in `database/migrations/`
+- **Seed Data**: SQL files in `database/init/`
+
+### Infrastructure
+- **Containerization**: Docker + Docker Compose
+- **Reverse Proxy**: Nginx (production)
+- **Testing**: Playwright (E2E), Vitest (unit), Go test (backend)
+
+## Recent Changes (December 2025)
+
+**✅ Completed Features**:
+- IDR currency formatting across all components (id-ID locale)
+- Indonesian menu seed data (Rendang Wagyu, Sate Wagyu, etc.)
+- Contact form admin interface with status management
+- Inventory management system (backend + frontend)
+- System settings UI with real-time health monitoring
+- Dark/Light theme system with localStorage persistence
+- Indonesian language support (300+ translation keys)
+- Empty states for better UX across all components
+- E2E testing suite (12/12 Playwright smoke tests passing)
+- Backend unit tests (3 files: orders, products, auth - 875+ lines)
+- Frontend unit tests (15 tests with 70% coverage threshold)
+- Notification generation system
+- Order status history viewer
+- Badge counters for unread notifications
+- CSV export for inventory and contacts
+
+**📋 Current Status**:
+- Phase A (Critical Fixes): COMPLETE ✅
+- Phase B (High Priority): COMPLETE ✅
+- Phase C (Medium Priority): COMPLETE ✅
+- Phase D (Testing & Polish): IN PROGRESS ⚠️
+
+## Documentation
+
+- **API Specification**: `agent-os/specs/backend-restaurant/contracts/openapi.yaml`
+- **Architecture Plan**: `agent-os/specs/backend-restaurant/plan.md`
+- **Full Specification**: `agent-os/specs/backend-restaurant/spec.md`
+- **Tasks**: `agent-os/specs/backend-restaurant/tasks.md`
+- **Quickstart Guide**: `agent-os/specs/backend-restaurant/quickstart.md`
+- **Constitution**: `.specify/memory/constitution.md`
 
 ## Development Commands
 
@@ -149,3 +230,6 @@ The project includes 17 Cursor AI rule files in `.cursor/rules/` covering:
 - Role-based access patterns
 - Performance optimization
 - Testing patterns
+
+## Active Technologies
+- Go 1.21+ (backend), TypeScript 5+ strict mode (frontend) (001-restaurant-management)
