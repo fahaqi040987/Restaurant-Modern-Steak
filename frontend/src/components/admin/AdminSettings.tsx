@@ -79,15 +79,19 @@ export function AdminSettings() {
   // Save settings mutation
   const saveSettingsMutation = useMutation({
     mutationFn: async (newSettings: SystemSettings) => {
-      // Parse numeric fields before sending to backend
-      const parsedSettings = {
-        ...newSettings,
-        tax_rate: newSettings.tax_rate ? parseFloat(newSettings.tax_rate) : 0,
-        service_charge: newSettings.service_charge ? parseFloat(newSettings.service_charge) : 0,
-        enable_rounding: newSettings.enable_rounding === 'true' || newSettings.enable_rounding === true,
+      // Convert all values to strings as backend expects map[string]string
+      const stringifiedSettings: Record<string, string> = {}
+      for (const [key, value] of Object.entries(newSettings)) {
+        if (value === null || value === undefined) {
+          stringifiedSettings[key] = ''
+        } else if (typeof value === 'boolean') {
+          stringifiedSettings[key] = value ? 'true' : 'false'
+        } else {
+          stringifiedSettings[key] = String(value)
+        }
       }
 
-      const response = await apiClient.updateSettings(parsedSettings)
+      const response = await apiClient.updateSettings(stringifiedSettings)
       if (!response.success) {
         throw new Error(response.message)
       }
@@ -704,7 +708,7 @@ export function AdminSettings() {
                   Database
                 </Badge>
                 <div className="flex items-center justify-center gap-1 mt-1">
-                  {healthData?.database === 'connected' ? (
+                  {healthData?.database?.status === 'connected' ? (
                     <>
                       <CheckCircle2 className="h-3 w-3 text-green-600" />
                       <p className="text-sm text-green-600">Connected</p>
@@ -716,9 +720,9 @@ export function AdminSettings() {
                     </>
                   )}
                 </div>
-                {healthData?.database_latency_ms && (
+                {healthData?.database?.latency_ms !== undefined && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    {healthData.database_latency_ms.toFixed(2)}ms
+                    {healthData.database.latency_ms.toFixed(2)}ms
                   </p>
                 )}
               </div>
@@ -727,7 +731,7 @@ export function AdminSettings() {
                   API Version
                 </Badge>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {healthData?.api_version || 'v1.0.0'}
+                  {healthData?.api?.version || 'v1.0.0'}
                 </p>
               </div>
               <div className="text-center">
@@ -735,8 +739,8 @@ export function AdminSettings() {
                   Last Backup
                 </Badge>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {healthData?.last_backup_at
-                    ? new Date(healthData.last_backup_at).toLocaleDateString()
+                  {healthData?.backup?.last_backup
+                    ? new Date(healthData.backup.last_backup).toLocaleDateString()
                     : 'Never'
                   }
                 </p>

@@ -61,7 +61,7 @@ export function PublicFooter({ restaurantInfo }: PublicFooterProps) {
                 className="font-serif text-xl font-semibold tracking-wide text-[var(--public-text-primary)]"
                 style={{ fontFamily: 'var(--public-font-heading)' }}
               >
-                Modern<span className="text-[var(--public-secondary)]">Steak</span>
+                Steak<span className="text-[var(--public-secondary)]">Kenangan</span>
               </h3>
             </Link>
             <p className="text-sm text-[var(--public-text-secondary)] leading-relaxed">

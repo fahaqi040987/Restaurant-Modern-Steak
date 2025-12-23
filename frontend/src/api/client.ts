@@ -574,10 +574,20 @@ class APIClient {
   }
 
   async getSystemHealth(): Promise<APIResponse<{
-    database: string;
-    database_latency_ms?: number;
-    api_version: string;
-    last_backup_at?: string;
+    database: {
+      status: string;
+      latency_ms: number;
+      last_check: string;
+    };
+    api: {
+      status: string;
+      version: string;
+    };
+    backup: {
+      status: string;
+      last_backup: string;
+      next_backup: string;
+    };
   }>> {
     return this.request({
       method: 'GET',

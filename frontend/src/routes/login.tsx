@@ -129,7 +129,7 @@ function LoginPage() {
               className="text-3xl font-bold text-[var(--public-text-primary)]"
               style={{ fontFamily: 'var(--public-font-heading)' }}
             >
-              Modern<span className="text-[var(--public-secondary)]">Steak</span>
+              Steak<span className="text-[var(--public-secondary)]">Kenangan</span>
             </h1>
           </div>
           <CardTitle className="text-xl text-[var(--public-text-primary)]">

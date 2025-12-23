@@ -205,7 +205,7 @@ function CustomerOrderPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-xl font-bold text-[var(--public-text-primary)]">
-                                Modern<span className="text-[var(--public-secondary)]">Steak</span>
+                                Steak<span className="text-[var(--public-secondary)]">Kenangan</span>
                             </h1>
                             <p className="text-sm text-[var(--public-text-secondary)]">
                                 Table {table?.table_number}

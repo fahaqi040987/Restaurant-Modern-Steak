@@ -180,7 +180,7 @@ export function PaymentConfirmationModal({
     try {
       // Update printer settings from system settings
       receiptPrinter.updateSettings({
-        restaurant_name: settingsData?.restaurant_name || 'Modern Steak',
+        restaurant_name: settingsData?.restaurant_name || 'Steak Kenangan',
         receipt_header: settingsData?.receipt_header,
         receipt_footer: settingsData?.receipt_footer,
         paper_size: settingsData?.paper_size || '80mm',

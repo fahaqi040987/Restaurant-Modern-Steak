@@ -104,3 +104,5 @@ coverage.out
 
 *.github
 *.specify
+
+.venv/
