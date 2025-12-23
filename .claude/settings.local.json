@@ -13,7 +13,11 @@
       "Bash(bash:*)",
       "Bash(git rev-parse:*)",
       "Bash(ls:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm run test:coverage:*)",
+      "Bash(cd:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run type-check:*)"
     ]
   }
 }

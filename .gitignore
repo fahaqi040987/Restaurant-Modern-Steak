@@ -51,7 +51,6 @@ Thumbs.db
 .idea/
 .cursor/
 .claude/
-.claude
 *.swp
 *.swo
 *~
@@ -74,8 +73,6 @@ go.sum
 
 # Air build files (Go hot reloading)
 tmp/
-
-CLAUDE.md
 
 specs/
 

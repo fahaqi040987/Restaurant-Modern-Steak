@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Volume2, VolumeX, TestTube } from 'lucide-react';
-import { kitchenSoundService, type SoundSettings, type SoundEvent } from '@/services/soundService';
+import { kitchenSoundService, type SoundSettings as SoundSettingsType, type SoundEvent } from '@/services/soundService';
 import { cn } from '@/lib/utils';
 
 interface SoundSettingsProps {
@@ -13,16 +13,29 @@ interface SoundSettingsProps {
   onClose?: () => void;
 }
 
+const defaultSettings: SoundSettingsType = {
+  enabled: false,
+  volume: 0.7,
+  newOrderEnabled: true,
+  orderReadyEnabled: true,
+  takeawayReadyEnabled: true,
+};
+
 export function SoundSettings({ className, onClose }: SoundSettingsProps) {
-  const [settings, setSettings] = useState<SoundSettings>(kitchenSoundService.getSettings());
+  const [settings, setSettings] = useState<SoundSettingsType>(
+    kitchenSoundService.getSettings() ?? defaultSettings
+  );
   const [isTestingSound, setIsTestingSound] = useState<string | null>(null);
 
   useEffect(() => {
     // Load current settings when component mounts
-    setSettings(kitchenSoundService.getSettings());
+    const loadedSettings = kitchenSoundService.getSettings();
+    if (loadedSettings) {
+      setSettings(loadedSettings);
+    }
   }, []);
 
-  const handleSettingChange = (key: keyof SoundSettings, value: boolean | number) => {
+  const handleSettingChange = (key: keyof SoundSettingsType, value: boolean | number) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     kitchenSoundService.updateSettings({ [key]: value });
