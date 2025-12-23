@@ -1,22 +1,669 @@
-# Task Breakdown: B2C Restaurant Website
+# Task Breakdown: Steak Kenangan POS System
 
 ## Overview
-Total Tasks: 5 Task Groups (approximately 32 sub-tasks)
 
-This feature creates a public-facing B2C restaurant website that showcases the Steak Kenangan brand, provides essential customer information (hours, location, contact), displays the menu, and offers a staff login portal to access the existing POS system.
+This document contains tasks for three major specifications:
+1. **B2C Restaurant Website** (User Story 1) - ✅ COMPLETED
+2. **Admin System Improvements** (User Stories 2-5) - 🔨 IN PROGRESS
+3. **Indonesian Localization** (User Stories 6-11) - 🔨 IN PROGRESS
 
-**Implementation Status:**
-- Database schema: COMPLETE (restaurant_info, operating_hours, contact_submissions tables)
-- Backend API: COMPLETE (public endpoints at /api/v1/public/*)
-- Frontend: IN PROGRESS (PublicHeader component exists, remaining components needed)
+**Total Tasks**: 95+ tasks across 11 user stories  
+**Completion**: 32 tasks complete (User Story 1), 63 tasks remaining
 
 ---
 
-## Task List
+## Implementation Strategy
 
-### Backend Layer
+**MVP Scope (User Story 1 Only)**: B2C Website - ✅ COMPLETED Dec 15, 2025
 
-#### Task Group 1: Backend API Verification & Seed Data
+**Phase 2 (User Stories 2-5)**: Admin Improvements
+- Profile & Navigation (US2)
+- Product CRUD (US3)
+- Notification System (US4)
+- System Settings (US5)
+
+**Phase 3 (User Stories 6-11)**: Indonesian Localization
+- Currency (US6)
+- Menu Data (US7)
+- Contact Admin (US8)
+- Inventory (US9)
+- i18n Language (US10)
+- Testing & Quality (US11)
+
+---
+
+## Phase 1: Setup & Prerequisites
+
+**Status**: ✅ COMPLETED
+
+- [x] T000 Verify project structure and dependencies
+- [x] T001 Setup PostgreSQL database with UUID extension
+- [x] T002 Initialize backend Go modules and dependencies
+- [x] T003 Initialize frontend React + TanStack Router
+- [x] T004 Configure Docker Compose development environment
+- [x] T005 Create base database schema in database/init/01_schema.sql
+
+---
+
+## Phase 2: Foundational Infrastructure
+
+**Status**: ✅ COMPLETED
+
+- [x] T006 [P] Implement JWT authentication middleware in backend/internal/middleware/auth.go
+- [x] T007 [P] Create base API routes in backend/internal/api/routes.go
+- [x] T008 [P] Setup CORS configuration for frontend integration
+- [x] T009 [P] Create API client in frontend/src/api/client.ts
+- [x] T010 [P] Setup TanStack Query provider in frontend/src/main.tsx
+
+---
+
+## User Story 1: B2C Restaurant Website (COMPLETED ✅)
+
+**Goal**: Create public-facing website for customers to view menu, contact, and restaurant info
+
+**Independent Test Criteria**: Customer can browse menu, submit contact form, view hours without authentication
+
+**Priority**: P1 (MVP)  
+**Status**: ✅ COMPLETED Dec 15, 2025
+
+### Backend Tasks
+
+### Backend Tasks
+
+- [x] T011 [US1] Create restaurant_info table migration in database/migrations/001_create_restaurant_info.sql
+- [x] T012 [US1] Create operating_hours table migration in database/migrations/002_create_operating_hours.sql
+- [x] T013 [US1] Create contact_submissions table migration in database/migrations/003_create_contact_submissions.sql
+- [x] T014 [P] [US1] Implement PublicHandler in backend/internal/handlers/public.go
+- [x] T015 [P] [US1] Add GET /api/v1/public/menu endpoint
+- [x] T016 [P] [US1] Add GET /api/v1/public/categories endpoint
+- [x] T017 [P] [US1] Add GET /api/v1/public/restaurant endpoint with is_open_now calculation
+- [x] T018 [US1] Add POST /api/v1/public/contact endpoint with validation
+- [x] T019 [P] [US1] Write unit tests for public handlers in backend/internal/handlers/public_test.go
+- [x] T020 [US1] Seed restaurant_info data in database/init/02_seed_data.sql
+
+### Frontend API & Types
+
+- [x] T021 [P] [US1] Add PublicMenuItem interface in frontend/src/types/index.ts
+- [x] T022 [P] [US1] Add RestaurantInfo interface in frontend/src/types/index.ts
+- [x] T023 [P] [US1] Add getPublicMenu() method in frontend/src/api/client.ts
+- [x] T024 [P] [US1] Add getRestaurantInfo() method in frontend/src/api/client.ts
+- [x] T025 [P] [US1] Add submitContactForm() method in frontend/src/api/client.ts
+
+### UI Components
+
+- [x] T026 [P] [US1] Create PublicHeader component in frontend/src/components/public/PublicHeader.tsx
+- [x] T027 [P] [US1] Create PublicFooter component in frontend/src/components/public/PublicFooter.tsx
+- [x] T028 [P] [US1] Create PublicLayout wrapper in frontend/src/components/public/PublicLayout.tsx
+- [x] T029 [P] [US1] Create OpenStatusBadge component in frontend/src/components/public/OpenStatusBadge.tsx
+- [x] T030 [US1] Create public theme CSS in frontend/src/styles/public-theme.css
+
+### Pages
+
+- [x] T031 [US1] Create landing page in frontend/src/routes/public/index.tsx
+- [x] T032 [US1] Create menu page in frontend/src/routes/public/menu.tsx
+- [x] T033 [US1] Create about page in frontend/src/routes/public/about.tsx
+- [x] T034 [US1] Create contact page in frontend/src/routes/public/contact.tsx
+- [x] T035 [US1] Create staff login page in frontend/src/routes/staff.tsx
+
+### Testing & Integration
+
+- [x] T036 [US1] Write component tests for PublicHeader
+- [x] T037 [US1] Write E2E test for landing page navigation
+- [x] T038 [US1] Write E2E test for menu browsing and filtering
+- [x] T039 [US1] Write E2E test for contact form submission
+- [x] T040 [US1] Verify mobile responsiveness (320px minimum)
+- [x] T041 [US1] Verify all public routes accessible without auth
+- [x] T042 [US1] Manual integration testing checklist completion
+
+**User Story 1 Status**: ✅ COMPLETED (42 tasks, 100% complete)
+
+---
+
+## User Story 2: Admin Profile & Navigation
+
+**Goal**: Admin users can access and update their profile, navigate to settings/notifications
+
+**Independent Test Criteria**: User can edit name/email, change password, navigate header menu items successfully
+
+**Priority**: P2  
+**Status**: 🔨 NOT STARTED
+
+### Backend Tasks
+
+- [x] T043 [P] [US2] Create GET /api/v1/profile endpoint in backend/internal/handlers/profile.go
+- [ ] T044 [P] [US2] Create PUT /api/v1/profile endpoint for updating user info
+- [ ] T045 [US2] Create PUT /api/v1/profile/password endpoint for password changes
+- [ ] T046 [P] [US2] Add password strength validation (min 8 chars, uppercase, number, special)
+- [ ] T047 [US2] Write unit tests for profile handlers in backend/internal/handlers/profile_test.go
+
+### Frontend Tasks
+
+- [ ] T048 [US2] Create profile page route in frontend/src/routes/admin/profile.tsx
+- [ ] T049 [US2] Create ProfileForm component with React Hook Form + Zod validation
+- [ ] T050 [US2] Create ChangePasswordForm component with strength indicator
+- [ ] T051 [US2] Add getUserProfile() API method in frontend/src/api/client.ts
+- [ ] T052 [US2] Add updateProfile() API method in frontend/src/api/client.ts
+- [ ] T053 [US2] Add changePassword() API method in frontend/src/api/client.ts
+- [ ] T054 [US2] Update UserMenu component onClick handlers in frontend/src/components/admin/UserMenu.tsx
+- [ ] T055 [US2] Add navigation to /admin/profile from header menu
+- [ ] T056 [US2] Add navigation to /admin/settings from header menu
+- [ ] T057 [US2] Add navigation to /admin/notifications from header menu
+
+### Testing
+
+- [ ] T058 [US2] Write component test for ProfileForm validation
+- [ ] T059 [US2] Write E2E test for profile update flow
+- [ ] T060 [US2] Write E2E test for password change flow
+- [ ] T061 [US2] Verify header navigation links work correctly
+
+**User Story 2 Tasks**: 19 tasks (0/19 complete)
+
+---
+
+## User Story 3: Server Product CRUD
+
+**Goal**: Server role can create, edit, and delete menu products
+
+**Independent Test Criteria**: Server can add new product, edit existing product, delete product with confirmation
+
+**Priority**: P2  
+**Status**: 🔨 NOT STARTED
+
+### Backend Tasks
+
+- [ ] T062 [P] [US3] Verify POST /api/v1/products endpoint exists and works
+- [ ] T063 [P] [US3] Verify PUT /api/v1/products/:id endpoint exists and works
+- [ ] T064 [US3] Verify DELETE /api/v1/products/:id endpoint exists and works
+- [ ] T065 [US3] Add role-based permission check (server + admin only)
+- [ ] T066 [US3] Add product validation (required fields, price > 0)
+
+### Frontend Tasks
+
+- [ ] T067 [US3] Create ProductFormModal component in frontend/src/components/admin/ProductFormModal.tsx
+- [ ] T068 [US3] Create DeleteConfirmDialog component in frontend/src/components/admin/DeleteConfirmDialog.tsx
+- [ ] T069 [US3] Add "Add Product" button to ServerStation component
+- [ ] T070 [US3] Add "Edit" button to each product card in ServerStation
+- [ ] T071 [US3] Add "Delete" button to each product card in ServerStation
+- [ ] T072 [US3] Implement createProduct() mutation with TanStack Query
+- [ ] T073 [US3] Implement updateProduct() mutation with TanStack Query
+- [ ] T074 [US3] Implement deleteProduct() mutation with TanStack Query
+- [ ] T075 [US3] Add product validation schema with Zod in frontend/src/lib/validation/product-schema.ts
+- [ ] T076 [US3] Add success/error toast notifications for CRUD operations
+
+### Testing
+
+- [ ] T077 [US3] Write unit test for product form validation
+- [ ] T078 [US3] Write E2E test for creating product
+- [ ] T079 [US3] Write E2E test for editing product
+- [ ] T080 [US3] Write E2E test for deleting product with confirmation
+- [ ] T081 [US3] Verify role permissions (kitchen/counter cannot access)
+
+**User Story 3 Tasks**: 20 tasks (0/20 complete)
+
+---
+
+## User Story 4: Production Notification System
+
+**Goal**: Users receive real-time notifications for orders, inventory, payments, system events
+
+**Independent Test Criteria**: User receives notification on new order, can mark as read, filter by type
+
+**Priority**: P2  
+**Status**: ✅ COMPLETED (Backend + Frontend infrastructure ready)
+
+### Backend Tasks
+
+- [x] T082 [P] [US4] Create notifications table migration
+- [x] T083 [P] [US4] Create notification_preferences table migration
+- [x] T084 [P] [US4] Create NotificationService in backend/internal/services/notification.go
+- [x] T085 [US4] Implement GET /api/v1/notifications endpoint
+- [x] T086 [US4] Implement PUT /api/v1/notifications/:id/read endpoint
+- [x] T087 [US4] Implement DELETE /api/v1/notifications/:id endpoint
+- [x] T088 [US4] Implement GET /api/v1/notifications/preferences endpoint
+- [x] T089 [US4] Implement PUT /api/v1/notifications/preferences endpoint
+- [x] T090 [US4] Add notification triggers for order events
+- [x] T091 [US4] Add notification triggers for inventory low stock
+- [x] T092 [US4] Add notification triggers for payment events
+- [x] T093 [US4] Implement quiet hours logic in NotificationService
+
+### Frontend Tasks
+
+- [x] T094 [US4] Create notifications page in frontend/src/routes/admin/notifications.tsx
+- [x] T095 [US4] Create NotificationList component
+- [x] T096 [US4] Create NotificationPreferences component in AdminSettings
+- [x] T097 [US4] Add getNotifications() API method
+- [x] T098 [US4] Add markNotificationRead() API method
+- [x] T099 [US4] Add deleteNotification() API method
+- [x] T100 [US4] Add notification badge counter in header (unread count)
+- [x] T101 [US4] Remove ToastDemo component from AdminLayout
+- [x] T102 [US4] Implement real-time polling (30-second interval)
+
+### Testing
+
+- [x] T103 [US4] Write unit tests for NotificationService
+- [x] T104 [US4] Write E2E test for notification workflow
+- [x] T105 [US4] Verify quiet hours functionality
+- [x] T106 [US4] Verify badge counter updates correctly
+
+**User Story 4 Tasks**: 25 tasks (25/25 complete) ✅
+
+---
+
+## User Story 5: System Settings with Database
+
+**Goal**: Admin can configure system settings that persist to database
+
+**Independent Test Criteria**: Admin changes tax rate, saves settings, settings persist after restart
+
+**Priority**: P2  
+**Status**: ✅ COMPLETED
+
+### Backend Tasks
+
+- [x] T107 [P] [US5] Create system_settings table migration
+- [x] T108 [US5] Implement GET /api/v1/settings endpoint in backend/internal/handlers/settings.go
+- [x] T109 [US5] Implement PUT /api/v1/settings endpoint (admin only)
+- [x] T110 [US5] Implement GET /api/v1/health endpoint in backend/internal/handlers/health.go
+- [x] T111 [US5] Add settings validation (tax 0-100, service charge 0-100)
+- [x] T112 [US5] Seed default settings in database/init/03_system_settings.sql
+
+### Frontend Tasks
+
+- [x] T113 [US5] Update AdminSettings component to fetch from API
+- [x] T114 [US5] Replace useState with useQuery in frontend/src/components/admin/AdminSettings.tsx
+- [x] T115 [US5] Replace dummy handleSave with useMutation
+- [x] T116 [US5] Add settings validation schema with Zod
+- [x] T117 [US5] Add getSettings() API method in frontend/src/api/client.ts
+- [x] T118 [US5] Add updateSettings() API method
+- [x] T119 [US5] Add getSystemHealth() API method
+- [x] T120 [US5] Implement real-time health monitoring (30s polling)
+- [x] T121 [US5] Add loading states during fetch/save operations
+- [x] T122 [US5] Add error handling with toast notifications
+- [x] T123 [US5] Add theme toggle in Appearance section
+
+### Testing
+
+- [x] T124 [US5] Write unit tests for settings handlers
+- [x] T125 [US5] Write E2E test for settings save/load
+- [x] T126 [US5] Verify settings persist after backend restart
+- [x] T127 [US5] Verify health status displays correctly
+
+**User Story 5 Tasks**: 21 tasks (21/21 complete) ✅
+
+---
+
+## User Story 6: Indonesian Currency (IDR)
+
+**Goal**: All prices display in Indonesian Rupiah across entire system
+
+**Independent Test Criteria**: Order total shows "Rp 250.000", no USD symbols anywhere
+
+**Priority**: P1 (CRITICAL)  
+**Status**: ✅ COMPLETED
+
+### Backend Tasks
+
+- [x] T128 [US6] Verify system_settings.currency default is 'IDR'
+- [x] T129 [US6] Update seed data currency setting if needed
+
+### Frontend Tasks
+
+- [x] T130 [P] [US6] Update formatCurrency in frontend/src/lib/utils.ts to use id-ID locale
+- [x] T131 [P] [US6] Update ServerInterface currency display
+- [x] T132 [P] [US6] Update CounterInterface currency display
+- [x] T133 [P] [US6] Update KitchenDisplay currency display
+- [x] T134 [P] [US6] Update AdminDashboard currency display
+- [x] T135 [P] [US6] Update OrderManagement currency display
+- [x] T136 [P] [US6] Update AdminReports currency display
+- [x] T137 [US6] Update public website currency display (already IDR)
+
+### Testing
+
+- [x] T138 [US6] Write unit tests for currency formatting
+- [x] T139 [US6] Verify all order totals show "Rp X.XXX"
+- [x] T140 [US6] Verify no USD symbols in codebase
+- [x] T141 [US6] Verify reports show IDR
+- [x] T142 [US6] Verify receipts show IDR
+
+**User Story 6 Tasks**: 15 tasks (15/15 complete) ✅
+
+---
+
+## User Story 7: Indonesian Menu Data
+
+**Goal**: Database contains Indonesian steakhouse menu items
+
+**Independent Test Criteria**: Menu displays Rendang Wagyu, Sate Wagyu, prices in IDR range
+
+**Priority**: P1 (CRITICAL)  
+**Status**: ✅ COMPLETED
+
+### Database Tasks
+
+- [x] T143 [US7] Create database/init/03_indonesian_menu.sql file
+- [x] T144 [US7] Add Indonesian category names (Steak Nusantara, Makanan Pembuka, etc.)
+- [x] T145 [US7] Add Indonesian products (Rendang Wagyu, Sate Wagyu, etc.)
+- [x] T146 [US7] Set prices in IDR range (15k - 750k)
+- [x] T147 [US7] Add descriptions in Bahasa Indonesia
+- [x] T148 [US7] Remove old Western food data (Pizza, Burgers)
+
+### Verification
+
+- [x] T149 [US7] Verify menu loads with Indonesian items
+- [x] T150 [US7] Verify category names in Indonesian
+- [x] T151 [US7] Verify prices in correct IDR range
+- [x] T152 [US7] Verify descriptions in Bahasa Indonesia
+
+**User Story 7 Tasks**: 10 tasks (10/10 complete) ✅
+
+---
+
+## User Story 8: Contact Form Admin Interface
+
+**Goal**: Admin can view and manage customer contact form submissions
+
+**Independent Test Criteria**: Admin sees contact list, can filter by status, mark as resolved, delete spam
+
+**Priority**: P1 (CRITICAL)  
+**Status**: ✅ COMPLETED
+
+### Backend Tasks
+
+- [x] T153 [US8] Create ContactHandler in backend/internal/handlers/contact.go
+- [x] T154 [US8] Implement GET /api/v1/admin/contacts endpoint with pagination
+- [x] T155 [US8] Implement PUT /api/v1/admin/contacts/:id/status endpoint
+- [x] T156 [US8] Implement DELETE /api/v1/admin/contacts/:id endpoint
+- [x] T157 [US8] Add status enum validation (new, in_progress, resolved, spam)
+
+### Frontend Tasks
+
+- [x] T158 [US8] Create contacts page in frontend/src/routes/admin/contacts.tsx
+- [x] T159 [US8] Create ContactSubmissions component
+- [x] T160 [US8] Add filter by status dropdown
+- [x] T161 [US8] Add search by name/email/subject
+- [x] T162 [US8] Add "Mark as Resolved" button
+- [x] T163 [US8] Add "Delete" button with confirmation
+- [x] T164 [US8] Add mailto: link for email replies
+- [x] T165 [US8] Implement pagination (50 per page)
+- [x] T166 [US8] Add new submissions badge counter in sidebar
+- [x] T167 [US8] Add CSV export functionality
+
+### Testing
+
+- [x] T168 [US8] Write E2E test for viewing contacts
+- [x] T169 [US8] Write E2E test for status update workflow
+- [x] T170 [US8] Verify badge counter updates
+
+**User Story 8 Tasks**: 18 tasks (18/18 complete) ✅
+
+---
+
+## User Story 9: Inventory Management
+
+**Goal**: Manager can track inventory levels, adjust stock, view history
+
+**Independent Test Criteria**: Manager adjusts stock, sees low stock alerts, views audit history
+
+**Priority**: P2 (HIGH)  
+**Status**: ✅ COMPLETED
+
+### Backend Tasks
+
+- [x] T171 [P] [US9] Create inventory table migration
+- [x] T172 [P] [US9] Create inventory_history table migration
+- [x] T173 [US9] Create InventoryHandler in backend/internal/handlers/inventory.go
+- [x] T174 [US9] Implement GET /api/v1/inventory endpoint
+- [x] T175 [US9] Implement POST /api/v1/inventory/adjust endpoint
+- [x] T176 [US9] Implement GET /api/v1/inventory/history/:product_id endpoint
+- [x] T177 [US9] Implement GET /api/v1/inventory/low-stock endpoint
+- [x] T178 [US9] Add stock calculation logic (current vs minimum)
+- [x] T179 [US9] Trigger low stock notifications
+
+### Frontend Tasks
+
+- [x] T180 [US9] Create inventory page in frontend/src/routes/admin/inventory.tsx
+- [x] T181 [US9] Create InventoryManagement component
+- [x] T182 [US9] Create AdjustStockModal component
+- [x] T183 [US9] Add inventory table with status colors (green/yellow/red)
+- [x] T184 [US9] Add "Adjust Stock" button per item
+- [x] T185 [US9] Add operation dropdown (Add/Remove)
+- [x] T186 [US9] Add reason dropdown (Purchase, Sale, Spoilage, etc.)
+- [x] T187 [US9] Add stock history modal per product
+- [x] T188 [US9] Add low stock alert badge in sidebar
+- [x] T189 [US9] Add CSV export for inventory
+
+### Testing
+
+- [x] T190 [US9] Write unit tests for inventory handlers
+- [x] T191 [US9] Write E2E test for stock adjustment
+- [x] T192 [US9] Write E2E test for history viewing
+- [x] T193 [US9] Verify low stock notifications trigger
+
+**User Story 9 Tasks**: 23 tasks (23/23 complete) ✅
+
+---
+
+## User Story 10: Indonesian Language (i18n)
+
+**Goal**: Staff can use system in Bahasa Indonesia or English
+
+**Independent Test Criteria**: User switches language, all UI text translates, preference persists
+
+**Priority**: P2 (HIGH)  
+**Status**: ✅ COMPLETED
+
+### Infrastructure Tasks
+
+- [x] T194 [P] [US10] Install react-i18next and i18next packages
+- [x] T195 [P] [US10] Create i18n configuration in frontend/src/i18n.ts
+- [x] T196 [US10] Create translation file structure (locales/id/, locales/en/)
+- [x] T197 [US10] Setup i18next-browser-languagedetector
+
+### Translation Tasks
+
+- [x] T198 [P] [US10] Create common translations in locales/id/common.json
+- [x] T199 [P] [US10] Create orders translations in locales/id/orders.json
+- [x] T200 [P] [US10] Create products translations in locales/id/products.json
+- [x] T201 [P] [US10] Create settings translations in locales/id/settings.json
+- [x] T202 [US10] Translate all component strings (300+ keys)
+- [x] T203 [US10] Add corresponding English translations
+
+### Frontend Tasks
+
+- [x] T204 [US10] Create LanguageSwitcher component
+- [x] T205 [US10] Add language switcher to AdminLayout header
+- [x] T206 [US10] Replace hardcoded strings with t() function
+- [x] T207 [US10] Add date/time formatting per locale
+- [x] T208 [US10] Add currency formatting per locale (already done in US6)
+- [x] T209 [US10] Set Indonesian as default language
+
+### Testing
+
+- [x] T210 [US10] Write E2E test for language switching
+- [x] T211 [US10] Verify all UI text translatable
+- [x] T212 [US10] Verify language preference persists
+- [x] T213 [US10] Verify date/time formats correctly
+
+**User Story 10 Tasks**: 20 tasks (20/20 complete) ✅
+
+---
+
+## User Story 11: Testing & Quality Assurance
+
+**Goal**: Comprehensive test coverage meets 70% threshold, all critical workflows tested
+
+**Independent Test Criteria**: All tests pass, coverage ≥70%, no critical bugs
+
+**Priority**: P1 (CRITICAL)  
+**Status**: 🔨 IN PROGRESS
+
+### Backend Testing
+
+- [x] T214 [P] [US11] Create backend/internal/handlers/orders_test.go
+- [x] T215 [P] [US11] Create backend/internal/handlers/products_test.go
+- [x] T216 [P] [US11] Create backend/internal/handlers/auth_test.go
+- [x] T217 [US11] Write tests for order CRUD operations
+- [x] T218 [US11] Write tests for product CRUD operations
+- [x] T219 [US11] Write tests for authentication (login, JWT, roles)
+- [x] T220 [US11] Write tests for validation errors (400 responses)
+- [x] T221 [US11] Write tests for role-based authorization (403 responses)
+- [x] T222 [US11] Write tests for order calculations (tax 11%, service 5%)
+- [ ] T223 [US11] Run go test ./... -cover and verify ≥70%
+
+### Frontend Testing
+
+- [x] T224 [P] [US11] Create frontend/src/__tests__/setup.ts
+- [x] T225 [P] [US11] Create frontend/src/components/ui/__tests__/button.test.tsx
+- [x] T226 [P] [US11] Create frontend/src/lib/__tests__/currency.test.ts
+- [x] T227 [US11] Write component rendering tests (Button, UI components)
+- [x] T228 [US11] Write currency formatting tests (IDR validation)
+- [x] T229 [US11] Write user interaction tests (click events, forms)
+- [ ] T230 [US11] Run npm run test:coverage and verify ≥70%
+
+### E2E Testing
+
+- [x] T231 [US11] Setup Playwright configuration in playwright.config.ts
+- [x] T232 [P] [US11] Create e2e/smoke.spec.ts with 12 smoke tests
+- [x] T233 [P] [US11] Create e2e/auth.spec.ts
+- [x] T234 [P] [US11] Create e2e/admin-dashboard.spec.ts
+- [x] T235 [P] [US11] Create e2e/ui-ux.spec.ts
+- [x] T236 [US11] Write E2E test for server order creation workflow
+- [x] T237 [US11] Write E2E test for counter payment processing
+- [x] T238 [US11] Write E2E test for kitchen order management
+- [x] T239 [US11] Write E2E test for responsive design (mobile/tablet)
+- [x] T240 [US11] Write E2E test for i18n language switching
+- [x] T241 [US11] Verify all 12 smoke tests pass
+
+### Quality Gates
+
+- [ ] T242 [US11] Verify TypeScript compiles with zero errors
+- [ ] T243 [US11] Verify Go builds with zero errors
+- [ ] T244 [US11] Run frontend linter and fix issues
+- [ ] T245 [US11] Verify no console.error in production build
+- [ ] T246 [US11] Verify API returns proper HTTP status codes
+- [ ] T247 [US11] Load test critical endpoints (<200ms response)
+- [ ] T248 [US11] Lighthouse performance score >90
+
+**User Story 11 Tasks**: 35 tasks (28/35 complete, 80%)
+
+---
+
+## Final Phase: Polish & Cross-Cutting Concerns
+
+**Status**: ⏳ PENDING
+
+- [ ] T249 [P] Update README.md with setup instructions
+- [ ] T250 [P] Update CLAUDE.md with latest architecture
+- [ ] T251 Update .env.example with all required variables
+- [ ] T252 Create production deployment guide
+- [ ] T253 Create database backup/restore scripts
+- [ ] T254 Review security (SQL injection, XSS, CSRF)
+- [ ] T255 Add rate limiting to public endpoints
+- [ ] T256 Add request logging middleware
+- [ ] T257 Optimize bundle size (<500KB gzipped)
+- [ ] T258 Add database connection pooling
+- [ ] T259 Document all API endpoints in README
+- [ ] T260 Create troubleshooting guide
+
+**Final Phase Tasks**: 12 tasks (0/12 complete)
+
+---
+
+## Task Summary
+
+| Phase | User Story | Tasks | Complete | Progress |
+|-------|-----------|-------|----------|----------|
+| Setup | Prerequisites | 5 | 5 | ✅ 100% |
+| Foundation | Infrastructure | 5 | 5 | ✅ 100% |
+| US1 | B2C Website | 32 | 32 | ✅ 100% |
+| US2 | Profile & Navigation | 19 | 0 | ⏳ 0% |
+| US3 | Product CRUD | 20 | 0 | ⏳ 0% |
+| US4 | Notifications | 25 | 25 | ✅ 100% |
+| US5 | System Settings | 21 | 21 | ✅ 100% |
+| US6 | IDR Currency | 15 | 15 | ✅ 100% |
+| US7 | Indonesian Menu | 10 | 10 | ✅ 100% |
+| US8 | Contact Admin | 18 | 18 | ✅ 100% |
+| US9 | Inventory | 23 | 23 | ✅ 100% |
+| US10 | i18n Language | 20 | 20 | ✅ 100% |
+| US11 | Testing | 35 | 28 | 🔨 80% |
+| Polish | Final Phase | 12 | 0 | ⏳ 0% |
+| **TOTAL** | **11 User Stories** | **260** | **202** | **78%** |
+
+---
+
+## Dependency Graph
+
+```
+Setup (T000-T005)
+    ↓
+Foundation (T006-T010)
+    ↓
+    ├─→ US1: B2C Website (T011-T042) ✅ COMPLETE
+    │
+    ├─→ US6: IDR Currency (T128-T142) ✅ COMPLETE
+    │   └─→ US7: Indonesian Menu (T143-T152) ✅ COMPLETE
+    │
+    ├─→ US4: Notifications (T082-T106) ✅ COMPLETE
+    │
+    ├─→ US5: System Settings (T107-T127) ✅ COMPLETE
+    │
+    ├─→ US8: Contact Admin (T153-T170) ✅ COMPLETE
+    │
+    ├─→ US9: Inventory (T171-T193) ✅ COMPLETE
+    │
+    ├─→ US10: i18n (T194-T213) ✅ COMPLETE
+    │
+    ├─→ US2: Profile & Navigation (T043-T061) ⏳ READY TO START
+    │
+    └─→ US3: Product CRUD (T062-T081) ⏳ READY TO START
+        │
+        └─→ US11: Testing (T214-T248) 🔨 IN PROGRESS (80%)
+            │
+            └─→ Polish: Final Phase (T249-T260) ⏳ PENDING
+```
+
+---
+
+## Parallel Execution Examples
+
+**Week 1 (Setup + US6 + US7)**:
+- Developer 1: T128-T142 (IDR Currency) - 15 tasks
+- Developer 2: T143-T152 (Indonesian Menu) - 10 tasks
+- Total: 25 tasks in parallel
+
+**Week 2 (US4 + US5 + US8)**:
+- Developer 1: T082-T106 (Notifications) - 25 tasks
+- Developer 2: T107-T127 (Settings) - 21 tasks
+- Developer 3: T153-T170 (Contact Admin) - 18 tasks
+- Total: 64 tasks in parallel
+
+**Week 3 (US9 + US10 + US2)**:
+- Developer 1: T171-T193 (Inventory) - 23 tasks
+- Developer 2: T194-T213 (i18n) - 20 tasks
+- Developer 3: T043-T061 (Profile) - 19 tasks
+- Total: 62 tasks in parallel
+
+**Week 4 (US3 + US11 + Polish)**:
+- Developer 1: T062-T081 (Product CRUD) - 20 tasks
+- Developer 2: T214-T248 (Testing) - 35 tasks
+- Developer 3: T249-T260 (Polish) - 12 tasks
+- Total: 67 tasks in parallel
+
+---
+
+## Next Actions
+
+1. **Start US2** (Profile & Navigation): T043-T061 (19 tasks)
+2. **Start US3** (Product CRUD): T062-T081 (20 tasks)
+3. **Complete US11** (Testing): T223, T230, T242-T248 (7 remaining tasks)
+4. **Start Final Polish**: T249-T260 (12 tasks)
+
+**Estimated Completion**: 2-3 weeks with 2-3 developers working in parallel
+
+---
+
+**Last Updated**: 2025-12-23  
+**Document Version**: 2.0 (Extended with Admin + Indonesian specs)
 **Dependencies:** None
 **Status:** COMPLETE
 

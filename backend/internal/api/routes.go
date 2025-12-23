@@ -21,6 +21,7 @@ import (
 func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.HandlerFunc) {
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db)
+	profileHandler := handlers.NewProfileHandler(db)
 	orderHandler := handlers.NewOrderHandler(db)
 	productHandler := handlers.NewProductHandler(db)
 	paymentHandler := handlers.NewPaymentHandler(db)
@@ -61,7 +62,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		protected.GET("/auth/me", authHandler.GetCurrentUser)
 
 		// Profile routes
-		protected.GET("/profile", authHandler.GetUserProfile)
+		protected.GET("/profile", profileHandler.GetProfile)
 		protected.PUT("/profile", authHandler.UpdateUserProfile)
 		protected.PUT("/profile/password", authHandler.ChangePassword)
 

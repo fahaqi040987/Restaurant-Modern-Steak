@@ -49,6 +49,8 @@ Thumbs.db
 # Editor directories and files
 .vscode/
 .idea/
+.cursor/
+.claude/
 *.swp
 *.swo
 *~
@@ -97,3 +99,6 @@ playwright-report/
 coverage/
 *.coverage.*
 coverage.out
+
+*.github
+*.specify
