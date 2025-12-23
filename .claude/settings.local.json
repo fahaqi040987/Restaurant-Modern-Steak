@@ -17,7 +17,8 @@
       "Bash(npm run test:coverage:*)",
       "Bash(cd:*)",
       "Bash(npm run lint:*)",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }
