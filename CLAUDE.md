@@ -230,3 +230,6 @@ The project includes 17 Cursor AI rule files in `.cursor/rules/` covering:
 - Role-based access patterns
 - Performance optimization
 - Testing patterns
+
+## Active Technologies
+- Go 1.21+ (backend), TypeScript 5+ strict mode (frontend) (001-restaurant-management)
