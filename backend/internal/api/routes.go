@@ -29,6 +29,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	publicHandler := handlers.NewPublicHandler(db)
 	inventoryHandler := handlers.NewInventoryHandler(db)
 	ingredientsHandler := handlers.NewIngredientsHandler(db)
+	uploadHandler := handlers.NewUploadHandler("./uploads")
 
 	// Rate limiters for different endpoint types
 	publicRateLimiter := middleware.PublicRateLimiter()
@@ -188,6 +189,10 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		// Advanced order management
 		admin.POST("/orders", orderHandler.CreateOrder)                   // Admins can create any type of order
 		admin.POST("/orders/:id/payments", paymentHandler.ProcessPayment) // Admins can process payments
+
+		// File upload
+		admin.POST("/upload", uploadHandler.UploadImage)
+		admin.DELETE("/upload/:filename", uploadHandler.DeleteImage)
 	}
 
 	// Server with product management (server role can manage products)

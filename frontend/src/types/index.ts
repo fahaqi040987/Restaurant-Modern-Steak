@@ -353,3 +353,17 @@ export interface ContactFormResponse {
   id: string;
 }
 
+// ===========================================
+// Upload Types
+// ===========================================
+
+/**
+ * Response from image upload endpoint POST /api/v1/admin/upload
+ */
+export interface UploadResponse {
+  filename: string;
+  url: string;
+  size: number;
+  mime_type: string;
+}
+

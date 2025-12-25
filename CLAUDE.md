@@ -233,3 +233,8 @@ The project includes 17 Cursor AI rule files in `.cursor/rules/` covering:
 
 ## Active Technologies
 - Go 1.21+ (backend), TypeScript 5+ strict mode (frontend) (001-restaurant-management)
+- Go 1.21+ (backend), TypeScript 5+ (frontend) + Gin 1.9.1, React 18.3.1, TanStack Router, PostgreSQL 15 (002-restaurant-management)
+- PostgreSQL 15 with UUID primary keys, Docker volumes for persistence (002-restaurant-management)
+- Go 1.21+ (backend), TypeScript 5+ strict mode (frontend) + Gin v1.9.1, React 18, TanStack Router/Query, PostgreSQL 15 (002-restaurant-management)
+- PostgreSQL 15 with Docker volume persistence (002-restaurant-management)
+- PostgreSQL 15 (data), MinIO/Cloudflare R2 (images) (002-restaurant-management)

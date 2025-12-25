@@ -53,6 +53,7 @@ func main() {
 	// Add middleware
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	router.Use(middleware.SecurityHeaders())
 
 	// CORS configuration - load allowed origins from environment for production
 	allowedOrigins := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001,http://localhost:5173")
@@ -74,6 +75,14 @@ func main() {
 
 	// Health check endpoint at root level (for Docker health checks)
 	router.GET("/health", healthHandler.GetSystemHealth)
+
+	// Static file serving for uploaded images
+	// Create uploads directory if it doesn't exist
+	uploadsDir := getEnv("UPLOADS_DIR", "./uploads")
+	if err := os.MkdirAll(uploadsDir, 0755); err != nil {
+		log.Printf("Warning: Failed to create uploads directory: %v", err)
+	}
+	router.Static("/uploads", uploadsDir)
 
 	// Initialize API routes
 	apiRoutes := router.Group("/api/v1")
