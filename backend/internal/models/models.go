@@ -57,6 +57,7 @@ type DiningTable struct {
 	SeatingCapacity int       `json:"seating_capacity"`
 	Location        *string   `json:"location"`
 	IsOccupied      bool      `json:"is_occupied"`
+	QRCode          *string   `json:"qr_code"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }

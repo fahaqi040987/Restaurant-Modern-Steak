@@ -13,11 +13,11 @@ import (
 
 // PasswordStrengthError represents validation errors for password requirements
 type PasswordStrengthError struct {
-	MinLength   bool `json:"min_length"`   // At least 8 characters
-	HasUpper    bool `json:"has_upper"`    // At least one uppercase letter
-	HasLower    bool `json:"has_lower"`    // At least one lowercase letter
-	HasNumber   bool `json:"has_number"`   // At least one number
-	HasSpecial  bool `json:"has_special"`  // At least one special character
+	MinLength  bool `json:"min_length"`  // At least 8 characters
+	HasUpper   bool `json:"has_upper"`   // At least one uppercase letter
+	HasLower   bool `json:"has_lower"`   // At least one lowercase letter
+	HasNumber  bool `json:"has_number"`  // At least one number
+	HasSpecial bool `json:"has_special"` // At least one special character
 }
 
 // ValidatePasswordStrength checks if a password meets all strength requirements

@@ -470,7 +470,7 @@ export function AdminTableManagement() {
                     <div className="text-right">
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        {table.capacity} seats
+                        {table.seating_capacity} seats
                       </div>
                     </div>
                   </div>

@@ -107,8 +107,14 @@ export function EnhancedKitchenLayout({ user }: EnhancedKitchenLayoutProps) {
   const handleOrderStatusUpdate = useCallback(async (orderId: string, newStatus: string) => {
     // Optimistically update the UI immediately
     const previousOrders = queryClient.getQueryData(['enhancedKitchenOrders']);
-    
+
     queryClient.setQueryData(['enhancedKitchenOrders'], (old: any) => {
+      // Handle both direct array response and { data: [] } response structure
+      if (Array.isArray(old)) {
+        return old.map((order: Order) =>
+          order.id === orderId ? { ...order, status: newStatus } : order
+        );
+      }
       if (!old?.data) return old;
       return {
         ...old,
@@ -120,45 +126,55 @@ export function EnhancedKitchenLayout({ user }: EnhancedKitchenLayoutProps) {
 
     try {
       await apiClient.updateOrderStatus(orderId, newStatus as any);
-      refetch();
+      // Invalidate and refetch to ensure cache consistency
+      await queryClient.invalidateQueries({ queryKey: ['enhancedKitchenOrders'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
     } catch (error) {
       // Rollback on error
       queryClient.setQueryData(['enhancedKitchenOrders'], previousOrders);
       console.error('Failed to update order status:', error);
     }
-  }, [refetch, queryClient]);
+  }, [queryClient]);
 
   // Handle order item status updates with optimistic update
   const handleOrderItemStatusUpdate = useCallback(async (orderId: string, itemId: string, newStatus: string) => {
     // Optimistically update the UI immediately
     const previousOrders = queryClient.getQueryData(['enhancedKitchenOrders']);
-    
+
     queryClient.setQueryData(['enhancedKitchenOrders'], (old: any) => {
+      // Helper to update order items
+      const updateOrderItems = (order: Order) =>
+        order.id === orderId
+          ? {
+              ...order,
+              items: order.items?.map((item) =>
+                item.id === itemId ? { ...item, status: newStatus } : item
+              ),
+            }
+          : order;
+
+      // Handle both direct array response and { data: [] } response structure
+      if (Array.isArray(old)) {
+        return old.map(updateOrderItems);
+      }
       if (!old?.data) return old;
       return {
         ...old,
-        data: old.data.map((order: Order) =>
-          order.id === orderId
-            ? {
-                ...order,
-                items: order.items?.map((item) =>
-                  item.id === itemId ? { ...item, status: newStatus } : item
-                ),
-              }
-            : order
-        ),
+        data: old.data.map(updateOrderItems),
       };
     });
 
     try {
       await apiClient.updateOrderItemStatus(orderId, itemId, newStatus);
-      refetch();
+      // Invalidate and refetch to ensure cache consistency
+      await queryClient.invalidateQueries({ queryKey: ['enhancedKitchenOrders'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
     } catch (error) {
       // Rollback on error
       queryClient.setQueryData(['enhancedKitchenOrders'], previousOrders);
       console.error('Failed to update order item status:', error);
     }
-  }, [refetch, queryClient]);
+  }, [queryClient]);
 
   // Manual refresh
   const handleRefresh = useCallback(() => {
