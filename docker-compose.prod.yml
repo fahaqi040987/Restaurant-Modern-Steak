@@ -17,6 +17,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - GIN_MODE=release
+    volumes:
+      - uploads_data:/app/uploads  # Persistent storage for uploaded images
     depends_on:
       db:
         condition: service_healthy
@@ -118,6 +120,8 @@ services:
 volumes:
   postgres_data:
     name: steak-kenangan-postgres-data
+  uploads_data:
+    name: steak-kenangan-uploads
   uptime_kuma_data:
     name: steak-kenangan-uptime-kuma
 

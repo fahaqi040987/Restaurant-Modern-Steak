@@ -30,14 +30,14 @@ INSERT INTO restaurant_info (
     '12190',
     'Indonesia',
     '+62 21 1234 5678',
-    'info@modernsteak.com',
+    'info@steakkenangan.com',
     '+62 812 3456 7890',
     -6.2088,
     106.8456,
     'https://maps.google.com/?q=-6.2088,106.8456',
-    'https://instagram.com/modernsteak',
-    'https://facebook.com/modernsteak',
-    'https://twitter.com/modernsteak',
+    'https://instagram.com/steakkenangan',
+    'https://facebook.com/steakkenangan',
+    'https://twitter.com/steakkenangan',
     '/images/logo.png',
     '/images/hero-steak.jpg'
 ) ON CONFLICT DO NOTHING;

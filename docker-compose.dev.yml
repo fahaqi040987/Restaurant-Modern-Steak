@@ -38,6 +38,7 @@ services:
       - pos-network
     volumes:
       - ./backend:/app
+      - uploads_dev_data:/app/uploads  # Persistent storage for uploaded images
     restart: unless-stopped
 
   # Frontend (Development)
@@ -63,6 +64,7 @@ services:
 
 volumes:
   postgres_dev_data:
+  uploads_dev_data:
 
 networks:
   pos-network:

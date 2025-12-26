@@ -31,6 +31,26 @@ import {
 } from "lucide-react"
 import type { Product, Category } from "@/types"
 
+/**
+ * Build the full image URL from a potentially relative path.
+ * Handles both full URLs and relative paths like /uploads/image.jpg
+ */
+function getProductImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  // If it's already a full URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // If it's a relative URL starting with /uploads, prepend the API base
+  if (url.startsWith('/uploads')) {
+    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1';
+    // Remove /api/v1 from the API URL to get the base URL
+    const baseUrl = apiUrl.replace('/api/v1', '');
+    return `${baseUrl}${url}`;
+  }
+  return url;
+}
+
 interface AdminMenuTableProps {
   data: Product[]
   categories: Category[]
@@ -94,14 +114,21 @@ export function AdminMenuTable({
       },
       cell: ({ row }) => {
         const product = row.original
+        const imageUrl = getProductImageUrl(product.image_url)
         return (
           <div className="flex items-center space-x-3">
             <div className="flex-shrink-0">
-              {product.image_url ? (
-                <img 
-                  src={product.image_url} 
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
                   alt={product.name}
                   className="h-12 w-12 rounded-lg object-cover"
+                  onError={(e) => {
+                    // Fallback to placeholder on image load error
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.parentElement?.classList.add('bg-gradient-to-r', 'from-orange-400', 'to-pink-500', 'flex', 'items-center', 'justify-center');
+                  }}
                 />
               ) : (
                 <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-orange-400 to-pink-500 flex items-center justify-center">
