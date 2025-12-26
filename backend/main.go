@@ -46,13 +46,25 @@ func main() {
 
 	log.Println("Successfully connected to database")
 
+	// Initialize Sentry error tracking (optional)
+	if err := middleware.InitializeSentry(); err != nil {
+		log.Printf("Warning: Sentry initialization failed: %v", err)
+	}
+
+	// Configure logging level based on environment
+	logLevel := getEnv("LOG_LEVEL", "INFO")
+	middleware.SetLogLevel(logLevel)
+	log.Printf("Log level set to: %s", logLevel)
+
 	// Initialize Gin router
 	gin.SetMode(getEnv("GIN_MODE", "release"))
 	router := gin.New()
 
 	// Add middleware
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
+	router.Use(middleware.RecoveryWithSentry())   // Custom recovery with Sentry
+	router.Use(middleware.RequestIDMiddleware())  // Add request ID to all requests
+	router.Use(middleware.StructuredLogger())     // Structured JSON logging with masking
+	router.Use(middleware.SentryErrorReporting()) // Sentry error reporting
 	router.Use(middleware.SecurityHeaders())
 
 	// CORS configuration - load allowed origins from environment for production

@@ -7,8 +7,52 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { OfflineIndicator } from '@/components/OfflineIndicator'
 import { ThemeProvider } from '@/components/theme-provider'
 import { queryClient } from '@/lib/queryClient'
+import * as Sentry from '@sentry/react'
 import './i18n' // Import i18n configuration
 import './index.css'
+
+// Initialize Sentry error tracking (optional)
+const sentryDsn = import.meta.env.VITE_SENTRY_DSN
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    environment: import.meta.env.VITE_ENVIRONMENT || import.meta.env.MODE,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
+    // Performance Monitoring
+    tracesSampleRate: import.meta.env.VITE_ENVIRONMENT === 'production' ? 0.1 : 1.0,
+    // Session Replay
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    // Filter out sensitive data
+    beforeSend(event, hint) {
+      // Remove sensitive data from breadcrumbs
+      if (event.breadcrumbs) {
+        event.breadcrumbs = event.breadcrumbs.map(breadcrumb => {
+          if (breadcrumb.category === 'fetch' || breadcrumb.category === 'xhr') {
+            // Mask Authorization headers
+            if (breadcrumb.data?.['request.headers']) {
+              const headers = breadcrumb.data['request.headers']
+              if (headers.Authorization) {
+                headers.Authorization = '***MASKED***'
+              }
+            }
+          }
+          return breadcrumb
+        })
+      }
+      return event
+    },
+  })
+  console.log('Sentry initialized for environment:', import.meta.env.VITE_ENVIRONMENT || import.meta.env.MODE)
+} else {
+  console.log('Sentry DSN not configured, error tracking disabled')
+}
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
