@@ -1,0 +1,1554 @@
+openapi: 3.0.3
+info:
+  title: Steak Kenangan Restaurant POS API
+  description: |
+    REST API for Steak Kenangan Restaurant Point-of-Sale system.
+
+    ## Features
+    - Role-based access control (RBAC)
+    - JWT authentication
+    - Rate limiting
+    - Comprehensive order management
+    - Inventory tracking
+    - Real-time kitchen display
+    - Multi-payment processing
+
+    ## Authentication
+    Most endpoints require JWT authentication. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your_jwt_token>
+    ```
+
+    ## Roles
+    - **admin**: Full system access
+    - **manager**: Business operations and reporting
+    - **server**: Dine-in orders only
+    - **counter**: All order types + payments
+    - **kitchen**: Order preparation workflow
+
+    ## Rate Limiting
+    - Public endpoints: 30 requests/minute per IP
+    - Auth endpoints: 5 requests/minute (brute-force protection)
+    - Contact form: 3 requests/5 minutes
+
+    ## Response Format
+    All endpoints return standard response format:
+    ```json
+    {
+      "success": boolean,
+      "message": string,
+      "data": object | array,
+      "error": string (optional)
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: Steak Kenangan API Support
+    email: tech@steakkenangan.com
+    url: https://steakkenangan.com
+  license:
+    name: Proprietary
+    url: https://steakkenangan.com/legal/terms.html
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+  - url: https://api.steakkenangan.com/api/v1
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: Login, logout, and user authentication
+  - name: Public
+    description: Public website API (no auth required)
+  - name: Customer
+    description: Customer self-ordering (no auth required)
+  - name: Profile
+    description: User profile management
+  - name: Products
+    description: Menu items and categories
+  - name: Orders
+    description: Order management
+  - name: Payments
+    description: Payment processing
+  - name: Tables
+    description: Dining table management
+  - name: Notifications
+    description: User notifications
+  - name: Admin
+    description: Admin-only operations
+  - name: Kitchen
+    description: Kitchen display system
+  - name: Server
+    description: Server station operations
+  - name: Counter
+    description: Counter station operations
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login endpoint
+
+  schemas:
+    APIResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indicates if request was successful
+        message:
+          type: string
+          description: Human-readable message
+        data:
+          description: Response payload (varies by endpoint)
+        error:
+          type: string
+          description: Error message (only present on failure)
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        role:
+          type: string
+          enum: [admin, manager, server, counter, kitchen]
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        category_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+        image_url:
+          type: string
+          format: uri
+        barcode:
+          type: string
+        sku:
+          type: string
+        is_available:
+          type: boolean
+        preparation_time:
+          type: integer
+          description: Time in minutes
+        sort_order:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+          pattern: '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
+        sort_order:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order_number:
+          type: string
+        user_id:
+          type: string
+          format: uuid
+        table_id:
+          type: string
+          format: uuid
+        order_type:
+          type: string
+          enum: [dine_in, takeaway, delivery]
+        status:
+          type: string
+          enum: [pending, confirmed, preparing, ready, served, completed, cancelled]
+        customer_name:
+          type: string
+        customer_phone:
+          type: string
+        delivery_address:
+          type: string
+        subtotal:
+          type: number
+          format: decimal
+        tax_amount:
+          type: number
+          format: decimal
+        discount_amount:
+          type: number
+          format: decimal
+        total_amount:
+          type: number
+          format: decimal
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price:
+          type: number
+          format: decimal
+        subtotal:
+          type: number
+          format: decimal
+        special_instructions:
+          type: string
+        status:
+          type: string
+          enum: [pending, preparing, ready, served]
+
+    Table:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        table_number:
+          type: string
+        seating_capacity:
+          type: integer
+        location:
+          type: string
+        is_occupied:
+          type: boolean
+        qr_code:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order_id:
+          type: string
+          format: uuid
+        payment_method:
+          type: string
+          enum: [cash, credit_card, debit_card, e_wallet, qris]
+        amount:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [pending, completed, failed, refunded]
+        transaction_id:
+          type: string
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [order, system, inventory, alert]
+        title:
+          type: string
+        message:
+          type: string
+        is_read:
+          type: boolean
+        action_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+        error:
+          type: string
+
+paths:
+  # ==========================================
+  # AUTHENTICATION ENDPOINTS (T098)
+  # ==========================================
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: |
+        Authenticate user and receive JWT token.
+
+        **Rate Limit**: 5 requests/minute per IP (brute-force protection)
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: admin
+                password:
+                  type: string
+                  format: password
+                  example: admin123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          token:
+                            type: string
+                            description: JWT token for authentication
+                          user:
+                            $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Invalidate current session (client should discard token)
+      operationId: logout
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user info
+      description: Returns authenticated user details
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User info retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==========================================
+  # PUBLIC ENDPOINTS (T100)
+  # ==========================================
+
+  /public/menu:
+    get:
+      tags:
+        - Public
+      summary: Get public menu
+      description: |
+        Returns menu items for public website.
+
+        **Rate Limit**: 30 requests/minute per IP
+      operationId: getPublicMenu
+      responses:
+        '200':
+          description: Menu retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+
+  /public/categories:
+    get:
+      tags:
+        - Public
+      summary: Get categories
+      description: Returns all active product categories
+      operationId: getPublicCategories
+      responses:
+        '200':
+          description: Categories retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Category'
+
+  /public/restaurant:
+    get:
+      tags:
+        - Public
+      summary: Get restaurant info
+      description: Returns restaurant information (hours, location, contact)
+      operationId: getRestaurantInfo
+      responses:
+        '200':
+          description: Restaurant info retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          address:
+                            type: string
+                          phone:
+                            type: string
+                          email:
+                            type: string
+                          opening_hours:
+                            type: object
+
+  /public/contact:
+    post:
+      tags:
+        - Public
+      summary: Submit contact form
+      description: |
+        Submit contact/inquiry form from public website.
+
+        **Rate Limit**: 3 requests/5 minutes per IP (spam protection)
+      operationId: submitContactForm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - subject
+                - message
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                subject:
+                  type: string
+                  enum: [general, reservation, catering, feedback, complaint]
+                message:
+                  type: string
+      responses:
+        '200':
+          description: Contact form submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==========================================
+  # CUSTOMER SELF-ORDERING
+  # ==========================================
+
+  /customer/table/{qr_code}:
+    get:
+      tags:
+        - Customer
+      summary: Get table by QR code
+      description: Returns table information for customer self-ordering
+      operationId: getTableByQRCode
+      parameters:
+        - name: qr_code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Table info retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Table'
+        '404':
+          description: Table not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /customer/orders:
+    post:
+      tags:
+        - Customer
+      summary: Create customer order
+      description: Create order from customer self-ordering (QR code scan)
+      operationId: createCustomerOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - table_id
+                - items
+              properties:
+                table_id:
+                  type: string
+                  format: uuid
+                customer_name:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      product_id:
+                        type: string
+                        format: uuid
+                      quantity:
+                        type: integer
+                      special_instructions:
+                        type: string
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+
+  # ==========================================
+  # PROFILE ENDPOINTS
+  # ==========================================
+
+  /profile:
+    get:
+      tags:
+        - Profile
+      summary: Get user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+    put:
+      tags:
+        - Profile
+      summary: Update user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
+  /profile/password:
+    put:
+      tags:
+        - Profile
+      summary: Change password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - current_password
+                - new_password
+              properties:
+                current_password:
+                  type: string
+                  format: password
+                new_password:
+                  type: string
+                  format: password
+                  minLength: 8
+      responses:
+        '200':
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '400':
+          description: Invalid current password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==========================================
+  # PRODUCTS ENDPOINTS
+  # ==========================================
+
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get products (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category_id
+          in: query
+          schema:
+            type: string
+        - name: available_only
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Products retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+                      meta:
+                        $ref: '#/components/schemas/PaginationMeta'
+
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Get product by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /categories:
+    get:
+      tags:
+        - Products
+      summary: Get all categories
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Categories retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Category'
+
+  /categories/{id}/products:
+    get:
+      tags:
+        - Products
+      summary: Get products by category
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Products retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+
+  # ==========================================
+  # ORDERS ENDPOINTS
+  # ==========================================
+
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: Get orders (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, preparing, ready, served, completed, cancelled]
+        - name: order_type
+          in: query
+          schema:
+            type: string
+            enum: [dine_in, takeaway, delivery]
+      responses:
+        '200':
+          description: Orders retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Order'
+                      meta:
+                        $ref: '#/components/schemas/PaginationMeta'
+
+  /orders/{id}:
+    get:
+      tags:
+        - Orders
+      summary: Get order by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+
+  /orders/{id}/status:
+    patch:
+      tags:
+        - Orders
+      summary: Update order status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [confirmed, preparing, ready, served, completed, cancelled]
+      responses:
+        '200':
+          description: Order status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
+  /orders/{id}/status-history:
+    get:
+      tags:
+        - Orders
+      summary: Get order status history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Status history retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            status:
+                              type: string
+                            changed_by:
+                              type: string
+                            changed_at:
+                              type: string
+                              format: date-time
+
+  # ==========================================
+  # ADMIN ENDPOINTS (T099) - Condensed
+  # ==========================================
+
+  /admin/dashboard/stats:
+    get:
+      tags:
+        - Admin
+      summary: Get dashboard statistics
+      description: Returns today's orders, revenue, active orders, occupied tables
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard stats retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          today_orders:
+                            type: integer
+                          today_revenue:
+                            type: number
+                          active_orders:
+                            type: integer
+                          occupied_tables:
+                            type: integer
+
+  /admin/reports/sales:
+    get:
+      tags:
+        - Admin
+      summary: Get sales report
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month]
+            default: today
+      responses:
+        '200':
+          description: Sales report retrieved
+
+  /admin/reports/income:
+    get:
+      tags:
+        - Admin
+      summary: Get income report
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month, year]
+      responses:
+        '200':
+          description: Income report retrieved
+
+  /admin/users:
+    get:
+      tags:
+        - Admin
+      summary: Get users (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Users retrieved
+    post:
+      tags:
+        - Admin
+      summary: Create new user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+                - first_name
+                - last_name
+                - role
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                role:
+                  type: string
+                  enum: [admin, manager, server, counter, kitchen]
+      responses:
+        '201':
+          description: User created
+
+  /admin/products:
+    post:
+      tags:
+        - Admin
+      summary: Create product
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - price
+              properties:
+                category_id:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                image_url:
+                  type: string
+                sku:
+                  type: string
+      responses:
+        '201':
+          description: Product created
+
+  /admin/inventory:
+    get:
+      tags:
+        - Admin
+      summary: Get inventory
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Inventory retrieved
+
+  /admin/inventory/low-stock:
+    get:
+      tags:
+        - Admin
+      summary: Get low stock items
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Low stock items retrieved
+
+  /admin/contacts:
+    get:
+      tags:
+        - Admin
+      summary: Get contact submissions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Contact submissions retrieved
+
+  /admin/upload:
+    post:
+      tags:
+        - Admin
+      summary: Upload image
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Image uploaded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          url:
+                            type: string
+                          filename:
+                            type: string
+
+  # ==========================================
+  # KITCHEN ENDPOINTS
+  # ==========================================
+
+  /kitchen/orders:
+    get:
+      tags:
+        - Kitchen
+      summary: Get kitchen orders
+      description: Returns orders in confirmed/preparing/ready status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, confirmed, preparing, ready]
+      responses:
+        '200':
+          description: Kitchen orders retrieved
+
+  /kitchen/orders/{id}/items/{item_id}/status:
+    patch:
+      tags:
+        - Kitchen
+      summary: Update order item status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [preparing, ready, served]
+      responses:
+        '200':
+          description: Order item status updated
+
+  # ==========================================
+  # SERVER ENDPOINTS
+  # ==========================================
+
+  /server/orders:
+    post:
+      tags:
+        - Server
+      summary: Create dine-in order (server role only)
+      description: Server staff can only create dine-in orders
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - table_id
+                - items
+              properties:
+                table_id:
+                  type: string
+                customer_name:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Order created
+
+  # ==========================================
+  # COUNTER ENDPOINTS
+  # ==========================================
+
+  /counter/orders:
+    post:
+      tags:
+        - Counter
+      summary: Create order (all types)
+      description: Counter staff can create dine-in, takeaway, and delivery orders
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - order_type
+                - items
+              properties:
+                order_type:
+                  type: string
+                  enum: [dine_in, takeaway, delivery]
+                table_id:
+                  type: string
+                customer_name:
+                  type: string
+                customer_phone:
+                  type: string
+                delivery_address:
+                  type: string
+                items:
+                  type: array
+      responses:
+        '201':
+          description: Order created
+
+  /counter/orders/{id}/payments:
+    post:
+      tags:
+        - Counter
+      summary: Process payment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - payment_method
+                - amount
+              properties:
+                payment_method:
+                  type: string
+                  enum: [cash, credit_card, debit_card, e_wallet, qris]
+                amount:
+                  type: number
+                transaction_id:
+                  type: string
+      responses:
+        '200':
+          description: Payment processed
+
+  # ==========================================
+  # TABLES ENDPOINTS
+  # ==========================================
+
+  /tables:
+    get:
+      tags:
+        - Tables
+      summary: Get all tables
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Tables retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Table'
+
+  /tables/{id}:
+    get:
+      tags:
+        - Tables
+      summary: Get table by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Table retrieved
+
+  /tables/status:
+    get:
+      tags:
+        - Tables
+      summary: Get tables status
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Tables status retrieved
+
+  # ==========================================
+  # NOTIFICATIONS ENDPOINTS
+  # ==========================================
+
+  /notifications:
+    get:
+      tags:
+        - Notifications
+      summary: Get user notifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Notifications retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Notification'
+
+  /notifications/counts/unread:
+    get:
+      tags:
+        - Notifications
+      summary: Get unread notification count
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Unread count retrieved
+
+  /notifications/{id}/read:
+    put:
+      tags:
+        - Notifications
+      summary: Mark notification as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification marked as read
+
+# Note: This OpenAPI spec covers the major endpoints.
+# For complete details on all admin CRUD operations, see the full API routes file.

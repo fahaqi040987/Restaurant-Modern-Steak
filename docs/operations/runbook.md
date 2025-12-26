@@ -601,24 +601,386 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## Backup and Restore
 
-See dedicated scripts:
-- **Backup**: `./scripts/backup.sh`
-- **Restore**: `./scripts/restore.sh`
+### T087: Backup Verification Procedures
 
-**Quick Reference**:
+This section covers comprehensive backup and restore procedures for the Restaurant POS system, including verification and testing protocols.
 
+### Backup Strategy
+
+The system implements a **3-2-1 backup strategy**:
+- **3** copies of data (production + local backup + cloud backup)
+- **2** different storage types (local disk + S3/Cloudflare R2)
+- **1** offsite backup (S3/Cloudflare R2)
+
+**Backup Types**:
+- **Daily**: Automatic at 2 AM Jakarta time (kept for 7 days)
+- **Weekly**: Automatic on Sundays at 3 AM (kept for 4 weeks)
+- **Monthly**: Automatic on 1st of month at 4 AM (kept for 3 months)
+- **Pre-deploy**: Manual before deployments (last 5 kept)
+
+### Backup Scripts
+
+#### Backup Script: `scripts/backup.sh`
+
+Features:
+- PostgreSQL pg_dump with compression
+- Integrity verification (gzip test)
+- Optional S3/Cloudflare R2 upload
+- Automatic rotation by retention policy
+- Webhook notifications for failures
+
+Usage:
 ```bash
-# Create backup
-./scripts/backup.sh
+# Daily backup (default)
+./scripts/backup.sh daily
 
-# Restore from latest backup
-./scripts/restore.sh latest
+# Weekly backup
+./scripts/backup.sh weekly
 
-# List available backups
-./scripts/restore.sh list
+# Monthly backup
+./scripts/backup.sh monthly
+
+# Pre-deployment backup
+./scripts/backup.sh pre-deploy
 ```
 
-Backups are stored in `/backups/` with automatic rotation (7 daily, 4 weekly, 3 monthly).
+#### Restore Script: `scripts/restore.sh`
+
+Features:
+- Restore from local or S3 backups
+- Safety confirmation prompts
+- Emergency pre-restore backup creation
+- Post-restore verification
+- Service restart handling
+
+Usage:
+```bash
+# List available backups
+./scripts/restore.sh
+
+# Restore from local backup
+./scripts/restore.sh backups/daily/steak_kenangan_daily_20250126_020000.dump.gz
+
+# Restore from S3
+./scripts/restore.sh s3://steak-kenangan-backups/daily/steak_kenangan_daily_20250126_020000.dump.gz
+
+# Skip confirmation (dangerous - use only in scripts)
+./scripts/restore.sh <backup_file> --skip-confirm
+```
+
+### Backup Verification Procedures
+
+#### 1. Daily Backup Verification (5 minutes)
+
+Run these checks every morning to verify last night's backup:
+
+**Step 1: Check backup completion**
+```bash
+# View recent backup logs
+tail -50 /var/log/steak-kenangan/backup.log
+
+# Look for success message
+grep "Backup completed successfully" /var/log/steak-kenangan/backup.log | tail -1
+```
+
+**Expected output**:
+```
+[2025-12-26 02:15:30] ✅ Backup completed successfully!
+```
+
+**Step 2: Verify backup file exists**
+```bash
+# List today's backups
+ls -lh backups/daily/ | head -5
+
+# Check backup size (should be > 1MB for populated database)
+du -h backups/daily/steak_kenangan_daily_$(date +%Y%m%d)*.dump.gz
+```
+
+**Expected output**:
+```
+-rw-r--r-- 1 user user 5.2M Dec 26 02:15 steak_kenangan_daily_20251226_021530.dump.gz
+```
+
+**Step 3: Test backup integrity**
+```bash
+# Find latest backup
+LATEST_BACKUP=$(ls -t backups/daily/*.dump.gz | head -1)
+
+# Test gzip integrity
+gzip -t "$LATEST_BACKUP" && echo "✅ Integrity OK" || echo "❌ Corrupted!"
+```
+
+**Step 4: Verify backup contents**
+```bash
+# Extract and check backup (without restoring)
+zcat "$LATEST_BACKUP" | head -50
+
+# Should show PostgreSQL dump headers and schema
+```
+
+**Expected output**:
+```
+--
+-- PostgreSQL database dump
+--
+SET statement_timeout = 0;
+...
+```
+
+**Step 5: Check S3 upload (if configured)**
+```bash
+# Verify S3 credentials are set
+echo "S3_BUCKET: ${BACKUP_S3_BUCKET:-Not set}"
+echo "S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-Not set}"
+
+# List today's S3 backups
+aws s3 ls s3://${BACKUP_S3_BUCKET}/daily/ --endpoint-url ${BACKUP_S3_ENDPOINT} | grep $(date +%Y%m%d)
+```
+
+**Expected output**:
+```
+2025-12-26 02:16:45    5242880 steak_kenangan_daily_20251226_021530.dump.gz
+```
+
+#### 2. Weekly Backup Test Restore (30 minutes)
+
+Perform a **test restore** every Sunday to verify backup validity:
+
+**Step 1: Create test environment**
+```bash
+# Use a separate docker compose for testing
+cp docker-compose.prod.yml docker-compose.test.yml
+
+# Modify ports to avoid conflicts
+sed -i 's/8080:8080/8081:8080/' docker-compose.test.yml
+sed -i 's/3000:80/3001:80/' docker-compose.test.yml
+sed -i 's/5432:5432/5433:5432/' docker-compose.test.yml
+
+# Change container names
+sed -i 's/steak-kenangan-/steak-kenangan-test-/g' docker-compose.test.yml
+```
+
+**Step 2: Start test environment**
+```bash
+docker compose -f docker-compose.test.yml up -d db backend
+```
+
+**Step 3: Restore to test database**
+```bash
+# Set test environment
+export DB_CONTAINER=steak-kenangan-test-db
+export DB_NAME=restaurant_test
+
+# Find latest weekly backup
+LATEST_WEEKLY=$(ls -t backups/weekly/*.dump.gz | head -1)
+
+# Restore (modify restore.sh to use test container)
+./scripts/restore.sh "$LATEST_WEEKLY" --skip-confirm
+```
+
+**Step 4: Verify restored data**
+```bash
+# Check table counts
+docker exec steak-kenangan-test-db psql -U postgres -d restaurant_test -c "
+SELECT
+    'users' as table_name, COUNT(*) as records FROM users
+UNION ALL SELECT 'orders', COUNT(*) FROM orders
+UNION ALL SELECT 'products', COUNT(*) FROM products
+UNION ALL SELECT 'payments', COUNT(*) FROM payments
+ORDER BY table_name;
+"
+
+# Test API health endpoint
+curl http://localhost:8081/api/v1/health
+```
+
+**Expected output**:
+```json
+{
+  "success": true,
+  "message": "System healthy",
+  "data": {
+    "database": "connected",
+    "tables": 25
+  }
+}
+```
+
+**Step 5: Cleanup test environment**
+```bash
+docker compose -f docker-compose.test.yml down -v
+rm docker-compose.test.yml
+```
+
+#### 3. Monthly Disaster Recovery Drill (1 hour)
+
+Once a month, perform a **full disaster recovery drill**:
+
+**Scenario**: Complete server failure, restore from cloud backup
+
+**Step 1: Document current state**
+```bash
+# Get current database statistics
+docker exec steak-kenangan-db psql -U postgres -d restaurant -c "
+SELECT COUNT(*) as total_records,
+       (SELECT COUNT(*) FROM users) as users,
+       (SELECT COUNT(*) FROM orders) as orders,
+       (SELECT COUNT(*) FROM products) as products
+FROM (SELECT 1) as dummy;
+" > pre-drill-stats.txt
+
+cat pre-drill-stats.txt
+```
+
+**Step 2: Simulate failure (on staging only!)**
+```bash
+# DO NOT RUN IN PRODUCTION
+# Stop all services
+docker compose -f docker-compose.prod.yml down
+
+# Delete local database volume
+docker volume rm steak-kenangan_postgres-data
+```
+
+**Step 3: Restore from S3 backup**
+```bash
+# List S3 monthly backups
+aws s3 ls s3://${BACKUP_S3_BUCKET}/monthly/ --endpoint-url ${BACKUP_S3_ENDPOINT}
+
+# Download latest monthly backup
+MONTHLY_BACKUP="s3://${BACKUP_S3_BUCKET}/monthly/steak_kenangan_monthly_20250101_040000.dump.gz"
+
+# Restore database
+./scripts/restore.sh "$MONTHLY_BACKUP" --skip-confirm
+```
+
+**Step 4: Verify recovery**
+```bash
+# Start services
+docker compose -f docker-compose.prod.yml up -d
+
+# Wait for health check
+sleep 10
+
+# Check restored statistics
+docker exec steak-kenangan-db psql -U postgres -d restaurant -c "
+SELECT COUNT(*) as total_records,
+       (SELECT COUNT(*) FROM users) as users,
+       (SELECT COUNT(*) FROM orders) as orders,
+       (SELECT COUNT(*) FROM products) as products
+FROM (SELECT 1) as dummy;
+" > post-drill-stats.txt
+
+# Compare with pre-drill stats
+diff pre-drill-stats.txt post-drill-stats.txt
+```
+
+**Step 5: Document drill results**
+```bash
+# Create drill report
+cat > disaster-recovery-drill-$(date +%Y%m%d).md << EOF
+# Disaster Recovery Drill - $(date +%Y-%m-%d)
+
+## Summary
+- Backup Used: $MONTHLY_BACKUP
+- Recovery Time: [MEASURE AND FILL IN]
+- Data Loss: [COMPARE STATS]
+- Status: [SUCCESS/ISSUES]
+
+## Issues Found
+[Document any problems]
+
+## Recommendations
+[Document improvements]
+
+## Next Drill
+Scheduled for: $(date -d '+1 month' +%Y-%m-%d)
+EOF
+```
+
+### Backup Troubleshooting
+
+#### Issue: Backup script fails with "Database container not running"
+
+**Cause**: Database container name changed or stopped
+
+**Solution**:
+```bash
+# Check running containers
+docker ps | grep postgres
+
+# Update DB_CONTAINER environment variable
+export DB_CONTAINER=<actual-container-name>
+
+# Or update in script
+```
+
+#### Issue: S3 upload fails with "Access Denied"
+
+**Cause**: Invalid S3 credentials or insufficient permissions
+
+**Solution**:
+```bash
+# Test S3 credentials
+aws s3 ls s3://${BACKUP_S3_BUCKET}/ --endpoint-url ${BACKUP_S3_ENDPOINT}
+
+# If fails, regenerate credentials in Cloudflare R2 dashboard
+# Update .env.production with new credentials
+```
+
+#### Issue: Backup file corrupted (integrity check fails)
+
+**Cause**: Disk full during backup or interrupted backup
+
+**Solution**:
+```bash
+# Check disk space
+df -h /opt/steak-kenangan
+
+# Delete corrupted backup
+rm backups/daily/steak_kenangan_daily_CORRUPTED.dump.gz
+
+# Run backup again
+./scripts/backup.sh daily
+```
+
+#### Issue: Restore fails with "table already exists"
+
+**Cause**: Database not properly cleaned before restore
+
+**Solution**:
+```bash
+# Drop database completely
+docker exec steak-kenangan-db dropdb -U postgres --if-exists restaurant
+
+# Recreate database
+docker exec steak-kenangan-db createdb -U postgres restaurant
+
+# Retry restore
+./scripts/restore.sh <backup_file>
+```
+
+### Backup Best Practices
+
+1. **Test restores regularly** - Backups are useless if they can't be restored
+2. **Monitor backup completion** - Check logs daily
+3. **Verify backup size** - Should increase as data grows
+4. **Keep offsite copies** - Use S3/Cloudflare R2
+5. **Document recovery procedures** - This runbook!
+6. **Automate backup alerts** - Use ALERT_WEBHOOK
+7. **Encrypt sensitive backups** - Consider encryption for compliance
+8. **Test disaster recovery** - Monthly drills
+
+### Backup Retention Summary
+
+| Type | Frequency | Retention | Location |
+|------|-----------|-----------|----------|
+| Daily | Every night 2 AM | 7 days | Local + S3 |
+| Weekly | Sunday 3 AM | 4 weeks | Local + S3 |
+| Monthly | 1st of month 4 AM | 3 months | Local + S3 |
+| Pre-deploy | Manual | Last 5 | Local |
+| Emergency | Before restore | Indefinite | Local (pre-restore/) |
 
 ---
 

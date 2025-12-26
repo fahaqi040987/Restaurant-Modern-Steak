@@ -1,59 +1,119 @@
 #!/bin/bash
+# Database Backup Script for Steak Kenangan Restaurant POS
+# Usage: ./backup.sh [type]
+# Types: daily (default), weekly, monthly, pre-deploy
+#
+# Features:
+# - Compressed PostgreSQL backups using pg_dump
+# - S3/Cloudflare R2 upload support
+# - Retention policy (7 daily, 4 weekly, 3 monthly)
+# - Backup integrity verification
+# - Failure notifications via webhook
 
-# Database and File Backup Script
-# This script creates a complete backup of the POS system
+set -euo pipefail
 
-set -e  # Exit on any error
+# Configuration
+BACKUP_DIR="${BACKUP_DIR:-backups}"
+DB_CONTAINER="${DB_CONTAINER:-pos-postgres-dev}"
+DB_NAME="${DB_NAME:-pos_system}"
+DB_USER="${DB_USER:-postgres}"
 
-# Colors
+# Retention policies (days)
+RETENTION_DAILY=7
+RETENTION_WEEKLY=4  # weeks
+RETENTION_MONTHLY=3  # months
+
+# S3 Configuration (Cloudflare R2 compatible)
+S3_BUCKET="${BACKUP_S3_BUCKET:-}"
+S3_ENDPOINT="${BACKUP_S3_ENDPOINT:-}"
+S3_ACCESS_KEY="${BACKUP_S3_ACCESS_KEY:-}"
+S3_SECRET_KEY="${BACKUP_S3_SECRET_KEY:-}"
+
+# Alert Configuration (optional)
+ALERT_WEBHOOK="${ALERT_WEBHOOK:-}"
+
+# Colors for terminal output
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}💾 POS System - Create Backup${NC}"
-echo "=================================="
-echo ""
+# Logging functions
+log() {
+    echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1"
+}
+
+success() {
+    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] ✅ $1${NC}"
+}
+
+warning() {
+    echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] ⚠️  $1${NC}"
+}
+
+error() {
+    echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S')] ❌ ERROR: $1${NC}"
+    send_alert "🚨 Backup Failed: $1"
+    exit 1
+}
+
+# Send alert notification
+send_alert() {
+    if [ -n "$ALERT_WEBHOOK" ]; then
+        curl -s -X POST "$ALERT_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{\"message\": \"Steak Kenangan POS: $1\"}" || true
+    fi
+}
 
 # Check if database container is running
-CONTAINER_NAME="pos-postgres-dev"
-if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-    CONTAINER_NAME="pos-postgres"
-    if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-        echo -e "${RED}❌ Database container is not running!${NC}"
-        echo -e "${YELLOW}Please run 'make up' or 'make dev' first.${NC}"
-        exit 1
+check_database_container() {
+    if ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER}$"; then
+        # Try production container name
+        DB_CONTAINER="pos-postgres"
+        if ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER}$"; then
+            # Try steak-kenangan production name
+            DB_CONTAINER="steak-kenangan-db"
+            if ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER}$"; then
+                error "Database container is not running. Please start the containers first."
+            fi
+        fi
     fi
-fi
+    log "Using database container: $DB_CONTAINER"
+}
 
-# Create backup directory if it doesn't exist
-BACKUP_DIR="backups"
-mkdir -p $BACKUP_DIR
+# Determine backup type
+BACKUP_TYPE="${1:-daily}"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_FILE="steak_kenangan_${BACKUP_TYPE}_${TIMESTAMP}.dump"
 
-# Generate timestamp for backup files
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_NAME="pos_backup_${TIMESTAMP}"
+# Main script
+echo -e "${GREEN}💾 Steak Kenangan - Database Backup${NC}"
+echo "======================================"
+echo ""
+log "Starting $BACKUP_TYPE backup..."
 
-echo -e "${YELLOW}📊 Analyzing database contents...${NC}"
+# Check database container
+check_database_container
 
-# Check database size and record counts
-DB_STATS=$(docker exec $CONTAINER_NAME psql -U postgres -d pos_system -tAc "
-SELECT 
-    COUNT(*) as total_users FROM users
-UNION ALL SELECT 
-    COUNT(*) as total_orders FROM orders  
-UNION ALL SELECT 
-    COUNT(*) as total_products FROM products
-UNION ALL SELECT 
-    COUNT(*) as total_payments FROM payments;
-")
+# Create backup directory structure
+mkdir -p "$BACKUP_DIR/${BACKUP_TYPE}"
 
-# Parse stats
-USER_COUNT=$(echo "$DB_STATS" | sed -n '1p')
-ORDER_COUNT=$(echo "$DB_STATS" | sed -n '2p')
-PRODUCT_COUNT=$(echo "$DB_STATS" | sed -n '3p')
-PAYMENT_COUNT=$(echo "$DB_STATS" | sed -n '4p')
+# Get database statistics
+log "Analyzing database contents..."
+DB_STATS=$(docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -tAc "
+SELECT
+    (SELECT COUNT(*) FROM users) as users,
+    (SELECT COUNT(*) FROM orders) as orders,
+    (SELECT COUNT(*) FROM products) as products,
+    (SELECT COUNT(*) FROM payments) as payments;
+" 2>/dev/null || echo "0|0|0|0")
+
+USER_COUNT=$(echo "$DB_STATS" | cut -d'|' -f1)
+ORDER_COUNT=$(echo "$DB_STATS" | cut -d'|' -f2)
+PRODUCT_COUNT=$(echo "$DB_STATS" | cut -d'|' -f3)
+PAYMENT_COUNT=$(echo "$DB_STATS" | cut -d'|' -f4)
 
 echo -e "${BLUE}Database Statistics:${NC}"
 echo "  Users: $USER_COUNT"
@@ -62,153 +122,137 @@ echo "  Products: $PRODUCT_COUNT"
 echo "  Payments: $PAYMENT_COUNT"
 echo ""
 
-# Database backup
-echo -e "${YELLOW}🗄️  Creating database backup...${NC}"
-DB_BACKUP_FILE="${BACKUP_DIR}/${BACKUP_NAME}_database.sql"
+# T076: Create compressed database dump using pg_dump
+log "Creating database dump..."
+docker exec "$DB_CONTAINER" pg_dump \
+    -U "$DB_USER" \
+    -d "$DB_NAME" \
+    -Fc \
+    --no-owner \
+    --no-privileges \
+    > "$BACKUP_DIR/${BACKUP_TYPE}/$BACKUP_FILE" \
+    || error "Failed to create database dump"
 
-# Create comprehensive database dump
-docker exec $CONTAINER_NAME pg_dump \
-    -U postgres \
-    -d pos_system \
-    --clean \
-    --if-exists \
-    --create \
-    --verbose \
-    --format=plain > $DB_BACKUP_FILE
+# Compress backup with gzip
+log "Compressing backup..."
+gzip "$BACKUP_DIR/${BACKUP_TYPE}/$BACKUP_FILE" \
+    || error "Failed to compress backup"
 
-if [[ $? -eq 0 ]]; then
-    DB_SIZE=$(du -h $DB_BACKUP_FILE | cut -f1)
-    echo -e "${GREEN}✅ Database backup created: $DB_BACKUP_FILE ($DB_SIZE)${NC}"
-else
-    echo -e "${RED}❌ Database backup failed!${NC}"
-    exit 1
-fi
+BACKUP_FILE="${BACKUP_FILE}.gz"
+BACKUP_PATH="$BACKUP_DIR/${BACKUP_TYPE}/$BACKUP_FILE"
 
-# File uploads backup (if uploads directory exists)
-UPLOADS_BACKUP_FILE="${BACKUP_DIR}/${BACKUP_NAME}_uploads.tar.gz"
-UPLOADS_DIR="uploads"
+# T077: Verify backup integrity
+log "Verifying backup integrity..."
+gzip -t "$BACKUP_PATH" || error "Backup integrity check failed"
 
-if [[ -d "$UPLOADS_DIR" ]]; then
-    echo -e "${YELLOW}📁 Creating file uploads backup...${NC}"
-    tar -czf $UPLOADS_BACKUP_FILE $UPLOADS_DIR/
-    
-    if [[ $? -eq 0 ]]; then
-        UPLOADS_SIZE=$(du -h $UPLOADS_BACKUP_FILE | cut -f1)
-        UPLOAD_COUNT=$(find $UPLOADS_DIR -type f | wc -l)
-        echo -e "${GREEN}✅ Uploads backup created: $UPLOADS_BACKUP_FILE ($UPLOADS_SIZE, $UPLOAD_COUNT files)${NC}"
+BACKUP_SIZE=$(du -h "$BACKUP_PATH" | cut -f1)
+success "Backup created: $BACKUP_FILE (Size: $BACKUP_SIZE)"
+
+# T078: Upload to S3/Cloudflare R2 (if configured)
+if [ -n "$S3_BUCKET" ]; then
+    log "Uploading to S3/Cloudflare R2..."
+
+    # Configure AWS CLI for Cloudflare R2 or S3
+    if [ -n "$S3_ACCESS_KEY" ] && [ -n "$S3_SECRET_KEY" ]; then
+        export AWS_ACCESS_KEY_ID="$S3_ACCESS_KEY"
+        export AWS_SECRET_ACCESS_KEY="$S3_SECRET_KEY"
+    fi
+
+    # Upload with endpoint URL (for Cloudflare R2)
+    if [ -n "$S3_ENDPOINT" ]; then
+        aws s3 cp "$BACKUP_PATH" "s3://$S3_BUCKET/${BACKUP_TYPE}/$BACKUP_FILE" \
+            --endpoint-url "$S3_ENDPOINT" \
+            || error "Failed to upload to S3"
     else
-        echo -e "${RED}❌ Uploads backup failed!${NC}"
+        aws s3 cp "$BACKUP_PATH" "s3://$S3_BUCKET/${BACKUP_TYPE}/$BACKUP_FILE" \
+            || error "Failed to upload to S3"
     fi
+
+    success "Uploaded to S3: s3://$S3_BUCKET/${BACKUP_TYPE}/$BACKUP_FILE"
 else
-    echo -e "${YELLOW}ℹ️  No uploads directory found, skipping file backup${NC}"
+    warning "S3 upload skipped - BACKUP_S3_BUCKET not configured"
 fi
 
-# Docker volumes backup (optional)
-echo -e "${YELLOW}🐳 Creating Docker volumes backup...${NC}"
-VOLUMES_BACKUP_FILE="${BACKUP_DIR}/${BACKUP_NAME}_volumes.tar.gz"
+# T079: Implement backup rotation based on retention policy
+cleanup_old_backups() {
+    local type=$1
+    local retention=$2
+    local dir="$BACKUP_DIR/$type"
 
-# Get list of POS-related volumes
-VOLUMES=$(docker volume ls --filter name=pos --format "{{.Name}}" | grep -E "pos.*postgres.*data")
+    log "Cleaning up $type backups older than $retention days..."
 
-if [[ -n "$VOLUMES" ]]; then
-    # Create a temporary container to access volumes
-    docker run --rm -v pos-postgres-data:/data -v $(pwd)/${BACKUP_DIR}:/backup alpine sh -c "cd /data && tar czf /backup/${BACKUP_NAME}_volumes.tar.gz ." 2>/dev/null || \
-    docker run --rm -v pos-postgres_data:/data -v $(pwd)/${BACKUP_DIR}:/backup alpine sh -c "cd /data && tar czf /backup/${BACKUP_NAME}_volumes.tar.gz ." 2>/dev/null || \
-    echo -e "${YELLOW}⚠️  Could not backup Docker volumes (this is normal if using dev setup)${NC}"
-    
-    if [[ -f "$VOLUMES_BACKUP_FILE" ]]; then
-        VOLUMES_SIZE=$(du -h $VOLUMES_BACKUP_FILE | cut -f1)
-        echo -e "${GREEN}✅ Volumes backup created: $VOLUMES_BACKUP_FILE ($VOLUMES_SIZE)${NC}"
+    # Local cleanup
+    find "$dir" -name "*.dump.gz" -mtime +$retention -delete 2>/dev/null || true
+
+    local removed_count=$(find "$dir" -name "*.dump.gz" -mtime +$retention 2>/dev/null | wc -l)
+    if [ "$removed_count" -gt 0 ]; then
+        success "Removed $removed_count old local backups"
     fi
-else
-    echo -e "${YELLOW}ℹ️  No Docker volumes found to backup${NC}"
-fi
 
-# Create backup manifest
-MANIFEST_FILE="${BACKUP_DIR}/${BACKUP_NAME}_manifest.txt"
-echo -e "${YELLOW}📋 Creating backup manifest...${NC}"
+    # S3 cleanup (if configured)
+    if [ -n "$S3_BUCKET" ]; then
+        local cutoff_date=$(date -d "-${retention} days" +%Y-%m-%d 2>/dev/null || date -v-${retention}d +%Y-%m-%d)
 
-cat > $MANIFEST_FILE << EOF
-POS System Backup Manifest
-==========================
-Created: $(date)
-Backup Name: $BACKUP_NAME
-System: $(uname -s) $(uname -r)
-Docker Version: $(docker --version)
+        if [ -n "$S3_ENDPOINT" ]; then
+            aws s3 ls "s3://$S3_BUCKET/$type/" --endpoint-url "$S3_ENDPOINT" 2>/dev/null | \
+                awk -v cutoff="$cutoff_date" '$1 < cutoff {print $4}' | \
+                xargs -I {} aws s3 rm "s3://$S3_BUCKET/$type/{}" --endpoint-url "$S3_ENDPOINT" 2>/dev/null || true
+        else
+            aws s3 ls "s3://$S3_BUCKET/$type/" 2>/dev/null | \
+                awk -v cutoff="$cutoff_date" '$1 < cutoff {print $4}' | \
+                xargs -I {} aws s3 rm "s3://$S3_BUCKET/$type/{}" 2>/dev/null || true
+        fi
+    fi
+}
 
-Database Statistics:
-- Users: $USER_COUNT
-- Orders: $ORDER_COUNT  
-- Products: $PRODUCT_COUNT
-- Payments: $PAYMENT_COUNT
+# Apply retention policy based on backup type
+case $BACKUP_TYPE in
+    daily)
+        cleanup_old_backups "daily" $RETENTION_DAILY
+        ;;
+    weekly)
+        cleanup_old_backups "weekly" $((RETENTION_WEEKLY * 7))
+        ;;
+    monthly)
+        cleanup_old_backups "monthly" $((RETENTION_MONTHLY * 30))
+        ;;
+    pre-deploy)
+        # Keep last 5 pre-deploy backups
+        log "Keeping last 5 pre-deploy backups..."
+        ls -t "$BACKUP_DIR/pre-deploy/"*.dump.gz 2>/dev/null | tail -n +6 | xargs rm -f 2>/dev/null || true
+        ;;
+esac
 
-Backup Files:
-EOF
-
-# Add database backup info
-if [[ -f "$DB_BACKUP_FILE" ]]; then
-    echo "- Database: ${BACKUP_NAME}_database.sql ($(du -h $DB_BACKUP_FILE | cut -f1))" >> $MANIFEST_FILE
-fi
-
-# Add uploads backup info
-if [[ -f "$UPLOADS_BACKUP_FILE" ]]; then
-    echo "- Uploads: ${BACKUP_NAME}_uploads.tar.gz ($(du -h $UPLOADS_BACKUP_FILE | cut -f1))" >> $MANIFEST_FILE
-fi
-
-# Add volumes backup info
-if [[ -f "$VOLUMES_BACKUP_FILE" ]]; then
-    echo "- Volumes: ${BACKUP_NAME}_volumes.tar.gz ($(du -h $VOLUMES_BACKUP_FILE | cut -f1))" >> $MANIFEST_FILE
-fi
-
-echo "" >> $MANIFEST_FILE
-echo "Restore Instructions:" >> $MANIFEST_FILE
-echo "1. Run 'make restore' and select this backup" >> $MANIFEST_FILE
-echo "2. Or restore manually using the individual backup files" >> $MANIFEST_FILE
-echo "" >> $MANIFEST_FILE
-
-# Database schema info
-echo "Database Schema Information:" >> $MANIFEST_FILE
-docker exec $CONTAINER_NAME psql -U postgres -d pos_system -c "\dt" >> $MANIFEST_FILE 2>/dev/null || echo "Could not retrieve schema info" >> $MANIFEST_FILE
-
-echo -e "${GREEN}✅ Backup manifest created: $MANIFEST_FILE${NC}"
-
-# Create compressed backup bundle
-BUNDLE_FILE="${BACKUP_DIR}/${BACKUP_NAME}_complete.tar.gz"
-echo -e "${YELLOW}📦 Creating complete backup bundle...${NC}"
-
-tar -czf $BUNDLE_FILE -C $BACKUP_DIR \
-    ${BACKUP_NAME}_database.sql \
-    ${BACKUP_NAME}_manifest.txt \
-    $(test -f ${BACKUP_DIR}/${BACKUP_NAME}_uploads.tar.gz && echo ${BACKUP_NAME}_uploads.tar.gz) \
-    $(test -f ${BACKUP_DIR}/${BACKUP_NAME}_volumes.tar.gz && echo ${BACKUP_NAME}_volumes.tar.gz)
-
-if [[ $? -eq 0 ]]; then
-    BUNDLE_SIZE=$(du -h $BUNDLE_FILE | cut -f1)
-    echo -e "${GREEN}✅ Complete backup bundle: $BUNDLE_FILE ($BUNDLE_SIZE)${NC}"
-else
-    echo -e "${RED}❌ Failed to create backup bundle!${NC}"
-fi
+# List current backups
+log "Current backups in $BACKUP_DIR/${BACKUP_TYPE}:"
+ls -lh "$BACKUP_DIR/${BACKUP_TYPE}/"*.dump.gz 2>/dev/null || log "No backups found"
 
 # Summary
 echo ""
-echo -e "${GREEN}🎉 Backup completed successfully!${NC}"
+success "Backup completed successfully!"
 echo ""
 echo -e "${BLUE}Backup Summary:${NC}"
-echo "  Name: $BACKUP_NAME"
-echo "  Location: $BACKUP_DIR/"
-echo "  Database: ✅ ($DB_SIZE)"
-echo "  Files: $(test -f $UPLOADS_BACKUP_FILE && echo "✅" || echo "⏭️  (no uploads)")"
-echo "  Volumes: $(test -f $VOLUMES_BACKUP_FILE && echo "✅" || echo "⏭️  (dev setup)")"
-echo "  Bundle: ✅ ($BUNDLE_SIZE)"
-echo ""
-echo -e "${YELLOW}💡 To restore this backup, run: make restore${NC}"
-echo -e "${YELLOW}📁 Backup files are stored in: $BACKUP_DIR/${NC}"
+echo "  Type: $BACKUP_TYPE"
+echo "  File: $BACKUP_FILE"
+echo "  Size: $BACKUP_SIZE"
+echo "  Location: $BACKUP_PATH"
+echo "  Database Records:"
+echo "    - Users: $USER_COUNT"
+echo "    - Orders: $ORDER_COUNT"
+echo "    - Products: $PRODUCT_COUNT"
+echo "    - Payments: $PAYMENT_COUNT"
 echo ""
 
-# Clean up old backups (keep last 10)
-echo -e "${YELLOW}🧹 Cleaning up old backups (keeping last 10)...${NC}"
-cd $BACKUP_DIR
-ls -t pos_backup_*_complete.tar.gz 2>/dev/null | tail -n +11 | xargs rm -f
-cd - > /dev/null
+# T080: Send success notification for scheduled backups
+if [ "$BACKUP_TYPE" == "daily" ] && [ -n "$ALERT_WEBHOOK" ]; then
+    send_alert "✅ Daily backup completed successfully ($BACKUP_SIZE)"
+elif [ "$BACKUP_TYPE" == "weekly" ] && [ -n "$ALERT_WEBHOOK" ]; then
+    send_alert "✅ Weekly backup completed successfully ($BACKUP_SIZE)"
+elif [ "$BACKUP_TYPE" == "monthly" ] && [ -n "$ALERT_WEBHOOK" ]; then
+    send_alert "✅ Monthly backup completed successfully ($BACKUP_SIZE)"
+fi
 
-echo -e "${GREEN}✅ Backup process completed!${NC}"
+log "To restore this backup, run: ./scripts/restore.sh $BACKUP_PATH"
+echo ""
+
+exit 0
