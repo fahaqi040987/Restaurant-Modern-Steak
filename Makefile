@@ -1,7 +1,7 @@
 # POS System - Development Makefile
 # Usage: make <command>
 
-.PHONY: help dev prod up down build logs clean backup restore create-admin remove-data db-shell test lint format
+.PHONY: help dev prod up down build logs clean backup restore create-admin remove-data db-shell test lint format build-prod preview-prod deploy-prod sync-prod rollback-prod
 
 # Default target
 .DEFAULT_GOAL := help
@@ -15,7 +15,8 @@ NC := \033[0m # No Color
 
 # Docker compose files
 COMPOSE_DEV := docker-compose.dev.yml
-COMPOSE_PROD := docker-compose.yml
+COMPOSE_PROD := docker-compose.prod.yml
+COMPOSE_LEGACY := docker-compose.yml
 
 ## Help - Display available commands
 help:
@@ -53,6 +54,13 @@ help:
 	@echo "  make lint         - Run linting checks"
 	@echo "  make format       - Format code"
 	@echo "  make deps         - Install/update dependencies"
+	@echo ""
+	@echo "$(GREEN)Production Commands:$(NC)"
+	@echo "  make build-prod   - Build production artifacts (Docker + Frontend)"
+	@echo "  make preview-prod - Preview production build locally"
+	@echo "  make deploy-prod  - Deploy to production (requires .env.production)"
+	@echo "  make sync-prod    - Build and deploy in one step"
+	@echo "  make rollback-prod- Rollback to previous version"
 	@echo ""
 	@echo "$(YELLOW)Note: Make sure Docker Desktop is running before using these commands$(NC)"
 
@@ -313,3 +321,74 @@ deps:
 start: up
 stop: down
 install: deps
+
+## Production Commands
+
+# Build production artifacts (Docker images + Frontend static files)
+build-prod:
+	@echo "$(GREEN)🏗️  Building production artifacts...$(NC)"
+	@if [ ! -x ./scripts/build-prod.sh ]; then \
+		chmod +x ./scripts/build-prod.sh; \
+	fi
+	@./scripts/build-prod.sh
+	@echo "$(GREEN)✅ Production build completed!$(NC)"
+
+# Preview production build locally
+preview-prod:
+	@echo "$(GREEN)👀 Starting production preview locally...$(NC)"
+	@if [ ! -f frontend/dist/index.html ]; then \
+		echo "$(YELLOW)⚠️  Frontend not built. Running build-prod first...$(NC)"; \
+		$(MAKE) build-prod; \
+	fi
+	@echo "$(BLUE)Starting production containers...$(NC)"
+	@docker compose -f $(COMPOSE_PROD) up
+	@echo "$(GREEN)✅ Production preview started$(NC)"
+	@echo "$(BLUE)📱 Frontend: http://localhost$(NC)"
+	@echo "$(BLUE)🔧 Backend API: http://localhost:8080$(NC)"
+
+# Deploy to production server
+deploy-prod:
+	@echo "$(GREEN)🚀 Deploying to production...$(NC)"
+	@if [ ! -f .env.production ]; then \
+		echo "$(RED)❌ .env.production file not found!$(NC)"; \
+		echo "$(YELLOW)Please create .env.production from .env.production.example$(NC)"; \
+		exit 1; \
+	fi
+	@if [ ! -f frontend/dist/index.html ]; then \
+		echo "$(YELLOW)⚠️  Frontend not built. Running build-prod first...$(NC)"; \
+		$(MAKE) build-prod; \
+	fi
+	@echo "$(BLUE)Loading production environment...$(NC)"
+	@export $$(cat .env.production | grep -v '^#' | xargs) && \
+		docker compose -f $(COMPOSE_PROD) up -d
+	@echo "$(GREEN)✅ Production deployment completed!$(NC)"
+	@echo ""
+	@echo "$(BLUE)📊 Checking service status...$(NC)"
+	@docker compose -f $(COMPOSE_PROD) ps
+
+# Build and deploy in one step
+sync-prod: build-prod deploy-prod
+	@echo "$(GREEN)✅ Sync complete - built and deployed!$(NC)"
+
+# Rollback to previous version
+rollback-prod:
+	@echo "$(YELLOW)⏪ Rolling back to previous version...$(NC)"
+	@if [ -z "$(BUILD_TAG)" ]; then \
+		echo "$(RED)❌ BUILD_TAG not specified!$(NC)"; \
+		echo "$(YELLOW)Usage: make rollback-prod BUILD_TAG=abc123$(NC)"; \
+		echo ""; \
+		echo "$(BLUE)Recent builds:$(NC)"; \
+		docker images steak-kenangan-backend --format "table {{.Tag}}\t{{.CreatedAt}}" | head -5; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)Rolling back to tag: $(BUILD_TAG)$(NC)"
+	@docker tag steak-kenangan-backend:$(BUILD_TAG) steak-kenangan-backend:latest
+	@if [ -f .env.production ]; then \
+		export $$(cat .env.production | grep -v '^#' | xargs) && \
+		docker compose -f $(COMPOSE_PROD) up -d; \
+	else \
+		docker compose -f $(COMPOSE_PROD) up -d; \
+	fi
+	@echo "$(GREEN)✅ Rollback completed!$(NC)"
+	@echo "$(BLUE)📊 Checking service status...$(NC)"
+	@docker compose -f $(COMPOSE_PROD) ps

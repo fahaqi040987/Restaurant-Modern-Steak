@@ -1,9 +1,9 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form'
+import { Button } from '@/components/ui/button'
 import {
   TextInputField,
   TextareaField,
@@ -11,18 +11,14 @@ import {
   NumberInputField,
   SelectField,
   FormSubmitButton,
-  productStatusOptions,
-} from "@/components/forms/FormComponents";
-import {
-  createProductSchema,
-  updateProductSchema,
-  type CreateProductData,
-  type UpdateProductData,
-} from "@/lib/form-schemas";
-import { toastHelpers } from "@/lib/toast-helpers";
-import apiClient from "@/api/client";
-import type { Product, Category } from "@/types";
-import { X } from "lucide-react";
+  productStatusOptions
+} from '@/components/forms/FormComponents'
+import { ImageUploader } from '@/components/ui/ImageUploader'
+import { createProductSchema, updateProductSchema, type CreateProductData, type UpdateProductData } from '@/lib/form-schemas'
+import { toastHelpers } from '@/lib/toast-helpers'
+import apiClient from '@/api/client'
+import type { Product, Category } from '@/types'
+import { X } from 'lucide-react'
 
 interface ProductFormProps {
   product?: Product; // If provided, we're editing; otherwise creating
@@ -201,12 +197,26 @@ export function ProductForm({
                 description="Optional description for staff and customers"
               />
 
-              <TextInputField
+              <FormField
                 control={form.control}
                 name="image_url"
-                label="Image URL"
-                placeholder="https://example.com/image.jpg"
-                description="Optional product image URL"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Image</FormLabel>
+                    <FormControl>
+                      <ImageUploader
+                        value={field.value}
+                        onChange={(url) => field.onChange(url || '')}
+                        onError={(error) => toastHelpers.error('Upload failed', error)}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload a product image (JPEG, PNG, GIF, WebP - max 5MB)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
 

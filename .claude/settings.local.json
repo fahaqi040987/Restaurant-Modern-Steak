@@ -1,11 +1,29 @@
 {
   "permissions": {
     "allow": [
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(bash .specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(go build:*)",
       "Bash(go test:*)",
-      "Bash(find:*)",
+      "Bash(go vet:*)",
+      "Bash(CGO_ENABLED=0 go test:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(git fetch:*)",
+      "Bash(bash:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(ls:*)",
       "Bash(cat:*)",
-      "Bash(go get:*)",
-      "Bash(go build:*)"
+      "Bash(npm run test:coverage:*)",
+      "Bash(cd:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run type-check:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm run build:*)",
+      "Bash(make test:*)",
+      "Bash(make status:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker compose:*)"
     ]
   }
 }

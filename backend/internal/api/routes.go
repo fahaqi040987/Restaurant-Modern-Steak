@@ -21,6 +21,7 @@ import (
 func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.HandlerFunc) {
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db)
+	profileHandler := handlers.NewProfileHandler(db)
 	orderHandler := handlers.NewOrderHandler(db)
 	productHandler := handlers.NewProductHandler(db)
 	paymentHandler := handlers.NewPaymentHandler(db)
@@ -28,22 +29,38 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	publicHandler := handlers.NewPublicHandler(db)
 	inventoryHandler := handlers.NewInventoryHandler(db)
 	ingredientsHandler := handlers.NewIngredientsHandler(db)
+	uploadHandler := handlers.NewUploadHandler("./uploads")
+
+	// Rate limiters for different endpoint types
+	publicRateLimiter := middleware.PublicRateLimiter()
+	strictRateLimiter := middleware.StrictRateLimiter()
+	contactFormLimiter := middleware.ContactFormRateLimiter()
 
 	// Public routes (no authentication required)
 	public := router.Group("/")
 	{
-		// Authentication routes
-		public.POST("/auth/login", authHandler.Login)
+		// Authentication routes - strict rate limit (5/min) to prevent brute force
+		public.POST("/auth/login", strictRateLimiter, authHandler.Login)
 		public.POST("/auth/logout", authHandler.Logout)
 	}
 
 	// Public website API routes (no authentication required)
 	publicAPI := router.Group("/public")
+	publicAPI.Use(publicRateLimiter) // 30 requests/min per IP
 	{
 		publicAPI.GET("/menu", publicHandler.GetPublicMenu)
 		publicAPI.GET("/categories", publicHandler.GetPublicCategories)
 		publicAPI.GET("/restaurant", publicHandler.GetRestaurantInfo)
-		publicAPI.POST("/contact", publicHandler.SubmitContactForm)
+		// Contact form has stricter limit (3/5min) to prevent spam
+		publicAPI.POST("/contact", contactFormLimiter, publicHandler.SubmitContactForm)
+	}
+
+	// Customer self-ordering API routes (no authentication required)
+	customerAPI := router.Group("/customer")
+	customerAPI.Use(publicRateLimiter) // 30 requests/min per IP
+	{
+		customerAPI.GET("/table/:qr_code", publicHandler.GetTableByQRCode)
+		customerAPI.POST("/orders", publicHandler.CreateCustomerOrder)
 	}
 
 	// Protected routes (authentication required)
@@ -54,9 +71,9 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		protected.GET("/auth/me", authHandler.GetCurrentUser)
 
 		// Profile routes
-		protected.GET("/profile", authHandler.GetUserProfile)
-		protected.PUT("/profile", authHandler.UpdateUserProfile)
-		protected.PUT("/profile/password", authHandler.ChangePassword)
+		protected.GET("/profile", profileHandler.GetProfile)
+		protected.PUT("/profile", profileHandler.UpdateProfile)
+		protected.PUT("/profile/password", profileHandler.ChangePassword)
 
 		// Notification routes
 		protected.GET("/notifications", handlers.GetNotifications(db))
@@ -172,6 +189,10 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		// Advanced order management
 		admin.POST("/orders", orderHandler.CreateOrder)                   // Admins can create any type of order
 		admin.POST("/orders/:id/payments", paymentHandler.ProcessPayment) // Admins can process payments
+
+		// File upload
+		admin.POST("/upload", uploadHandler.UploadImage)
+		admin.DELETE("/upload/:filename", uploadHandler.DeleteImage)
 	}
 
 	// Server with product management (server role can manage products)

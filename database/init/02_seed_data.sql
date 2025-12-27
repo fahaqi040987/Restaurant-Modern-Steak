@@ -59,21 +59,21 @@ INSERT INTO products (category_id, name, description, price, sku, preparation_ti
 ((SELECT id FROM categories WHERE name = 'Pizza'), 'Hawaiian Pizza', 'Pizza with ham and pineapple', 17.99, 'PIZ004', 16, 4);
 
 -- Insert dining tables
-INSERT INTO dining_tables (table_number, seating_capacity, location) VALUES
-('T01', 2, 'Main Floor'),
-('T02', 4, 'Main Floor'),
-('T03', 4, 'Main Floor'),
-('T04', 6, 'Main Floor'),
-('T05', 2, 'Main Floor'),
-('T06', 4, 'Window Side'),
-('T07', 4, 'Window Side'),
-('T08', 8, 'Private Room'),
-('T09', 2, 'Patio'),
-('T10', 4, 'Patio'),
-('BAR01', 1, 'Bar Counter'),
-('BAR02', 1, 'Bar Counter'),
-('BAR03', 1, 'Bar Counter'),
-('TAKEOUT', 1, 'Takeout Counter');
+INSERT INTO dining_tables (table_number, seating_capacity, location, qr_code) VALUES
+('T01', 2, 'Main Floor', 'table-t01'),
+('T02', 4, 'Main Floor', 'table-t02'),
+('T03', 4, 'Main Floor', 'table-t03'),
+('T04', 6, 'Main Floor', 'table-t04'),
+('T05', 2, 'Main Floor', 'table-t05'),
+('T06', 4, 'Window Side', 'table-t06'),
+('T07', 4, 'Window Side', 'table-t07'),
+('T08', 8, 'Private Room', 'table-t08'),
+('T09', 2, 'Patio', 'table-t09'),
+('T10', 4, 'Patio', 'table-t10'),
+('BAR01', 1, 'Bar Counter', 'table-bar01'),
+('BAR02', 1, 'Bar Counter', 'table-bar02'),
+('BAR03', 1, 'Bar Counter', 'table-bar03'),
+('TAKEOUT', 1, 'Takeout Counter', 'table-takeout');
 
 -- Insert initial inventory
 INSERT INTO inventory (product_id, current_stock, minimum_stock, maximum_stock, unit_cost)
@@ -140,14 +140,14 @@ INSERT INTO restaurant_info (
     '12190',
     'Indonesia',
     '+62 21 1234 5678',
-    'info@modernsteak.com',
+    'customercare@steakkenangan.com',
     '+62 812 3456 7890',
     -6.2088,
     106.8456,
     'https://maps.google.com/?q=-6.2088,106.8456',
-    'https://instagram.com/modernsteak',
-    'https://facebook.com/modernsteak',
-    'https://twitter.com/modernsteak',
+    'https://instagram.com/steakkenangan',
+    'https://facebook.com/steakkenangan',
+    'https://twitter.com/steakkenangan',
     '/images/logo.png',
     '/images/hero-steak.jpg'
 );

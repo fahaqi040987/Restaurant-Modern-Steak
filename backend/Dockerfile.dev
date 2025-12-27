@@ -1,11 +1,8 @@
-# =========================
-# Development stage
-# =========================
-FROM golang:1.25-alpine AS development
+# Development Dockerfile for Go backend
+FROM golang:1.23-alpine AS development
 
-# Install git & air
-RUN apk add --no-cache git \
- && go install github.com/air-verse/air@latest
+# Install development dependencies
+RUN apk add --no-cache git gcc musl-dev
 
 WORKDIR /app
 
@@ -20,38 +17,5 @@ COPY . .
 
 EXPOSE 8080
 
-# Hot reload
-CMD ["air", "-c", ".air.toml"]
-
-
-# =========================
-# Production build stage
-# =========================
-FROM golang:1.25-alpine AS builder
-
-WORKDIR /app
-RUN apk add --no-cache git
-
-# Copy ONLY go.mod
-COPY go.mod ./
-
-# Generate go.sum & download deps
-RUN go mod tidy
-
-COPY . .
-
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
-
-
-# =========================
-# Production runtime
-# =========================
-FROM alpine:latest AS production
-
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-
-COPY --from=builder /app/main .
-
-EXPOSE 8080
-CMD ["./main"]
+# Run the application with hot reload (using go run)
+CMD ["go", "run", "."]
