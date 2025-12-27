@@ -30,6 +30,8 @@ import type {
   RestaurantInfo,
   ContactFormData,
   ContactFormResponse,
+  // Upload types
+  UploadResponse,
 } from '@/types';
 
 class APIClient {
@@ -840,6 +842,59 @@ class APIClient {
     return this.request({
       method: 'GET',
       url: '/admin/contacts/counts/new',
+    });
+  }
+
+  // ===========================================
+  // Upload endpoints (Admin - Auth Required)
+  // ===========================================
+
+  /**
+   * Upload an image file
+   * @param file - The file to upload
+   * @param onProgress - Optional progress callback (0-100)
+   * @returns Promise with upload response containing filename and URL
+   */
+  async uploadImage(
+    file: File,
+    onProgress?: (progress: number) => void
+  ): Promise<APIResponse<UploadResponse>> {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = localStorage.getItem('pos_token');
+    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1';
+
+    const response = await axios.post<APIResponse<UploadResponse>>(
+      `${apiUrl}/admin/upload`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const progress = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            onProgress(progress);
+          }
+        },
+      }
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Delete an uploaded image
+   * @param filename - The filename to delete
+   */
+  async deleteImage(filename: string): Promise<APIResponse> {
+    return this.request({
+      method: 'DELETE',
+      url: `/admin/upload/${encodeURIComponent(filename)}`,
     });
   }
 

@@ -1,0 +1,107 @@
+# Cloudflare Tunnel Configuration
+# This file is managed via Cloudflare Dashboard after tunnel creation
+# OR use this as reference for cloudflared config
+
+# Tunnel UUID will be provided after creating tunnel
+tunnel: <YOUR_TUNNEL_UUID>
+credentials-file: /root/.cloudflared/<YOUR_TUNNEL_UUID>.json
+
+# Ingress rules - how to route traffic
+ingress:
+  # API requests -> Backend container
+  - hostname: steakkenangan.com
+    path: /api/*
+    service: http://backend:8080
+    originRequest:
+      noTLSVerify: true
+
+  # Health check endpoint
+  - hostname: steakkenangan.com
+    path: /health
+    service: http://backend:8080
+
+  # All other requests -> Frontend container
+  - hostname: steakkenangan.com
+    service: http://frontend:80
+
+  # WWW subdomain
+  - hostname: www.steakkenangan.com
+    service: http://frontend:80
+
+  # Catch-all (required)
+  - service: http_status:404
+
+# -------------------------------------------------------------------
+# SETUP INSTRUCTIONS
+# -------------------------------------------------------------------
+#
+# 1. Create Cloudflare Account (free):
+#    https://dash.cloudflare.com/sign-up
+#
+# 2. Add your domain to Cloudflare:
+#    - Change nameservers at your registrar to Cloudflare's
+#    - Wait for DNS propagation (up to 24 hours)
+#
+# 3. Create a Tunnel via Dashboard:
+#    a. Go to: Zero Trust > Networks > Tunnels
+#    b. Click "Create a tunnel"
+#    c. Name it: "steak-kenangan-production"
+#    d. Choose "Docker" as connector
+#    e. Copy the TUNNEL_TOKEN shown
+#
+# 4. Configure Public Hostname (in dashboard):
+#    a. Add hostname: steakkenangan.com
+#    b. Service: http://frontend:80
+#    c. Add another hostname for API:
+#       - Path: /api/*
+#       - Service: http://backend:8080
+#
+# 5. Set environment variable:
+#    export CLOUDFLARE_TUNNEL_TOKEN="your-token-here"
+#
+# 6. Start the tunnel:
+#    docker compose -f docker-compose.prod.yml up -d
+#
+# -------------------------------------------------------------------
+# ALTERNATIVE: Using cloudflared CLI
+# -------------------------------------------------------------------
+#
+# # Login to Cloudflare
+# cloudflared tunnel login
+#
+# # Create tunnel
+# cloudflared tunnel create steak-kenangan-production
+#
+# # Get tunnel token
+# cloudflared tunnel token steak-kenangan-production
+#
+# # Route DNS
+# cloudflared tunnel route dns steak-kenangan-production steakkenangan.com
+#
+# -------------------------------------------------------------------
+# CLOUDFLARE DASHBOARD SETTINGS RECOMMENDED
+# -------------------------------------------------------------------
+#
+# SSL/TLS:
+#   - Encryption mode: Full (strict)
+#   - Always Use HTTPS: On
+#   - Automatic HTTPS Rewrites: On
+#
+# Security:
+#   - WAF: On (Managed rules)
+#   - Bot Fight Mode: On
+#   - Browser Integrity Check: On
+#
+# Speed:
+#   - Auto Minify: JS, CSS, HTML
+#   - Brotli: On
+#   - Early Hints: On
+#
+# Caching:
+#   - Caching Level: Standard
+#   - Browser Cache TTL: Respect Existing Headers
+#   - Always Online: On
+#
+# Page Rules (optional):
+#   - steakkenangan.com/api/* -> Cache Level: Bypass
+#   - steakkenangan.com/static/* -> Cache Level: Cache Everything

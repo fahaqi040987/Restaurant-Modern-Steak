@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  Plus, 
+import {
+  Plus,
   Search,
   Package,
   Tag,
@@ -30,6 +30,26 @@ import { usePagination } from '@/hooks/usePagination'
 import { ProductListSkeleton, CategoryListSkeleton, SearchingSkeleton } from '@/components/ui/skeletons'
 import { InlineLoading } from '@/components/ui/loading-spinner'
 import type { Product, Category } from '@/types'
+
+/**
+ * Build the full image URL from a potentially relative path.
+ * Handles both full URLs and relative paths like /uploads/image.jpg
+ */
+function getProductImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  // If it's already a full URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // If it's a relative URL starting with /uploads, prepend the API base
+  if (url.startsWith('/uploads')) {
+    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1';
+    // Remove /api/v1 from the API URL to get the base URL
+    const baseUrl = apiUrl.replace('/api/v1', '');
+    return `${baseUrl}${url}`;
+  }
+  return url;
+}
 
 type ViewMode = 'list' | 'product-form' | 'category-form'
 type DisplayMode = 'table' | 'cards'
@@ -320,10 +340,16 @@ export function AdminMenuManagement() {
                         <div className="flex items-center space-x-3 flex-1">
                           <div className="flex-shrink-0">
                             {product.image_url ? (
-                              <img 
-                                src={product.image_url} 
+                              <img
+                                src={getProductImageUrl(product.image_url) || ''}
                                 alt={product.name}
                                 className="h-12 w-12 rounded-lg object-cover"
+                                onError={(e) => {
+                                  // Fallback to placeholder on image load error
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  target.parentElement?.classList.add('bg-gradient-to-r', 'from-orange-400', 'to-pink-500', 'flex', 'items-center', 'justify-center');
+                                }}
                               />
                             ) : (
                               <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-orange-400 to-pink-500 flex items-center justify-center">

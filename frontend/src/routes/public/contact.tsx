@@ -199,7 +199,7 @@ function PublicContactPage() {
                   {restaurantInfo?.map_latitude && restaurantInfo?.map_longitude && (
                     <div className="mt-4 rounded-lg overflow-hidden border border-[var(--public-border)]">
                       <iframe
-                        src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&zoom=15`}
+                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&zoom=15`}
                         width="100%"
                         height="200"
                         style={{ border: 0 }}

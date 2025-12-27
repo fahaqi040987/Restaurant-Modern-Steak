@@ -95,7 +95,6 @@ files/
 
 # Ignore test result snapshots
 test-results/
-playwright-report/
 *SUMMARY*.md
 *summary*.md
 coverage/

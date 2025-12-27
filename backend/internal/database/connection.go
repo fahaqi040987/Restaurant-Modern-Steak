@@ -47,7 +47,7 @@ func IsConnectionError(err error) bool {
 	if err == nil {
 		return false
 	}
-	
+
 	// Check for common database connection errors
 	errorString := err.Error()
 	connectionErrors := []string{
@@ -74,7 +74,6 @@ func IsConnectionError(err error) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
-

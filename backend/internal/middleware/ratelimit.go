@@ -71,7 +71,7 @@ func (rl *RateLimiter) getVisitor(ip string) *visitor {
 
 	// Refill tokens based on time passed
 	elapsed := time.Since(v.lastVisit)
-	tokensToAdd := int(elapsed / rl.interval) * rl.rate
+	tokensToAdd := int(elapsed/rl.interval) * rl.rate
 	v.tokens += tokensToAdd
 	if v.tokens > rl.rate {
 		v.tokens = rl.rate

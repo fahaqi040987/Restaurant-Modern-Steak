@@ -18,7 +18,12 @@
       "Bash(cd:*)",
       "Bash(npm run lint:*)",
       "Bash(npm run type-check:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm run build:*)",
+      "Bash(make test:*)",
+      "Bash(make status:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker compose:*)"
     ]
   }
 }

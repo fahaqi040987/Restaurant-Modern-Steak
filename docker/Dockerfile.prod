@@ -1,0 +1,78 @@
+# Production Dockerfile for Steak Kenangan Backend
+# Multi-stage build for minimal image size and security
+
+# =============================================================================
+# Stage 1: Build
+# =============================================================================
+FROM golang:1.21-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Install git for go mod download (if using private repos)
+RUN apk add --no-cache git ca-certificates tzdata
+
+# Copy go mod files first (for better caching)
+COPY backend/go.mod backend/go.sum ./
+
+# Download dependencies
+RUN go mod download && go mod verify
+
+# Copy source code
+COPY backend/ .
+
+# Build the application with optimizations
+# -ldflags "-s -w" strips debug info for smaller binary
+# CGO_ENABLED=0 for static binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-s -w -X main.Version=$(cat VERSION 2>/dev/null || echo 'dev')" \
+    -a -installsuffix cgo \
+    -o /app/server .
+
+# =============================================================================
+# Stage 2: Production
+# =============================================================================
+FROM alpine:3.19
+
+# Security: Run as non-root user
+RUN addgroup -g 1000 appgroup && \
+    adduser -u 1000 -G appgroup -s /bin/sh -D appuser
+
+# Install runtime dependencies
+RUN apk --no-cache add \
+    ca-certificates \
+    wget \
+    tzdata
+
+# Set timezone (Indonesian)
+ENV TZ=Asia/Jakarta
+
+# Create app directory
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /app/server .
+
+# Copy timezone data
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+
+# Create uploads directory for dynamic images
+RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget -q --spider http://localhost:8080/api/v1/health || exit 1
+
+# Labels for container metadata
+LABEL org.opencontainers.image.title="Steak Kenangan Backend"
+LABEL org.opencontainers.image.description="POS System Backend API"
+LABEL org.opencontainers.image.vendor="Steak Kenangan"
+
+# Run the application
+CMD ["./server"]

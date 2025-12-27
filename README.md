@@ -198,7 +198,87 @@ cd frontend && npm run test
 cd backend && go test ./...
 ```
 
+## Production Deployment
+
+### Prerequisites
+
+- Docker & Docker Compose
+- PostgreSQL 14+ (or use Docker)
+- Node.js 18+ (for frontend build)
+- Go 1.21+ (for backend build)
+
+### Environment Variables
+
+Create `.env` file for production:
+
+```bash
+# Database
+DB_HOST=your-db-host
+DB_PORT=5432
+DB_USER=your-db-user
+DB_PASSWORD=your-secure-password
+DB_NAME=restaurant
+
+# Security (minimum 32 characters)
+JWT_SECRET=your-256-bit-secret-key-minimum-32-chars
+
+# CORS (comma-separated for multiple origins)
+CORS_ALLOWED_ORIGINS=https://your-domain.com
+
+# API
+VITE_API_URL=https://api.your-domain.com
+```
+
+### Deploy Steps
+
+```bash
+# 1. Build frontend
+cd frontend && npm ci && npm run build
+
+# 2. Build backend
+cd backend && CGO_ENABLED=0 go build -o server .
+
+# 3. Run with Docker Compose
+docker-compose -f docker-compose.prod.yml up -d
+
+# 4. Initialize database
+make db-reset
+make create-demo-users
+```
+
+## Database Backup & Restore
+
+### Manual Backup
+
+```bash
+# Backup
+pg_dump -h localhost -U postgres -d restaurant -F c -f backup_$(date +%Y%m%d_%H%M%S).dump
+
+# Restore
+pg_restore -h localhost -U postgres -d restaurant -c backup_YYYYMMDD_HHMMSS.dump
+```
+
+### Automated Backup (cron)
+
+```bash
+# Add to crontab -e
+# Daily backup at 2 AM
+0 2 * * * pg_dump -h localhost -U postgres -d restaurant -F c -f /backups/restaurant_$(date +\%Y\%m\%d).dump
+```
+
+### Docker Backup
+
+```bash
+# Backup from Docker container
+docker exec -t postgres pg_dump -U postgres restaurant > backup.sql
+
+# Restore to Docker container
+docker exec -i postgres psql -U postgres restaurant < backup.sql
+```
+
 ## Troubleshooting
+
+### Common Issues
 
 **Docker issues**
 ```bash
@@ -217,6 +297,39 @@ make db-reset
 cd backend && go mod tidy
 cd frontend && npm install
 ```
+
+### Backend Errors
+
+**"JWT secret too short"**
+- Set `JWT_SECRET` environment variable with at least 32 characters
+
+**"CORS blocked"**
+- Set `CORS_ALLOWED_ORIGINS` environment variable with your frontend URL
+
+**"Database connection failed"**
+- Verify PostgreSQL is running: `docker ps | grep postgres`
+- Check connection settings in `.env` or `docker-compose.yml`
+
+### Frontend Errors
+
+**"API request failed"**
+- Verify backend is running: `curl http://localhost:8080/api/v1/health`
+- Check `VITE_API_URL` environment variable
+
+**"Build failed"**
+- Clear cache: `rm -rf node_modules dist && npm install`
+- Verify TypeScript: `npm run type-check`
+
+### Performance Issues
+
+**Slow API responses**
+- Check database indexes
+- Review PostgreSQL connection pool settings
+- Enable request logging for debugging
+
+**Large bundle size**
+- Run `npm run build` and check chunk sizes
+- Lazy load routes using dynamic imports
 
 ## License
 

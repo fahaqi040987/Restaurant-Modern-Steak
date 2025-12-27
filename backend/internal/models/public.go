@@ -8,27 +8,27 @@ import (
 
 // RestaurantInfo represents the singleton restaurant configuration
 type RestaurantInfo struct {
-	ID            uuid.UUID  `json:"id"`
-	Name          string     `json:"name"`
-	Tagline       *string    `json:"tagline"`
-	Description   *string    `json:"description"`
-	Address       string     `json:"address"`
-	City          *string    `json:"city"`
-	PostalCode    *string    `json:"postal_code"`
-	Country       *string    `json:"country"`
-	Phone         string     `json:"phone"`
-	Email         string     `json:"email"`
-	WhatsApp      *string    `json:"whatsapp"`
-	MapLatitude   *float64   `json:"map_latitude"`
-	MapLongitude  *float64   `json:"map_longitude"`
-	GoogleMapsURL *string    `json:"google_maps_url"`
-	InstagramURL  *string    `json:"instagram_url"`
-	FacebookURL   *string    `json:"facebook_url"`
-	TwitterURL    *string    `json:"twitter_url"`
-	LogoURL       *string    `json:"logo_url"`
-	HeroImageURL  *string    `json:"hero_image_url"`
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
+	ID            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	Tagline       *string   `json:"tagline"`
+	Description   *string   `json:"description"`
+	Address       string    `json:"address"`
+	City          *string   `json:"city"`
+	PostalCode    *string   `json:"postal_code"`
+	Country       *string   `json:"country"`
+	Phone         string    `json:"phone"`
+	Email         string    `json:"email"`
+	WhatsApp      *string   `json:"whatsapp"`
+	MapLatitude   *float64  `json:"map_latitude"`
+	MapLongitude  *float64  `json:"map_longitude"`
+	GoogleMapsURL *string   `json:"google_maps_url"`
+	InstagramURL  *string   `json:"instagram_url"`
+	FacebookURL   *string   `json:"facebook_url"`
+	TwitterURL    *string   `json:"twitter_url"`
+	LogoURL       *string   `json:"logo_url"`
+	HeroImageURL  *string   `json:"hero_image_url"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // OperatingHours represents the operating hours for a specific day of the week
