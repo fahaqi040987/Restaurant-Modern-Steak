@@ -13,11 +13,11 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as KitchenRouteImport } from './routes/kitchen'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PublicIndexRouteImport } from './routes/public/index'
+import { Route as SiteIndexRouteImport } from './routes/site/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as PublicMenuRouteImport } from './routes/public/menu'
-import { Route as PublicContactRouteImport } from './routes/public/contact'
-import { Route as PublicAboutRouteImport } from './routes/public/about'
+import { Route as SiteMenuRouteImport } from './routes/site/menu'
+import { Route as SiteContactRouteImport } from './routes/site/contact'
+import { Route as SiteAboutRouteImport } from './routes/site/about'
 import { Route as OrderTableCodeRouteImport } from './routes/order.$tableCode'
 import { Route as AdminTablesRouteImport } from './routes/admin/tables'
 import { Route as AdminStaffRouteImport } from './routes/admin/staff'
@@ -54,9 +54,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PublicIndexRoute = PublicIndexRouteImport.update({
-  id: '/public/',
-  path: '/public/',
+const SiteIndexRoute = SiteIndexRouteImport.update({
+  id: '/site/',
+  path: '/site/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -64,19 +64,19 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const PublicMenuRoute = PublicMenuRouteImport.update({
-  id: '/public/menu',
-  path: '/public/menu',
+const SiteMenuRoute = SiteMenuRouteImport.update({
+  id: '/site/menu',
+  path: '/site/menu',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PublicContactRoute = PublicContactRouteImport.update({
-  id: '/public/contact',
-  path: '/public/contact',
+const SiteContactRoute = SiteContactRouteImport.update({
+  id: '/site/contact',
+  path: '/site/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PublicAboutRoute = PublicAboutRouteImport.update({
-  id: '/public/about',
-  path: '/public/about',
+const SiteAboutRoute = SiteAboutRouteImport.update({
+  id: '/site/about',
+  path: '/site/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrderTableCodeRoute = OrderTableCodeRouteImport.update({
@@ -175,11 +175,11 @@ export interface FileRoutesByFullPath {
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
   '/order/$tableCode': typeof OrderTableCodeRoute
-  '/public/about': typeof PublicAboutRoute
-  '/public/contact': typeof PublicContactRoute
-  '/public/menu': typeof PublicMenuRoute
+  '/site/about': typeof SiteAboutRoute
+  '/site/contact': typeof SiteContactRoute
+  '/site/menu': typeof SiteMenuRoute
   '/admin/': typeof AdminIndexRoute
-  '/public': typeof PublicIndexRoute
+  '/site': typeof SiteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -200,11 +200,11 @@ export interface FileRoutesByTo {
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
   '/order/$tableCode': typeof OrderTableCodeRoute
-  '/public/about': typeof PublicAboutRoute
-  '/public/contact': typeof PublicContactRoute
-  '/public/menu': typeof PublicMenuRoute
+  '/site/about': typeof SiteAboutRoute
+  '/site/contact': typeof SiteContactRoute
+  '/site/menu': typeof SiteMenuRoute
   '/admin': typeof AdminIndexRoute
-  '/public': typeof PublicIndexRoute
+  '/site': typeof SiteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -227,11 +227,11 @@ export interface FileRoutesById {
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
   '/order/$tableCode': typeof OrderTableCodeRoute
-  '/public/about': typeof PublicAboutRoute
-  '/public/contact': typeof PublicContactRoute
-  '/public/menu': typeof PublicMenuRoute
+  '/site/about': typeof SiteAboutRoute
+  '/site/contact': typeof SiteContactRoute
+  '/site/menu': typeof SiteMenuRoute
   '/admin/': typeof AdminIndexRoute
-  '/public/': typeof PublicIndexRoute
+  '/site/': typeof SiteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -255,11 +255,11 @@ export interface FileRouteTypes {
     | '/admin/staff'
     | '/admin/tables'
     | '/order/$tableCode'
-    | '/public/about'
-    | '/public/contact'
-    | '/public/menu'
+    | '/site/about'
+    | '/site/contact'
+    | '/site/menu'
     | '/admin/'
-    | '/public'
+    | '/site'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -280,11 +280,11 @@ export interface FileRouteTypes {
     | '/admin/staff'
     | '/admin/tables'
     | '/order/$tableCode'
-    | '/public/about'
-    | '/public/contact'
-    | '/public/menu'
+    | '/site/about'
+    | '/site/contact'
+    | '/site/menu'
     | '/admin'
-    | '/public'
+    | '/site'
   id:
     | '__root__'
     | '/'
@@ -306,11 +306,11 @@ export interface FileRouteTypes {
     | '/admin/staff'
     | '/admin/tables'
     | '/order/$tableCode'
-    | '/public/about'
-    | '/public/contact'
-    | '/public/menu'
+    | '/site/about'
+    | '/site/contact'
+    | '/site/menu'
     | '/admin/'
-    | '/public/'
+    | '/site/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -319,10 +319,10 @@ export interface RootRouteChildren {
   KitchenRoute: typeof KitchenRoute
   LoginRoute: typeof LoginRoute
   OrderTableCodeRoute: typeof OrderTableCodeRoute
-  PublicAboutRoute: typeof PublicAboutRoute
-  PublicContactRoute: typeof PublicContactRoute
-  PublicMenuRoute: typeof PublicMenuRoute
-  PublicIndexRoute: typeof PublicIndexRoute
+  SiteAboutRoute: typeof SiteAboutRoute
+  SiteContactRoute: typeof SiteContactRoute
+  SiteMenuRoute: typeof SiteMenuRoute
+  SiteIndexRoute: typeof SiteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -355,11 +355,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/public/': {
-      id: '/public/'
-      path: '/public'
-      fullPath: '/public'
-      preLoaderRoute: typeof PublicIndexRouteImport
+    '/site/': {
+      id: '/site/'
+      path: '/site'
+      fullPath: '/site'
+      preLoaderRoute: typeof SiteIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -369,25 +369,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/public/menu': {
-      id: '/public/menu'
-      path: '/public/menu'
-      fullPath: '/public/menu'
-      preLoaderRoute: typeof PublicMenuRouteImport
+    '/site/menu': {
+      id: '/site/menu'
+      path: '/site/menu'
+      fullPath: '/site/menu'
+      preLoaderRoute: typeof SiteMenuRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/public/contact': {
-      id: '/public/contact'
-      path: '/public/contact'
-      fullPath: '/public/contact'
-      preLoaderRoute: typeof PublicContactRouteImport
+    '/site/contact': {
+      id: '/site/contact'
+      path: '/site/contact'
+      fullPath: '/site/contact'
+      preLoaderRoute: typeof SiteContactRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/public/about': {
-      id: '/public/about'
-      path: '/public/about'
-      fullPath: '/public/about'
-      preLoaderRoute: typeof PublicAboutRouteImport
+    '/site/about': {
+      id: '/site/about'
+      path: '/site/about'
+      fullPath: '/site/about'
+      preLoaderRoute: typeof SiteAboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/order/$tableCode': {
@@ -542,10 +542,10 @@ const rootRouteChildren: RootRouteChildren = {
   KitchenRoute: KitchenRoute,
   LoginRoute: LoginRoute,
   OrderTableCodeRoute: OrderTableCodeRoute,
-  PublicAboutRoute: PublicAboutRoute,
-  PublicContactRoute: PublicContactRoute,
-  PublicMenuRoute: PublicMenuRoute,
-  PublicIndexRoute: PublicIndexRoute,
+  SiteAboutRoute: SiteAboutRoute,
+  SiteContactRoute: SiteContactRoute,
+  SiteMenuRoute: SiteMenuRoute,
+  SiteIndexRoute: SiteIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

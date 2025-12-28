@@ -28,7 +28,7 @@ function HomePage() {
   if (error) {
     console.error('getCurrentUser failed:', error)
     apiClient.clearAuth()
-    window.location.href = '/public'
+    window.location.href = '/site'
   }
 
   useEffect(() => {
@@ -70,7 +70,7 @@ function HomePage() {
   console.log('Checking auth - isAuthenticated:', apiClient.isAuthenticated(), 'user:', user)
   if (!apiClient.isAuthenticated() || !user) {
     console.log('Not authenticated, redirecting to public website')
-    return <Navigate to="/public" />
+    return <Navigate to="/site" />
   }
 
   // Redirect admin users to admin panel

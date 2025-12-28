@@ -76,7 +76,7 @@ func UpdateSettings(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Get user ID from context (set by auth middleware)
-		userID, exists := c.Get("user_id")
+		userIDValue, exists := c.Get("user_id")
 		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"success": false,
@@ -85,22 +85,45 @@ func UpdateSettings(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		userUUID, err := uuid.Parse(userID.(string))
-		if err != nil {
+		// Handle both string and uuid.UUID types from middleware
+		var userUUID uuid.UUID
+		switch v := userIDValue.(type) {
+		case string:
+			var err error
+			userUUID, err = uuid.Parse(v)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"message": "Invalid user ID format",
+				})
+				return
+			}
+		case uuid.UUID:
+			userUUID = v
+		default:
 			c.JSON(http.StatusBadRequest, gin.H{
 				"success": false,
-				"message": "Invalid user ID",
+				"message": "Invalid user ID type",
 			})
 			return
 		}
 
-		// Update each setting
+		// Update or insert each setting using UPSERT
 		for key, value := range request {
+			// Determine setting type based on value
+			settingType := determineSettingType(value)
+			// Determine category based on key prefix
+			category := determineCategoryFromKey(key)
+
+			// Use INSERT ON CONFLICT (UPSERT) to handle both new and existing settings
 			_, err := db.Exec(`
-				UPDATE system_settings
-				SET setting_value = $1, updated_by = $2, updated_at = $3
-				WHERE setting_key = $4
-			`, value, userUUID, time.Now(), key)
+				INSERT INTO system_settings (setting_key, setting_value, setting_type, category, updated_by, updated_at)
+				VALUES ($1, $2, $3, $4, $5, $6)
+				ON CONFLICT (setting_key) DO UPDATE SET
+					setting_value = EXCLUDED.setting_value,
+					updated_by = EXCLUDED.updated_by,
+					updated_at = EXCLUDED.updated_at
+			`, key, value, settingType, category, userUUID, time.Now())
 
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -116,6 +139,41 @@ func UpdateSettings(db *sql.DB) gin.HandlerFunc {
 			"success": true,
 			"message": "Settings updated successfully",
 		})
+	}
+}
+
+// determineSettingType infers the setting type from the value
+func determineSettingType(value string) string {
+	// Check if it's a boolean
+	if value == "true" || value == "false" {
+		return "boolean"
+	}
+	// Check if it's a number
+	if _, err := strconv.ParseFloat(value, 64); err == nil {
+		return "number"
+	}
+	// Default to string
+	return "string"
+}
+
+// determineCategoryFromKey determines the category based on the setting key
+func determineCategoryFromKey(key string) string {
+	switch {
+	case key == "restaurant_name" || key == "default_language" || key == "currency":
+		return "restaurant"
+	case key == "tax_rate" || key == "service_charge" || key == "tax_calculation_method" || key == "enable_rounding":
+		return "financial"
+	case key == "receipt_header" || key == "receipt_footer" || key == "paper_size" ||
+		key == "show_logo" || key == "auto_print_customer_copy" || key == "printer_name" || key == "print_copies":
+		return "receipt"
+	case key == "kitchen_paper_size" || key == "auto_print_kitchen" || key == "show_prices_kitchen" ||
+		key == "kitchen_print_categories" || key == "kitchen_urgent_time":
+		return "kitchen"
+	case key == "backup_frequency" || key == "session_timeout" || key == "data_retention_days" ||
+		key == "low_stock_threshold" || key == "enable_audit_logging":
+		return "system"
+	default:
+		return "general"
 	}
 }
 

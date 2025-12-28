@@ -48,6 +48,8 @@ services:
       dockerfile: Dockerfile.dev
       target: development
     container_name: pos-frontend-dev
+    env_file:
+      - .env
     environment:
       - VITE_API_URL=http://localhost:8080/api/v1
     ports:

@@ -9,7 +9,7 @@ import { OpenStatusBadge } from '@/components/public/OpenStatusBadge'
 import { apiClient } from '@/api/client'
 import { cn } from '@/lib/utils'
 
-export const Route = createFileRoute('/public/')({
+export const Route = createFileRoute('/site/')({
   component: PublicLandingPage,
 })
 
@@ -93,7 +93,7 @@ function PublicLandingPage() {
               size="lg"
               className="bg-[var(--public-secondary)] text-[var(--public-text-on-gold)] hover:bg-[var(--public-secondary-light)] font-semibold px-8"
             >
-              <Link to="/public/menu">
+              <Link to="/site/menu">
                 <Utensils className="mr-2 h-5 w-5" />
                 View Menu
               </Link>
@@ -104,7 +104,7 @@ function PublicLandingPage() {
               variant="outline"
               className="border-[var(--public-secondary)] text-[var(--public-secondary)] hover:bg-[var(--public-secondary)] hover:text-[var(--public-text-on-gold)]"
             >
-              <Link to="/public/contact">
+              <Link to="/site/contact">
                 <Phone className="mr-2 h-5 w-5" />
                 Contact Us
               </Link>
@@ -215,7 +215,7 @@ function PublicLandingPage() {
               variant="outline"
               className="border-[var(--public-secondary)] text-[var(--public-secondary)] hover:bg-[var(--public-secondary)] hover:text-[var(--public-text-on-gold)]"
             >
-              <Link to="/public/menu">
+              <Link to="/site/menu">
                 View Full Menu
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Link>
@@ -244,7 +244,7 @@ function PublicLandingPage() {
                 variant="outline"
                 className="border-[var(--public-secondary)] text-[var(--public-secondary)] hover:bg-[var(--public-secondary)] hover:text-[var(--public-text-on-gold)]"
               >
-                <Link to="/public/about">
+                <Link to="/site/about">
                   Learn More About Us
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Link>

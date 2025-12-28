@@ -131,7 +131,7 @@ function CustomerOrderPage() {
                             This QR code is not recognized. Please scan a valid table QR code.
                         </p>
                         <Button
-                            onClick={() => navigate({ to: '/public' })}
+                            onClick={() => navigate({ to: '/site' })}
                             className="bg-[var(--public-secondary)] text-[var(--public-text-on-gold)]"
                         >
                             Go to Homepage

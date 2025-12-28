@@ -66,8 +66,8 @@ export default function ContactSubmissions() {
   const { data: contacts = [], isLoading } = useQuery<ContactSubmission[]>({
     queryKey: ['contactSubmissions', statusFilter, startDate, endDate],
     queryFn: async () => {
-      const response = await apiClient.get(`/admin/contacts?${queryParams.toString()}`)
-      return response.data
+      const response = await apiClient.get<ContactSubmission[]>(`/admin/contacts?${queryParams.toString()}`)
+      return response
     },
   })
 

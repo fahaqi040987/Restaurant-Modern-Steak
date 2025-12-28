@@ -236,7 +236,7 @@ function LoginPage() {
           {/* Back to website link */}
           <div className="mt-6 text-center">
             <a
-              href="/public"
+              href="/site"
               className="text-sm text-[var(--public-text-muted)] hover:text-[var(--public-secondary)] transition-colors"
             >
               ← Back to Website
