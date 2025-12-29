@@ -540,7 +540,7 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	// Build dynamic update query
 	query := "UPDATE products SET updated_at = NOW()"
 	var args []interface{}
-	argIndex := 1
+	argIndex := 0
 
 	if req.CategoryID != nil {
 		argIndex++

@@ -39,7 +39,7 @@ class APIClient {
     const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1';
     console.log('🔧 API Client baseURL:', apiUrl);
     console.log('🔧 Environment VITE_API_URL:', import.meta.env?.VITE_API_URL);
-    
+
     this.client = axios.create({
       baseURL: apiUrl,
       timeout: 30000,
@@ -222,10 +222,12 @@ class APIClient {
 
   async updateOrderStatus(id: string, status: OrderStatus, notes?: string): Promise<APIResponse<Order>> {
     const statusUpdate: UpdateOrderStatusRequest = { status, notes };
+    const token = localStorage.getItem('pos_token');
     return this.request({
       method: 'PATCH',
       url: `/orders/${id}/status`,
       data: statusUpdate,
+      headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
     });
   }
 
@@ -285,18 +287,22 @@ class APIClient {
 
   // Kitchen endpoints
   async getKitchenOrders(status?: string): Promise<APIResponse<Order[]>> {
+    const token = localStorage.getItem('pos_token');
     return this.request({
       method: 'GET',
       url: '/kitchen/orders',
       params: status && status !== 'all' ? { status } : {},
+      headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
     });
   }
 
   async updateOrderItemStatus(orderId: string, itemId: string, status: string): Promise<APIResponse> {
+    const token = localStorage.getItem('pos_token');
     return this.request({
       method: 'PATCH',
       url: `/kitchen/orders/${orderId}/items/${itemId}/status`,
       data: { status },
+      headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
     });
   }
 
@@ -415,9 +421,9 @@ class APIClient {
       search: params?.search,
       category_id: params?.category_id
     }
-    
-    return this.request({ 
-      method: 'GET', 
+
+    return this.request({
+      method: 'GET',
       url: '/admin/products',
       params: normalizedParams
     });
@@ -432,9 +438,9 @@ class APIClient {
       search: params?.search,
       active_only: params?.active_only
     }
-    
-    return this.request({ 
-      method: 'GET', 
+
+    return this.request({
+      method: 'GET',
       url: '/admin/categories',
       params: normalizedParams
     });
@@ -442,10 +448,10 @@ class APIClient {
 
   // Admin tables endpoint with pagination
   async getAdminTables(params?: { page?: number, limit?: number, search?: string, status?: string }): Promise<APIResponse<DiningTable[]>> {
-    return this.request({ 
-      method: 'GET', 
+    return this.request({
+      method: 'GET',
       url: '/admin/tables',
-      params 
+      params
     });
   }
 
@@ -460,6 +466,55 @@ class APIClient {
 
   async deleteTable(id: string): Promise<APIResponse> {
     return this.request({ method: 'DELETE', url: `/admin/tables/${id}` });
+  }
+
+  // ===========================================
+  // Image Upload endpoints (Admin - Auth Required)
+  // ===========================================
+
+  /**
+   * Upload a product image
+   * @param file - The image file to upload
+   * @returns URL of the uploaded image
+   */
+  async uploadProductImage(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = localStorage.getItem('pos_token');
+    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1';
+
+    const response = await fetch(`${apiUrl}/admin/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Upload failed');
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || 'Upload failed');
+    }
+
+    return data.url;
+  }
+
+  /**
+   * Delete a product image
+   * @param url - The URL of the image to delete
+   */
+  async deleteProductImage(url: string): Promise<void> {
+    await this.request({
+      method: 'DELETE',
+      url: '/admin/upload',
+      data: { url },
+    });
   }
 
   // ===========================================

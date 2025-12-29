@@ -92,7 +92,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	// Server routes (server role - dine-in orders only)
 	server := router.Group("/server")
 	server.Use(authMiddleware)
-	server.Use(middleware.RequireRole("server"))
+	server.Use(middleware.RequireRoles([]string{"server", "admin"}))
 	{
 		server.POST("/orders", createDineInOrder(db)) // Only dine-in orders
 	}
@@ -172,6 +172,11 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		// Advanced order management
 		admin.POST("/orders", orderHandler.CreateOrder)                   // Admins can create any type of order
 		admin.POST("/orders/:id/payments", paymentHandler.ProcessPayment) // Admins can process payments
+
+		// Image upload management
+		uploadHandler := handlers.NewUploadHandler("./uploads")
+		admin.POST("/upload", uploadHandler.UploadProductImage)
+		admin.DELETE("/upload", uploadHandler.DeleteProductImage)
 	}
 
 	// Server with product management (server role can manage products)
@@ -181,6 +186,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	{
 		serverWithProducts.POST("/products", productHandler.CreateProduct)
 		serverWithProducts.PUT("/products/:id", productHandler.UpdateProduct)
+
 	}
 
 	// Kitchen routes (kitchen staff access)
@@ -379,24 +385,36 @@ func getOrdersReport(db *sql.DB) gin.HandlerFunc {
 func getKitchenOrders(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		status := c.DefaultQuery("status", "all")
+		fmt.Printf("[Kitchen] Fetching orders with status param: %s\n", status)
 
-		query := `
-			SELECT DISTINCT o.id, o.order_number, o.table_id, o.order_type, o.status,
-			       o.created_at, o.customer_name,
-			       t.table_number
+		baseQuery := `
+			SELECT DISTINCT
+				o.id,
+				o.order_number,
+				o.table_id,
+				o.order_type,
+				o.status,
+				o.created_at,
+				o.customer_name,
+				t.table_number
 			FROM orders o
+			JOIN order_items oi ON o.id = oi.order_id
 			LEFT JOIN dining_tables t ON o.table_id = t.id
-			WHERE o.status IN ('confirmed', 'preparing', 'ready')
+			WHERE oi.status IN ('pending', 'preparing')
 		`
 
+		args := []interface{}{}
+
 		if status != "all" {
-			query += ` AND o.status = '` + status + `'`
+			baseQuery += " AND oi.status = $1"
+			args = append(args, status)
 		}
 
-		query += ` ORDER BY o.created_at ASC`
+		baseQuery += " ORDER BY o.created_at ASC"
 
-		rows, err := db.Query(query)
+		rows, err := db.Query(baseQuery, args...)
 		if err != nil {
+			fmt.Printf("[Kitchen] Error fetching orders: %v\n", err)
 			c.JSON(500, gin.H{
 				"success": false,
 				"message": "Failed to fetch kitchen orders",
@@ -407,14 +425,29 @@ func getKitchenOrders(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		var orders []map[string]interface{}
-		for rows.Next() {
-			var orderID, tableID interface{}
-			var orderNumber, orderType, orderStatus, customerName, tableNumber sql.NullString
-			var createdAt interface{}
 
-			err := rows.Scan(&orderID, &orderNumber, &tableID, &orderType, &orderStatus,
-				&createdAt, &customerName, &tableNumber)
-			if err != nil {
+		for rows.Next() {
+			var (
+				orderID      string
+				orderNumber  sql.NullString
+				tableID      sql.NullString
+				orderType    sql.NullString
+				orderStatus  sql.NullString
+				customerName sql.NullString
+				tableNumber  sql.NullString
+				createdAt    time.Time
+			)
+
+			if err := rows.Scan(
+				&orderID,
+				&orderNumber,
+				&tableID,
+				&orderType,
+				&orderStatus,
+				&createdAt,
+				&customerName,
+				&tableNumber,
+			); err != nil {
 				c.JSON(500, gin.H{
 					"success": false,
 					"message": "Failed to scan kitchen order",
@@ -426,15 +459,67 @@ func getKitchenOrders(db *sql.DB) gin.HandlerFunc {
 			order := map[string]interface{}{
 				"id":            orderID,
 				"order_number":  orderNumber.String,
-				"table_id":      tableID,
+				"table_id":      tableID.String,
 				"table_number":  tableNumber.String,
 				"order_type":    orderType.String,
 				"status":        orderStatus.String,
 				"customer_name": customerName.String,
 				"created_at":    createdAt,
+				"items":         []map[string]interface{}{},
 			}
 
-			orders = append(orders, order)
+			itemQuery := `
+				SELECT
+					oi.id,
+					oi.product_id,
+					oi.quantity,
+					oi.status,
+					p.name
+				FROM order_items oi
+				JOIN products p ON oi.product_id = p.id
+				WHERE oi.order_id = $1
+				AND oi.status IN ('pending', 'preparing')
+			`
+
+			itemRows, err := db.Query(itemQuery, orderID)
+			if err != nil {
+				fmt.Printf("[Kitchen] Failed to fetch items for order %s: %v\n", orderID, err)
+				continue
+			}
+
+			var items []map[string]interface{}
+			for itemRows.Next() {
+				var (
+					itemID      string
+					productID   string
+					quantity    int
+					itemStatus  string
+					productName string
+				)
+
+				if err := itemRows.Scan(
+					&itemID,
+					&productID,
+					&quantity,
+					&itemStatus,
+					&productName,
+				); err == nil {
+					items = append(items, map[string]interface{}{
+						"id":           itemID,
+						"product_id":   productID,
+						"product_name": productName,
+						"quantity":     quantity,
+						"status":       itemStatus,
+					})
+				}
+			}
+			itemRows.Close()
+
+			// Safety: only include orders with visible items
+			if len(items) > 0 {
+				order["items"] = items
+				orders = append(orders, order)
+			}
 		}
 
 		c.JSON(200, gin.H{

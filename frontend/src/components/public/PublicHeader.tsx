@@ -71,7 +71,7 @@ export function PublicHeader() {
             className="font-serif text-xl font-semibold tracking-wide text-[var(--public-text-primary)]"
             style={{ fontFamily: 'var(--public-font-heading)' }}
           >
-            Modern<span className="text-[var(--public-secondary)]">Steak</span>
+            Steak<span className="text-[var(--public-secondary)]">Kenangan</span>
           </span>
         </Link>
 
@@ -129,7 +129,7 @@ export function PublicHeader() {
                 className="text-left font-serif text-lg text-[var(--public-text-primary)]"
                 style={{ fontFamily: 'var(--public-font-heading)' }}
               >
-                Modern<span className="text-[var(--public-secondary)]">Steak</span>
+                Steak<span className="text-[var(--public-secondary)]">Kenangan</span>
               </SheetTitle>
             </SheetHeader>
 

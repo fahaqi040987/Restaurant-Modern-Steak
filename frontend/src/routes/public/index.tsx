@@ -75,8 +75,8 @@ function PublicLandingPage() {
               <span className="animate-pulse">Loading...</span>
             ) : (
               <>
-                {restaurantInfo?.name || 'Modern'}
-                <span className="text-[var(--public-secondary)]">Steak</span>
+                {restaurantInfo?.name || 'Steak'}
+                <span className="text-[var(--public-secondary)]">Kenangan</span>
               </>
             )}
           </h1>

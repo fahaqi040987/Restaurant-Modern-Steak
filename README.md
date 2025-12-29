@@ -194,24 +194,24 @@ make lint         # Run linting
 
 ---
 
-## 💻 **Technology Stack**
+    ## 💻 **Technology Stack**
 
-### **🏗️ Backend Stack**
-- **⚡ Golang 1.21** - High-performance server runtime
-- **🌐 Gin Framework 1.9.1** - Fast HTTP web framework with middleware support
-- **🗄️ Raw SQL with PostgreSQL Driver** - Direct database operations for maximum control and performance
-- **🔐 JWT Authentication (v5.2.0)** - Secure token-based authentication system
-- **🛡️ CORS Middleware** - Cross-origin request handling for development and production
+    ### **🏗️ Backend Stack**
+    - **⚡ Golang 1.21** - High-performance server runtime
+    - **🌐 Gin Framework 1.9.1** - Fast HTTP web framework with middleware support
+    - **🗄️ Raw SQL with PostgreSQL Driver** - Direct database operations for maximum control and performance
+    - **🔐 JWT Authentication (v5.2.0)** - Secure token-based authentication system
+    - **🛡️ CORS Middleware** - Cross-origin request handling for development and production
 
-### **🎨 Frontend Stack**
-- **⚛️ TanStack Start 1.57.15** - Full-stack React framework with file-based routing
-- **⚛️ React 18.3.1** - Latest React with concurrent features and hooks
-- **📝 TypeScript 5.6.2** - Type-safe development with comprehensive type definitions
-- **📊 TanStack Table 8.21.3** - Powerful data table with sorting, filtering, and pagination
-- **🔄 TanStack Query 5.56.2** - Powerful data synchronization and caching
-- **🎨 Tailwind CSS 3.4.13** - Utility-first CSS framework for rapid UI development
-- **⚡ Vite 5.4.8** - Lightning-fast build tool and dev server
-- **🧩 shadcn/ui + Radix UI** - Beautiful, accessible component library
+    ### **🎨 Frontend Stack**
+    - **⚛️ TanStack Start 1.57.15** - Full-stack React framework with file-based routing
+    - **⚛️ React 18.3.1** - Latest React with concurrent features and hooks
+    - **📝 TypeScript 5.6.2** - Type-safe development with comprehensive type definitions
+    - **📊 TanStack Table 8.21.3** - Powerful data table with sorting, filtering, and pagination
+    - **🔄 TanStack Query 5.56.2** - Powerful data synchronization and caching
+    - **🎨 Tailwind CSS 3.4.13** - Utility-first CSS framework for rapid UI development
+    - **⚡ Vite 5.4.8** - Lightning-fast build tool and dev server
+    - **🧩 shadcn/ui + Radix UI** - Beautiful, accessible component library
 
 ### **🗄️ Database & Infrastructure**
 - **🐘 PostgreSQL 15-Alpine** - Robust relational database with advanced features

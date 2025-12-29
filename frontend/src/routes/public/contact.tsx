@@ -73,6 +73,8 @@ const DAY_NAMES = [
   "Saturday",
 ];
 
+
+
 function PublicContactPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -121,9 +123,8 @@ function PublicContactPage() {
 
   const copyAddress = async () => {
     if (restaurantInfo?.address) {
-      const fullAddress = `${restaurantInfo.address}${
-        restaurantInfo.city ? `, ${restaurantInfo.city}` : ""
-      }${restaurantInfo.postal_code ? ` ${restaurantInfo.postal_code}` : ""}`;
+      const fullAddress = `${restaurantInfo.address}${restaurantInfo.city ? `, ${restaurantInfo.city}` : ""
+        }${restaurantInfo.postal_code ? ` ${restaurantInfo.postal_code}` : ""}`;
       await navigator.clipboard.writeText(fullAddress);
       toast({
         title: "Address Copied",
@@ -272,8 +273,8 @@ function PublicContactPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {restaurantInfo?.operating_hours
-                      ?.sort((a, b) => a.day_of_week - b.day_of_week)
+                    {(restaurantInfo?.operating_hours || [])
+                      .sort((a, b) => a.day_of_week - b.day_of_week)
                       .map((hours) => (
                         <div
                           key={hours.id}
@@ -301,8 +302,8 @@ function PublicContactPage() {
                             {hours.is_closed
                               ? "Closed"
                               : `${formatTime(hours.open_time)} - ${formatTime(
-                                  hours.close_time
-                                )}`}
+                                hours.close_time
+                              )}`}
                           </span>
                         </div>
                       ))}

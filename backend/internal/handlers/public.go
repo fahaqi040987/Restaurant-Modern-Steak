@@ -312,12 +312,13 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 	var operatingHours []models.OperatingHours
 	for rows.Next() {
 		var oh models.OperatingHours
+		var openTime, closeTime time.Time
 		err := rows.Scan(
 			&oh.ID,
 			&oh.RestaurantInfoID,
 			&oh.DayOfWeek,
-			&oh.OpenTime,
-			&oh.CloseTime,
+			&openTime,
+			&closeTime,
 			&oh.IsClosed,
 		)
 		if err != nil {
@@ -328,6 +329,10 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 			})
 			return
 		}
+		
+		// Format time to HH:MM:SS
+		oh.OpenTime = openTime.Format("15:04:05")
+		oh.CloseTime = closeTime.Format("15:04:05")
 		operatingHours = append(operatingHours, oh)
 	}
 

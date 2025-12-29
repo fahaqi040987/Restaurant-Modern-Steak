@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -21,11 +22,12 @@ import {
 } from "@/lib/form-schemas";
 import { toastHelpers } from "@/lib/toast-helpers";
 import apiClient from "@/api/client";
-import type { Product, Category } from "@/types";
+import { ImageUpload } from "@/components/forms/ImageUpload";
+import type { Product } from "@/types";
 import { X } from "lucide-react";
 
 interface ProductFormProps {
-  product?: Product; // If provided, we're editing; otherwise creating
+  product?: Product;
   onSuccess?: () => void;
   onCancel?: () => void;
   mode?: "create" | "edit";
@@ -41,7 +43,7 @@ export function ProductForm({
   const isEditing = mode === "edit" && product;
 
   // Fetch categories for dropdown
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: () => apiClient.getCategories().then((res) => res.data),
   });
@@ -52,45 +54,63 @@ export function ProductForm({
     label: cat.name,
   }));
 
-  // Choose the appropriate schema and default values
+  // Choose the appropriate schema
   const schema = isEditing ? updateProductSchema : createProductSchema;
-  const defaultValues: any =
-    isEditing && product
-      ? {
+
+  const form = useForm<CreateProductData | UpdateProductData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0,
+      category_id: "",
+      image_url: "",
+      status: "active",
+      preparation_time: 5,
+    },
+  });
+
+  // Reset form when categories load or when editing a product
+  useEffect(() => {
+    if (categoriesLoading) return;
+
+    if (isEditing && product) {
+      form.reset({
         id: product.id,
         name: product.name,
         description: product.description || "",
         price: product.price,
         category_id: product.category_id?.toString() || categories[0]?.id?.toString() || "",
         image_url: product.image_url || "",
-        status: product.is_available
-          ? ("active" as const)
-          : ("inactive" as const),
+        status: product.is_available ? "active" : "inactive",
         preparation_time: product.preparation_time || 5,
-      }
-      : {
+      });
+    } else if (categories.length > 0) {
+      form.reset({
         name: "",
         description: "",
         price: 0,
         category_id: categories[0]?.id?.toString() || "",
         image_url: "",
-        status: "active" as const,
+        status: "active",
         preparation_time: 5,
-      };
-
-  const form = useForm<CreateProductData | UpdateProductData>({
-    resolver: zodResolver(schema),
-    defaultValues,
-  });
+      });
+    }
+  }, [categoriesLoading, isEditing, product, categories, form]);
 
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (data: CreateProductData) => {
-      // Convert category_id to string for API
       const apiData = {
-        ...data,
-        category_id: data.category_id.toString(),
+        name: data.name,
+        description: data.description || undefined,
+        price: Number(data.price),
+        category_id: data.category_id,
+        image_url: data.image_url || undefined,
+        is_available: data.status === "active",
+        preparation_time: Number(data.preparation_time),
       };
+      console.log("Creating product with data:", apiData);
       return apiClient.createProduct(apiData);
     },
     onSuccess: () => {
@@ -102,6 +122,7 @@ export function ProductForm({
       onSuccess?.();
     },
     onError: (error) => {
+      console.error("Create product error:", error);
       toastHelpers.apiError("Create product", error);
     },
   });
@@ -109,14 +130,20 @@ export function ProductForm({
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: (data: UpdateProductData) => {
-      // Convert category_id to string for API
+      const statusValue = data.status ?? (product?.is_available ? "active" : "inactive");
       const apiData = {
-        ...data,
-        category_id: data.category_id ? data.category_id.toString() : undefined,
+        name: data.name,
+        description: data.description || undefined,
+        price: data.price !== undefined ? Number(data.price) : undefined,
+        category_id: data.category_id || undefined,
+        image_url: data.image_url || undefined,
+        is_available: statusValue === "active",
+        preparation_time: data.preparation_time !== undefined ? Number(data.preparation_time) : undefined,
       };
+      console.log("Updating product with data:", apiData);
       return apiClient.updateProduct(data.id.toString(), apiData);
     },
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
@@ -124,26 +151,33 @@ export function ProductForm({
       onSuccess?.();
     },
     onError: (error) => {
+      console.error("Update product error:", error);
       toastHelpers.apiError("Update product", error);
     },
   });
 
   const onSubmit = (data: CreateProductData | UpdateProductData) => {
-    // Memastikan harga adalah tipe data Number dan kategori terpilih
-    const sanitizedData = {
-      ...data,
-      price: Number(data.price),
-      category_id: data.category_id,
-    };
-
+    console.log("Form submitted with data:", data);
     if (isEditing) {
-      updateMutation.mutate(sanitizedData as UpdateProductData);
+      updateMutation.mutate(data as UpdateProductData);
     } else {
-      createMutation.mutate(sanitizedData as CreateProductData);
+      createMutation.mutate(data as CreateProductData);
     }
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
+
+  if (categoriesLoading) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardContent className="pt-6">
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Loading categories...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (categories.length === 0) {
     return (
@@ -201,12 +235,14 @@ export function ProductForm({
                 description="Optional description for staff and customers"
               />
 
-              <TextInputField
-                control={form.control}
-                name="image_url"
-                label="Image URL"
-                placeholder="https://example.com/image.jpg"
-                description="Optional product image URL"
+              <ImageUpload
+                value={form.watch("image_url") || ""}
+                onChange={(url) => form.setValue("image_url", url)}
+                onUpload={async (file) => {
+                  const url = await apiClient.uploadProductImage(file);
+                  return url;
+                }}
+                disabled={isLoading}
               />
             </div>
 

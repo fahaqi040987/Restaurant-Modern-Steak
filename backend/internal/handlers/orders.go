@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -216,8 +217,11 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 
 // CreateOrder creates a new order
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
+	log.Println("[Order] Starting CreateOrder process")
+
 	userID, _, _, ok := middleware.GetUserFromContext(c)
 	if !ok {
+		log.Println("[Order] Error: Authentication required")
 		c.JSON(http.StatusUnauthorized, models.APIResponse{
 			Success: false,
 			Message: "Authentication required",
@@ -225,9 +229,12 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		})
 		return
 	}
+	log.Printf("[Order] User authenticated: %v", userID)
 
+	log.Println("[Order] Attempting to bind request JSON")
 	var req models.CreateOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("[Order] Error binding JSON: %v", err)
 		c.JSON(http.StatusBadRequest, models.APIResponse{
 			Success: false,
 			Message: "Invalid request body",
@@ -236,8 +243,15 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
+	tableIDStr := "nil"
+	if req.TableID != nil {
+		tableIDStr = req.TableID.String()
+	}
+	log.Printf("[Order] Request payload bound. Items count: %d, Table: %s", len(req.Items), tableIDStr)
+
 	// Validate request
 	if len(req.Items) == 0 {
+		log.Println("[Order] Error: Empty order items")
 		c.JSON(http.StatusBadRequest, models.APIResponse{
 			Success: false,
 			Message: "Order must contain at least one item",
@@ -247,8 +261,10 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	}
 
 	// Start transaction
+	log.Println("[Order] Starting transaction")
 	tx, err := h.db.Begin()
 	if err != nil {
+		log.Printf("[Order] Error starting transaction: %v", err)
 		c.JSON(http.StatusInternalServerError, models.APIResponse{
 			Success: false,
 			Message: "Failed to start transaction",
@@ -260,22 +276,28 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	// Generate order number
 	orderNumber := h.generateOrderNumber()
+	log.Printf("[Order] Generated order number: %s", orderNumber)
 
-	// Calculate totals
+	// Calculate totals and cache prices
 	var subtotal float64
-	for _, item := range req.Items {
+	productPrices := make(map[uuid.UUID]float64)
+
+	for i, item := range req.Items {
 		// Get product price
 		var price float64
+		log.Printf("[Order] Looking up product %d: %s", i, item.ProductID)
 		err := tx.QueryRow("SELECT price FROM products WHERE id = $1 AND is_available = true", item.ProductID).Scan(&price)
 		if err == sql.ErrNoRows {
+			log.Printf("[Order] Error: Product not found or unavailable: %s", item.ProductID)
 			c.JSON(http.StatusBadRequest, models.APIResponse{
 				Success: false,
 				Message: "Product not found or not available",
-				Error:   stringPtr("product_not_found"),
+				Error:   stringPtr(fmt.Sprintf("product_not_found: %s", item.ProductID)),
 			})
 			return
 		}
 		if err != nil {
+			log.Printf("[Order] Error querying product %s: %v", item.ProductID, err)
 			c.JSON(http.StatusInternalServerError, models.APIResponse{
 				Success: false,
 				Message: "Failed to fetch product price",
@@ -283,8 +305,11 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 			})
 			return
 		}
+		log.Printf("[Order] Product %s price: %f", item.ProductID, price)
+		productPrices[item.ProductID] = price
 		subtotal += price * float64(item.Quantity)
 	}
+	log.Printf("[Order] Subtotal calculated: %f", subtotal)
 
 	// Get tax rate from system settings (default 11% Indonesian VAT)
 	var taxRateStr string
@@ -292,7 +317,10 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	err = tx.QueryRow(taxQuery).Scan(&taxRateStr)
 	if err != nil {
 		// Fallback to 11% if setting not found
+		log.Println("[Order] Tax rate setting not found, using default 11%")
 		taxRateStr = "11.00"
+	} else {
+		log.Printf("[Order] Using tax rate from settings: %s", taxRateStr)
 	}
 
 	taxRate := 0.11 // Default Indonesian VAT
@@ -302,11 +330,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	taxAmount := subtotal * taxRate
 	totalAmount := subtotal + taxAmount
+	log.Printf("[Order] Calculated Tax: %f, Total: %f", taxAmount, totalAmount)
 
 	// Create order
 	orderID := uuid.New()
+	log.Printf("[Order] Creating order record: %s", orderID)
 	orderQuery := `
-		INSERT INTO orders (id, order_number, table_id, user_id, customer_name, order_type, status, 
+		INSERT INTO orders (id, order_number, table_id, user_id, customer_name, order_type, status,
 		                   subtotal, tax_amount, discount_amount, total_amount, notes)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
@@ -314,6 +344,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	_, err = tx.Exec(orderQuery, orderID, orderNumber, req.TableID, userID, req.CustomerName,
 		req.OrderType, "pending", subtotal, taxAmount, 0, totalAmount, req.Notes)
 	if err != nil {
+		log.Printf("[Order] Error inserting order: %v", err)
 		c.JSON(http.StatusInternalServerError, models.APIResponse{
 			Success: false,
 			Message: "Failed to create order",
@@ -324,14 +355,15 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	// Create order items
 	for _, item := range req.Items {
-		// Get product price again for consistency
-		var price float64
-		err := tx.QueryRow("SELECT price FROM products WHERE id = $1", item.ProductID).Scan(&price)
-		if err != nil {
+		// Get price from cache
+		price, ok := productPrices[item.ProductID]
+		if !ok {
+			// This should theoretically never happen if the first loop passed, but safety check
+			log.Printf("[Order] Error: Price missing from cache for product %s", item.ProductID)
 			c.JSON(http.StatusInternalServerError, models.APIResponse{
 				Success: false,
-				Message: "Failed to fetch product price",
-				Error:   stringPtr(err.Error()),
+				Message: "Internal server error: price not found",
+				Error:   stringPtr(fmt.Sprintf("price_cache_miss: %s", item.ProductID)),
 			})
 			return
 		}
@@ -340,12 +372,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		itemID := uuid.New()
 
 		itemQuery := `
-			INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, total_price, special_instructions)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, total_price, special_instructions, status)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		`
 
-		_, err = tx.Exec(itemQuery, itemID, orderID, item.ProductID, item.Quantity, price, totalPrice, item.SpecialInstructions)
+		_, err = tx.Exec(itemQuery, itemID, orderID, item.ProductID, item.Quantity, price, totalPrice, item.SpecialInstructions, "pending")
 		if err != nil {
+			log.Printf("[Order] Error inserting order item: %v", err)
 			c.JSON(http.StatusInternalServerError, models.APIResponse{
 				Success: false,
 				Message: "Failed to create order item",
@@ -354,11 +387,14 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 			return
 		}
 	}
+	log.Println("[Order] Order items inserted successfully")
 
 	// Update table status if dine-in
 	if req.OrderType == "dine_in" && req.TableID != nil {
+		log.Printf("[Order] Updating table status for table: %v", *req.TableID)
 		_, err = tx.Exec("UPDATE dining_tables SET is_occupied = true WHERE id = $1", *req.TableID)
 		if err != nil {
+			log.Printf("[Order] Error updating table status: %v", err)
 			c.JSON(http.StatusInternalServerError, models.APIResponse{
 				Success: false,
 				Message: "Failed to update table status",
@@ -369,7 +405,9 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	}
 
 	// Commit transaction
+	log.Println("[Order] Committing transaction")
 	if err := tx.Commit(); err != nil {
+		log.Printf("[Order] Error committing transaction: %v", err)
 		c.JSON(http.StatusInternalServerError, models.APIResponse{
 			Success: false,
 			Message: "Failed to commit transaction",
@@ -377,6 +415,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		})
 		return
 	}
+	log.Println("[Order] Transaction committed")
 
 	// Send notification to kitchen staff about new order
 	var tableInfo string
@@ -387,11 +426,14 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	} else {
 		tableInfo = req.OrderType
 	}
+	log.Println("[Order] Sending notification")
 	go h.notificationSvc.NotifyOrderCreated(orderNumber, tableInfo)
 
 	// Fetch and return the created order
+	log.Println("[Order] Fetching created order details")
 	order, err := h.getOrderByID(orderID)
 	if err != nil {
+		log.Printf("[Order] Error fetching created order: %v", err)
 		c.JSON(http.StatusInternalServerError, models.APIResponse{
 			Success: false,
 			Message: "Order created but failed to fetch details",
@@ -400,6 +442,15 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
+	// Log order details for Kitchen Display verification
+	var itemStatuses []string
+	for _, item := range order.Items {
+		itemStatuses = append(itemStatuses, fmt.Sprintf("%s:%s", item.Product.Name, item.Status))
+	}
+	log.Printf("[Order] Created Order ID: %s", order.ID)
+	log.Printf("[Order] Item Statuses: %v", itemStatuses)
+
+	log.Println("[Order] CreateOrder completed successfully")
 	c.JSON(http.StatusCreated, models.APIResponse{
 		Success: true,
 		Message: "Order created successfully",

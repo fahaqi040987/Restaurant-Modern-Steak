@@ -152,10 +152,10 @@ INSERT INTO restaurant_info (
     '/images/hero-steak.jpg'
 );
 
--- Insert operating hours for all 7 days
--- Sunday (0) - Closed
+-- Insert operating hours for all 7 days (11:00 AM - 10:00 PM)
+-- Sunday (0)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
-SELECT id, 0, '10:00:00', '20:00:00', true FROM restaurant_info LIMIT 1;
+SELECT id, 0, '11:00:00', '22:00:00', false FROM restaurant_info LIMIT 1;
 
 -- Monday (1)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
@@ -173,10 +173,10 @@ SELECT id, 3, '11:00:00', '22:00:00', false FROM restaurant_info LIMIT 1;
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
 SELECT id, 4, '11:00:00', '22:00:00', false FROM restaurant_info LIMIT 1;
 
--- Friday (5) - Extended hours
+-- Friday (5)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
-SELECT id, 5, '11:00:00', '23:00:00', false FROM restaurant_info LIMIT 1;
+SELECT id, 5, '11:00:00', '22:00:00', false FROM restaurant_info LIMIT 1;
 
--- Saturday (6) - Extended hours, earlier opening
+-- Saturday (6)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
-SELECT id, 6, '10:00:00', '23:00:00', false FROM restaurant_info LIMIT 1;
+SELECT id, 6, '11:00:00', '22:00:00', false FROM restaurant_info LIMIT 1;

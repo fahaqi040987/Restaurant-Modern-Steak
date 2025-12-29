@@ -72,6 +72,9 @@ func main() {
 	apiRoutes := router.Group("/api/v1")
 	api.SetupRoutes(apiRoutes, db, authMiddleware)
 
+	// Serve uploaded files (product images, etc.)
+	router.Static("/uploads", "./uploads")
+
 	// Start server
 	port := getEnv("PORT", "8080")
 	log.Printf("Starting server on port %s", port)

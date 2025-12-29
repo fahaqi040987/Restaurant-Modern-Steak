@@ -42,55 +42,55 @@ INSERT INTO restaurant_info (
     '/images/hero-steak.jpg'
 ) ON CONFLICT DO NOTHING;
 
--- Insert operating hours for all 7 days
--- Sunday (0) - Closed
+-- Insert operating hours for all 7 days (11:00 AM - 10:00 PM)
+-- Sunday (0)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
-SELECT id, 0, '10:00:00', '20:00:00', true
+SELECT id, 0, '11:00:00', '22:00:00', false
 FROM restaurant_info
 LIMIT 1
-ON CONFLICT (restaurant_info_id, day_of_week) DO NOTHING;
+ON CONFLICT (restaurant_info_id, day_of_week) DO UPDATE SET open_time = '11:00:00', close_time = '22:00:00', is_closed = false;
 
 -- Monday (1)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
 SELECT id, 1, '11:00:00', '22:00:00', false
 FROM restaurant_info
 LIMIT 1
-ON CONFLICT (restaurant_info_id, day_of_week) DO NOTHING;
+ON CONFLICT (restaurant_info_id, day_of_week) DO UPDATE SET open_time = '11:00:00', close_time = '22:00:00', is_closed = false;
 
 -- Tuesday (2)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
 SELECT id, 2, '11:00:00', '22:00:00', false
 FROM restaurant_info
 LIMIT 1
-ON CONFLICT (restaurant_info_id, day_of_week) DO NOTHING;
+ON CONFLICT (restaurant_info_id, day_of_week) DO UPDATE SET open_time = '11:00:00', close_time = '22:00:00', is_closed = false;
 
 -- Wednesday (3)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
 SELECT id, 3, '11:00:00', '22:00:00', false
 FROM restaurant_info
 LIMIT 1
-ON CONFLICT (restaurant_info_id, day_of_week) DO NOTHING;
+ON CONFLICT (restaurant_info_id, day_of_week) DO UPDATE SET open_time = '11:00:00', close_time = '22:00:00', is_closed = false;
 
 -- Thursday (4)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
 SELECT id, 4, '11:00:00', '22:00:00', false
 FROM restaurant_info
 LIMIT 1
-ON CONFLICT (restaurant_info_id, day_of_week) DO NOTHING;
+ON CONFLICT (restaurant_info_id, day_of_week) DO UPDATE SET open_time = '11:00:00', close_time = '22:00:00', is_closed = false;
 
--- Friday (5) - Extended hours
+-- Friday (5)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
-SELECT id, 5, '11:00:00', '23:00:00', false
+SELECT id, 5, '11:00:00', '22:00:00', false
 FROM restaurant_info
 LIMIT 1
-ON CONFLICT (restaurant_info_id, day_of_week) DO NOTHING;
+ON CONFLICT (restaurant_info_id, day_of_week) DO UPDATE SET open_time = '11:00:00', close_time = '22:00:00', is_closed = false;
 
--- Saturday (6) - Extended hours, earlier opening
+-- Saturday (6)
 INSERT INTO operating_hours (restaurant_info_id, day_of_week, open_time, close_time, is_closed)
-SELECT id, 6, '10:00:00', '23:00:00', false
+SELECT id, 6, '11:00:00', '22:00:00', false
 FROM restaurant_info
 LIMIT 1
-ON CONFLICT (restaurant_info_id, day_of_week) DO NOTHING;
+ON CONFLICT (restaurant_info_id, day_of_week) DO UPDATE SET open_time = '11:00:00', close_time = '22:00:00', is_closed = false;
 
 -- Down Migration (for rollback)
 -- DELETE FROM operating_hours WHERE restaurant_info_id = (SELECT id FROM restaurant_info LIMIT 1);
