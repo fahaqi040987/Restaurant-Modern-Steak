@@ -6,7 +6,6 @@
 
 # Backup files
 backups/
-*.sql
 *.tar.gz
 
 # Dependencies
@@ -50,6 +49,8 @@ Thumbs.db
 # Editor directories and files
 .vscode/
 .idea/
+.cursor/
+.claude/
 *.swp
 *.swo
 *~
@@ -73,6 +74,8 @@ go.sum
 # Air build files (Go hot reloading)
 tmp/
 
+specs/
+
 # Frontend files
 .next/
 .nuxt/
@@ -92,9 +95,13 @@ files/
 
 # Ignore test result snapshots
 test-results/
-playwright-report/
 *SUMMARY*.md
 *summary*.md
 coverage/
 *.coverage.*
 coverage.out
+
+*.github
+*.specify
+
+.venv/

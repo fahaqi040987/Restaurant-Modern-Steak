@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '@/api/client'
+import { toastHelpers } from '@/lib/toast-helpers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -97,7 +98,7 @@ export function CounterInterface() {
 
   // Create order mutation (counter endpoint - all order types)
   const createOrderMutation = useMutation({
-    mutationFn: (orderData: CreateOrderRequest) => 
+    mutationFn: (orderData: CreateOrderRequest) =>
       apiClient.createCounterOrder(orderData),
     onSuccess: () => {
       // Reset form
@@ -107,6 +108,10 @@ export function CounterInterface() {
       setOrderNotes('')
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['tables'] })
+      toastHelpers.success('Order Created', 'Your order has been submitted successfully.')
+    },
+    onError: (error: any) => {
+      toastHelpers.apiError('Create order', error)
     }
   })
 
@@ -166,8 +171,14 @@ export function CounterInterface() {
   }
 
   const handleCreateOrder = () => {
-    if (cart.length === 0) return
-    if (orderType === 'dine_in' && !selectedTable) return
+    if (cart.length === 0) {
+      toastHelpers.warning('Empty Cart', 'Please add items to your order before submitting.')
+      return
+    }
+    if (orderType === 'dine_in' && !selectedTable) {
+      toastHelpers.warning('Table Required', 'Please select a table for dine-in orders.')
+      return
+    }
 
     const orderData: CreateOrderRequest = {
       table_id: orderType === 'dine_in' ? selectedTable?.id : undefined,

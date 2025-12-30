@@ -81,6 +81,7 @@ export interface DiningTable {
   seating_capacity: number;
   location?: string;
   is_occupied: boolean;
+  qr_code?: string;
   created_at: string;
   updated_at: string;
 }
@@ -350,5 +351,19 @@ export interface ContactFormData {
  */
 export interface ContactFormResponse {
   id: string;
+}
+
+// ===========================================
+// Upload Types
+// ===========================================
+
+/**
+ * Response from image upload endpoint POST /api/v1/admin/upload
+ */
+export interface UploadResponse {
+  filename: string;
+  url: string;
+  size: number;
+  mime_type: string;
 }
 

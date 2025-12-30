@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -12,8 +13,21 @@ import (
 	"github.com/google/uuid"
 )
 
-// JWT Secret - In production, this should be loaded from environment variables
-var jwtSecret = []byte("your-secret-key-change-this-in-production")
+// JWT Secret - Loaded from environment variable, with secure default for development only
+var jwtSecret []byte
+
+func init() {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		// DEVELOPMENT ONLY - In production, JWT_SECRET must be set
+		secret = "dev-only-secret-change-in-production-min-32-chars"
+	}
+	// Validate minimum secret length (256 bits = 32 bytes)
+	if len(secret) < 32 {
+		panic("JWT_SECRET must be at least 32 characters for security")
+	}
+	jwtSecret = []byte(secret)
+}
 
 // Claims represents the JWT claims
 type Claims struct {

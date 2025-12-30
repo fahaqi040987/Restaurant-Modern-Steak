@@ -1,0 +1,69 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+specs/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+coverage/
+test-results/
+playwright-report/
+
+# Environment files (add production secrets separately)
+.env*
+!.env.example
+
+# Editor/IDE
+.vscode/
+.idea/
+.cursor/
+.claude/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Go
+*.exe
+*.test
+*.out
+vendor/
+coverage.out
+
+# Logs
+*.log
+logs/
+
+# Backups
+backups/
+*.tar.gz
+*.dump
+*.backup
+
+# Testing
+test-results/
+playwright-report/
+*.coverage.*
+
+# Temporary
+tmp/
+*.tmp
+*.temp

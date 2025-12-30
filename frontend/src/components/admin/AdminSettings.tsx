@@ -15,9 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { 
-  Settings, 
-  Database, 
+import {
+  Settings,
+  Database,
   Bell,
   Globe,
   DollarSign,
@@ -34,6 +34,7 @@ import {
 import apiClient from '@/api/client'
 import { toastHelpers } from '@/lib/toast-helpers'
 import { useTheme } from '@/components/theme-provider'
+import { receiptPrinter } from '@/services/receiptPrinter'
 
 type SystemSettings = Record<string, any>
 
@@ -78,15 +79,19 @@ export function AdminSettings() {
   // Save settings mutation
   const saveSettingsMutation = useMutation({
     mutationFn: async (newSettings: SystemSettings) => {
-      // Parse numeric fields before sending to backend
-      const parsedSettings = {
-        ...newSettings,
-        tax_rate: newSettings.tax_rate ? parseFloat(newSettings.tax_rate) : 0,
-        service_charge: newSettings.service_charge ? parseFloat(newSettings.service_charge) : 0,
-        enable_rounding: newSettings.enable_rounding === 'true' || newSettings.enable_rounding === true,
+      // Convert all values to strings as backend expects map[string]string
+      const stringifiedSettings: Record<string, string> = {}
+      for (const [key, value] of Object.entries(newSettings)) {
+        if (value === null || value === undefined) {
+          stringifiedSettings[key] = ''
+        } else if (typeof value === 'boolean') {
+          stringifiedSettings[key] = value ? 'true' : 'false'
+        } else {
+          stringifiedSettings[key] = String(value)
+        }
       }
-      
-      const response = await apiClient.updateSettings(parsedSettings)
+
+      const response = await apiClient.updateSettings(stringifiedSettings)
       if (!response.success) {
         throw new Error(response.message)
       }
@@ -114,6 +119,35 @@ export function AdminSettings() {
 
   const updateSetting = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }))
+  }
+
+  // State for test printing
+  const [testPrinting, setTestPrinting] = useState(false)
+
+  // Handle test print
+  const handleTestPrint = async () => {
+    setTestPrinting(true)
+    try {
+      // Update printer settings before test
+      receiptPrinter.updateSettings({
+        restaurant_name: settings.restaurant_name,
+        receipt_header: settings.receipt_header,
+        receipt_footer: settings.receipt_footer,
+        paper_size: settings.paper_size,
+        currency: settings.currency,
+        tax_rate: parseFloat(settings.tax_rate) || 11,
+        printer_name: settings.printer_name,
+        print_copies: parseInt(settings.print_copies) || 1,
+      })
+
+      await receiptPrinter.testPrint()
+      toastHelpers.success('Test print berhasil! Periksa printer Anda.')
+    } catch (error) {
+      console.error('Test print error:', error)
+      toastHelpers.error('Test print gagal. Periksa koneksi printer.')
+    } finally {
+      setTestPrinting(false)
+    }
   }
 
   if (isLoadingSettings) {
@@ -434,6 +468,54 @@ export function AdminSettings() {
                 />
               </div>
             </div>
+
+            {/* Printer Configuration */}
+            <div className="border-t pt-4 mt-4 space-y-4">
+              <h4 className="font-medium text-sm">{t('settings.printerConfig', 'Konfigurasi Printer')}</h4>
+
+              <div className="space-y-2">
+                <Label htmlFor="printer_name">{t('settings.printerName', 'Nama Printer')}</Label>
+                <Input
+                  id="printer_name"
+                  value={settings.printer_name || ''}
+                  onChange={(e) => updateSetting('printer_name', e.target.value)}
+                  placeholder="Default"
+                />
+                <p className="text-xs text-muted-foreground">Nama printer sistem (kosongkan untuk default)</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="print_copies">{t('settings.printCopies', 'Jumlah Salinan')}</Label>
+                <Select
+                  value={settings.print_copies || '1'}
+                  onValueChange={(value) => updateSetting('print_copies', value)}
+                >
+                  <SelectTrigger id="print_copies">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 Salinan</SelectItem>
+                    <SelectItem value="2">2 Salinan (Pelanggan + Dapur)</SelectItem>
+                    <SelectItem value="3">3 Salinan</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Jumlah salinan struk yang dicetak</p>
+              </div>
+
+              <Button
+                onClick={handleTestPrint}
+                variant="outline"
+                className="w-full"
+                disabled={testPrinting}
+              >
+                {testPrinting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Printer className="w-4 h-4 mr-2" />
+                )}
+                {testPrinting ? 'Mencetak...' : t('settings.testPrint', 'Test Print')}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -626,7 +708,7 @@ export function AdminSettings() {
                   Database
                 </Badge>
                 <div className="flex items-center justify-center gap-1 mt-1">
-                  {healthData?.database === 'connected' ? (
+                  {healthData?.database?.status === 'connected' ? (
                     <>
                       <CheckCircle2 className="h-3 w-3 text-green-600" />
                       <p className="text-sm text-green-600">Connected</p>
@@ -638,9 +720,9 @@ export function AdminSettings() {
                     </>
                   )}
                 </div>
-                {healthData?.database_latency_ms && (
+                {healthData?.database?.latency_ms !== undefined && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    {healthData.database_latency_ms.toFixed(2)}ms
+                    {healthData.database.latency_ms.toFixed(2)}ms
                   </p>
                 )}
               </div>
@@ -649,7 +731,7 @@ export function AdminSettings() {
                   API Version
                 </Badge>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {healthData?.api_version || 'v1.0.0'}
+                  {healthData?.api?.version || 'v1.0.0'}
                 </p>
               </div>
               <div className="text-center">
@@ -657,8 +739,8 @@ export function AdminSettings() {
                   Last Backup
                 </Badge>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {healthData?.last_backup_at 
-                    ? new Date(healthData.last_backup_at).toLocaleDateString()
+                  {healthData?.backup?.last_backup
+                    ? new Date(healthData.backup.last_backup).toLocaleDateString()
                     : 'Never'
                   }
                 </p>

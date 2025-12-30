@@ -461,3 +461,197 @@ func isValidEmail(email string) bool {
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	return emailRegex.MatchString(email)
 }
+
+// GetTableByQRCode returns table info by QR code for customer self-ordering
+// Endpoint: GET /api/v1/customer/table/:qr_code
+func (h *PublicHandler) GetTableByQRCode(c *gin.Context) {
+	qrCode := c.Param("qr_code")
+	if qrCode == "" {
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Success: false,
+			Message: "QR code is required",
+			Error:   stringPtr("qr_code_required"),
+		})
+		return
+	}
+
+	query := `
+		SELECT id, table_number, seating_capacity, location, qr_code
+		FROM dining_tables
+		WHERE qr_code = $1
+	`
+
+	var tableID, tableNumber string
+	var seatingCapacity int
+	var location, storedQRCode sql.NullString
+
+	err := h.db.QueryRow(query, qrCode).Scan(&tableID, &tableNumber, &seatingCapacity, &location, &storedQRCode)
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusNotFound, models.APIResponse{
+			Success: false,
+			Message: "Table not found. Please scan a valid QR code.",
+			Error:   stringPtr("table_not_found"),
+		})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Failed to fetch table information",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	tableInfo := map[string]interface{}{
+		"id":               tableID,
+		"table_number":     tableNumber,
+		"seating_capacity": seatingCapacity,
+	}
+	if location.Valid {
+		tableInfo["location"] = location.String
+	}
+
+	c.JSON(http.StatusOK, models.APIResponse{
+		Success: true,
+		Message: "Table found",
+		Data:    tableInfo,
+	})
+}
+
+// CreateCustomerOrder creates an order from customer self-ordering (no auth required)
+// Endpoint: POST /api/v1/customer/orders
+func (h *PublicHandler) CreateCustomerOrder(c *gin.Context) {
+	var req struct {
+		TableID      string `json:"table_id" binding:"required"`
+		CustomerName string `json:"customer_name"`
+		Items        []struct {
+			ProductID           string `json:"product_id" binding:"required"`
+			Quantity            int    `json:"quantity" binding:"required,min=1"`
+			SpecialInstructions string `json:"special_instructions"`
+		} `json:"items" binding:"required,min=1"`
+		Notes string `json:"notes"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Success: false,
+			Message: "Invalid request body",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	// Verify table exists
+	var tableNumber string
+	err := h.db.QueryRow("SELECT table_number FROM dining_tables WHERE id = $1", req.TableID).Scan(&tableNumber)
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Success: false,
+			Message: "Invalid table ID",
+			Error:   stringPtr("table_not_found"),
+		})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Failed to verify table",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	// Generate order number
+	orderNumber := "QR" + time.Now().Format("060102") + "-" + strconv.FormatInt(time.Now().UnixNano()%10000, 10)
+
+	// Calculate subtotal
+	var subtotal float64
+	for _, item := range req.Items {
+		var price float64
+		err := h.db.QueryRow("SELECT price FROM products WHERE id = $1 AND is_available = true", item.ProductID).Scan(&price)
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusBadRequest, models.APIResponse{
+				Success: false,
+				Message: "Product not found or unavailable",
+				Error:   stringPtr("product_not_found"),
+			})
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.APIResponse{
+				Success: false,
+				Message: "Failed to get product price",
+				Error:   stringPtr(err.Error()),
+			})
+			return
+		}
+		subtotal += price * float64(item.Quantity)
+	}
+
+	// Get tax rate from settings (default 11%)
+	var taxRateStr string
+	err = h.db.QueryRow("SELECT setting_value FROM system_settings WHERE setting_key = 'tax_rate'").Scan(&taxRateStr)
+	taxRate := 11.0
+	if err == nil {
+		if parsed, parseErr := strconv.ParseFloat(taxRateStr, 64); parseErr == nil {
+			taxRate = parsed
+		}
+	}
+
+	taxAmount := subtotal * (taxRate / 100)
+	totalAmount := subtotal + taxAmount
+
+	// Create order
+	var orderID string
+	err = h.db.QueryRow(`
+		INSERT INTO orders (order_number, table_id, customer_name, order_type, status, subtotal, tax_amount, total_amount, notes)
+		VALUES ($1, $2, $3, 'dine_in', 'pending', $4, $5, $6, $7)
+		RETURNING id
+	`, orderNumber, req.TableID, req.CustomerName, subtotal, taxAmount, totalAmount, req.Notes).Scan(&orderID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Failed to create order",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	// Create order items
+	for _, item := range req.Items {
+		var price float64
+		h.db.QueryRow("SELECT price FROM products WHERE id = $1", item.ProductID).Scan(&price)
+
+		_, err = h.db.Exec(`
+			INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price, special_instructions)
+			VALUES ($1, $2, $3, $4, $5, $6)
+		`, orderID, item.ProductID, item.Quantity, price, price*float64(item.Quantity), item.SpecialInstructions)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.APIResponse{
+				Success: false,
+				Message: "Failed to create order item",
+				Error:   stringPtr(err.Error()),
+			})
+			return
+		}
+	}
+
+	// Mark table as occupied
+	h.db.Exec("UPDATE dining_tables SET is_occupied = true WHERE id = $1", req.TableID)
+
+	c.JSON(http.StatusCreated, models.APIResponse{
+		Success: true,
+		Message: "Order placed successfully! Your order will be prepared shortly.",
+		Data: map[string]interface{}{
+			"order_id":     orderID,
+			"order_number": orderNumber,
+			"table_number": tableNumber,
+			"subtotal":     subtotal,
+			"tax_amount":   taxAmount,
+			"total_amount": totalAmount,
+		},
+	})
+}

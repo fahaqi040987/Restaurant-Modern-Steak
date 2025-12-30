@@ -53,6 +53,7 @@ CREATE TABLE dining_tables (
     seating_capacity INTEGER DEFAULT 4,
     location VARCHAR(50), -- e.g., 'main floor', 'patio', 'private room'
     is_occupied BOOLEAN DEFAULT false,
+    qr_code VARCHAR(50) UNIQUE, -- QR code identifier for table scanning
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -188,6 +189,7 @@ CREATE INDEX idx_products_category_id ON products(category_id);
 CREATE INDEX idx_products_is_available ON products(is_available);
 CREATE INDEX idx_payments_order_id ON payments(order_id);
 CREATE INDEX idx_inventory_product_id ON inventory(product_id);
+CREATE INDEX idx_dining_tables_qr_code ON dining_tables(qr_code) WHERE qr_code IS NOT NULL;
 
 -- Restaurant info singleton constraint (only one row allowed)
 CREATE UNIQUE INDEX idx_restaurant_info_singleton ON restaurant_info ((true));

@@ -121,9 +121,8 @@ function PublicContactPage() {
 
   const copyAddress = async () => {
     if (restaurantInfo?.address) {
-      const fullAddress = `${restaurantInfo.address}${
-        restaurantInfo.city ? `, ${restaurantInfo.city}` : ""
-      }${restaurantInfo.postal_code ? ` ${restaurantInfo.postal_code}` : ""}`;
+      const fullAddress = `${restaurantInfo.address}${restaurantInfo.city ? `, ${restaurantInfo.city}` : ""
+        }${restaurantInfo.postal_code ? ` ${restaurantInfo.postal_code}` : ""}`;
       await navigator.clipboard.writeText(fullAddress);
       toast({
         title: "Address Copied",
@@ -215,20 +214,20 @@ function PublicContactPage() {
                   </div>
 
                   {/* Google Maps Embed */}
-                  {restaurantInfo?.map_latitude &&
-                    restaurantInfo?.map_longitude && (
-                      <div className="mt-4 rounded-lg overflow-hidden border border-[var(--public-border)]">
-                        <iframe
-                          key={`${restaurantInfo.map_latitude}-${restaurantInfo.map_longitude}`}
-                          src={`https://www.google.com/maps?q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&z=15&output=embed`}
-                          width="100%"
-                          height="200"
-                          style={{ border: 0 }}
-                          loading="lazy"
-                          title="Restaurant Location"
-                        />
-                      </div>
-                    )}
+                  {restaurantInfo?.map_latitude && restaurantInfo?.map_longitude && (
+                    <div className="mt-4 rounded-lg overflow-hidden border border-[var(--public-border)]">
+                      <iframe
+                        src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&zoom=15`}
+                        width="100%"
+                        height="200"
+                        style={{ border: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Restaurant Location"
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -301,8 +300,8 @@ function PublicContactPage() {
                             {hours.is_closed
                               ? "Closed"
                               : `${formatTime(hours.open_time)} - ${formatTime(
-                                  hours.close_time
-                                )}`}
+                                hours.close_time
+                              )}`}
                           </span>
                         </div>
                       ))}

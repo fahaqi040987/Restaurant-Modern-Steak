@@ -1,10 +1,11 @@
+import QRCode from 'react-qr-code'
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { 
+import {
   Plus,
   Search,
   Edit,
@@ -15,9 +16,20 @@ import {
   CheckCircle,
   Clock,
   Settings,
-  Table as TableIcon
+  Table as TableIcon,
+  QrCode as QrCodeIcon,
+  Copy,
+  ExternalLink,
+  Printer
 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import apiClient from '@/api/client'
 import { toastHelpers } from '@/lib/toast-helpers'
 import { TableForm } from '@/components/forms/TableForm'
@@ -34,6 +46,7 @@ export function AdminTableManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [editingTable, setEditingTable] = useState<DiningTable | null>(null)
+  const [showQrTable, setShowQrTable] = useState<DiningTable | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [isSearching, setIsSearching] = useState(false)
   const [isFiltering, setIsFiltering] = useState(false)
@@ -41,10 +54,10 @@ export function AdminTableManagement() {
   const queryClient = useQueryClient()
 
   // Pagination hook
-  const pagination = usePagination({ 
-    initialPage: 1, 
+  const pagination = usePagination({
+    initialPage: 1,
     initialPageSize: 12,
-    total: 0 
+    total: 0
   })
 
   // Debounce search term
@@ -95,7 +108,7 @@ export function AdminTableManagement() {
     if (paginationInfo.total !== undefined) {
       pagination.goToPage(pagination.page)
     }
-  }, [paginationInfo.total])
+  }, [paginationInfo.total]) // Corrected syntax here
 
   // Delete table mutation
   const deleteTableMutation = useMutation({
@@ -135,10 +148,76 @@ export function AdminTableManagement() {
     }
 
     if (confirm(`Are you sure you want to delete Table ${table.table_number}? This action cannot be undone.`)) {
-      deleteTableMutation.mutate({ 
-        id: table.id.toString(), 
-        tableNumber: table.table_number 
+      deleteTableMutation.mutate({
+        id: table.id.toString(),
+        tableNumber: table.table_number
       })
+    }
+  }
+
+  // QR Code handlers
+  const getQrUrl = (table: DiningTable) => {
+    if (!table.qr_code) return ''
+    return `${window.location.protocol}//${window.location.host}/order/${table.qr_code}`
+  }
+
+  const handleCopyQrUrl = (table: DiningTable) => {
+    const url = getQrUrl(table)
+    navigator.clipboard.writeText(url)
+    toastHelpers.success('Copied', 'Ordering URL copied to clipboard')
+  }
+
+  const handlePrintQr = () => {
+    // For printing, we'll try to use the browser's print functionality on a new window
+    // We'll rely on the external API for the print view to keep it simple,
+    // but the on-screen display now uses the local component.
+    const printWindow = window.open('', '_blank')
+    if (printWindow && showQrTable) {
+      const url = getQrUrl(showQrTable)
+      // Using a high-res external API for printing is usually fine, but if it fails,
+      // the user can print the screen or we can improve this later.
+      const qrImage = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(url)}`
+
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>QR Code - Table ${showQrTable.table_number}</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+              }
+              .container {
+                text-align: center;
+                border: 2px solid #000;
+                padding: 40px;
+                border-radius: 10px;
+              }
+              h1 { margin: 0 0 20px 0; font-size: 32px; }
+              img { width: 300px; height: 300px; }
+              p { margin-top: 20px; font-size: 18px; color: #555; }
+              .url { font-size: 14px; color: #999; margin-top: 10px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>Table ${showQrTable.table_number}</h1>
+              <img src="${qrImage}" alt="Table ${showQrTable.table_number} QR Code" />
+              <p>Scan to Order</p>
+              <div class="url">${url}</div>
+            </div>
+            <script>
+              window.onload = function() { window.print(); }
+            </script>
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
     }
   }
 
@@ -149,27 +228,27 @@ export function AdminTableManagement() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return { 
+        return {
           icon: <CheckCircle className="h-3 w-3" />,
           className: 'bg-green-100 text-green-800 hover:bg-green-200'
         }
       case 'occupied':
-        return { 
+        return {
           icon: <Users className="h-3 w-3" />,
           className: 'bg-blue-100 text-blue-800 hover:bg-blue-200'
         }
       case 'reserved':
-        return { 
+        return {
           icon: <Clock className="h-3 w-3" />,
           className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
         }
       case 'maintenance':
-        return { 
+        return {
           icon: <AlertCircle className="h-3 w-3" />,
           className: 'bg-red-100 text-red-800 hover:bg-red-200'
         }
       default:
-        return { 
+        return {
           icon: <Settings className="h-3 w-3" />,
           className: 'bg-gray-100 text-gray-800 hover:bg-gray-200'
         }
@@ -210,11 +289,11 @@ export function AdminTableManagement() {
             Manage your restaurant's dining tables and seating arrangements
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => {
             setEditingTable(null)
             setViewMode('table-form')
-          }} 
+          }}
           className="gap-2"
         >
           <Plus className="h-4 w-4" />
@@ -357,16 +436,16 @@ export function AdminTableManagement() {
               action={
                 searchTerm || filterStatus !== 'all'
                   ? {
-                      label: 'Hapus Filter',
-                      onClick: () => {
-                        setSearchTerm('')
-                        setFilterStatus('all')
-                      },
-                    }
+                    label: 'Hapus Filter',
+                    onClick: () => {
+                      setSearchTerm('')
+                      setFilterStatus('all')
+                    },
+                  }
                   : {
-                      label: 'Tambah Meja',
-                      onClick: () => setViewMode('table-form'),
-                    }
+                    label: 'Tambah Meja',
+                    onClick: () => setViewMode('table-form'),
+                  }
               }
             />
           </CardContent>
@@ -391,7 +470,7 @@ export function AdminTableManagement() {
                     <div className="text-right">
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        {table.capacity} seats
+                        {table.seating_capacity} seats
                       </div>
                     </div>
                   </div>
@@ -404,8 +483,16 @@ export function AdminTableManagement() {
                     </div>
                   )}
                   <div className="flex items-center justify-between pt-2">
-                    <div className="text-xs text-muted-foreground">
-                      Created {new Date(table.created_at).toLocaleDateString()}
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setShowQrTable(table)}
+                        className="h-8 w-8 p-0"
+                        title="View QR Code"
+                      >
+                        <QrCodeIcon className="h-4 w-4" />
+                      </Button>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
@@ -415,9 +502,9 @@ export function AdminTableManagement() {
                           setEditingTable(table)
                           setViewMode('table-form')
                         }}
-                        className="gap-2"
+                        className="gap-2 h-8"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-3 w-3" />
                         Edit
                       </Button>
                       <Button
@@ -425,9 +512,9 @@ export function AdminTableManagement() {
                         variant="outline"
                         onClick={() => handleDeleteTable(table)}
                         disabled={deleteTableMutation.isPending || table.status === 'occupied'}
-                        className="gap-2 text-red-600 hover:text-red-700 hover:border-red-300"
+                        className="gap-2 h-8 text-red-600 hover:text-red-700 hover:border-red-300"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3" />
                         Delete
                       </Button>
                     </div>
@@ -454,6 +541,64 @@ export function AdminTableManagement() {
           />
         </div>
       )}
+
+      {/* QR Code Dialog */}
+      <Dialog open={!!showQrTable} onOpenChange={(open) => !open && setShowQrTable(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>QR Code - Table {showQrTable?.table_number}</DialogTitle>
+            <DialogDescription>
+              Scan this QR code to open the ordering menu for this table.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center space-y-4 py-4">
+            {showQrTable?.qr_code && (
+              <div className="border-4 border-white shadow-lg rounded-lg overflow-hidden bg-white p-4">
+                <QRCode
+                  size={256}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                  value={getQrUrl(showQrTable)}
+                  viewBox={`0 0 256 256`}
+                />
+              </div>
+            )}
+            <div className="flex flex-col items-center space-y-2 w-full">
+              <p className="text-sm text-muted-foreground break-all text-center px-4">
+                {showQrTable && getQrUrl(showQrTable)}
+              </p>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => showQrTable && handleCopyQrUrl(showQrTable)}
+                  className="gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy URL
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => showQrTable && window.open(getQrUrl(showQrTable), '_blank')}
+                  className="gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handlePrintQr}
+                  className="gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print QR
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
+

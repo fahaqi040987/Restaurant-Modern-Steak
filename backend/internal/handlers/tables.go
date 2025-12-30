@@ -25,8 +25,8 @@ func (h *TableHandler) GetTables(c *gin.Context) {
 	availableOnly := c.Query("available_only") == "true"
 
 	queryBuilder := `
-		SELECT t.id, t.table_number, t.seating_capacity, t.location, t.is_occupied, 
-		       t.created_at, t.updated_at,
+		SELECT t.id, t.table_number, t.seating_capacity, t.location, t.is_occupied,
+		       t.qr_code, t.created_at, t.updated_at,
 		       o.id as order_id, o.order_number, o.customer_name, o.status as order_status,
 		       o.created_at as order_created_at, o.total_amount
 		FROM dining_tables t
@@ -68,10 +68,11 @@ func (h *TableHandler) GetTables(c *gin.Context) {
 		var orderID, orderNumber, customerName, orderStatus sql.NullString
 		var orderCreatedAt sql.NullTime
 		var totalAmount sql.NullFloat64
+		var qrCode sql.NullString
 
 		err := rows.Scan(
 			&table.ID, &table.TableNumber, &table.SeatingCapacity, &table.Location, &table.IsOccupied,
-			&table.CreatedAt, &table.UpdatedAt,
+			&qrCode, &table.CreatedAt, &table.UpdatedAt,
 			&orderID, &orderNumber, &customerName, &orderStatus, &orderCreatedAt, &totalAmount,
 		)
 		if err != nil {
@@ -83,6 +84,11 @@ func (h *TableHandler) GetTables(c *gin.Context) {
 			return
 		}
 
+		// Set QR code
+		if qrCode.Valid {
+			table.QRCode = &qrCode.String
+		}
+
 		// Create a map to hold table data including current order info
 		tableData := map[string]interface{}{
 			"id":               table.ID,
@@ -90,6 +96,7 @@ func (h *TableHandler) GetTables(c *gin.Context) {
 			"seating_capacity": table.SeatingCapacity,
 			"location":         table.Location,
 			"is_occupied":      table.IsOccupied,
+			"qr_code":          table.QRCode,
 			"created_at":       table.CreatedAt,
 			"updated_at":       table.UpdatedAt,
 			"current_order":    nil,
@@ -131,17 +138,23 @@ func (h *TableHandler) GetTable(c *gin.Context) {
 	}
 
 	var table models.DiningTable
+	var qrCode sql.NullString
 
 	query := `
-		SELECT id, table_number, seating_capacity, location, is_occupied, created_at, updated_at
+		SELECT id, table_number, seating_capacity, location, is_occupied, qr_code, created_at, updated_at
 		FROM dining_tables
 		WHERE id = $1
 	`
 
 	err = h.db.QueryRow(query, tableID).Scan(
 		&table.ID, &table.TableNumber, &table.SeatingCapacity, &table.Location,
-		&table.IsOccupied, &table.CreatedAt, &table.UpdatedAt,
+		&table.IsOccupied, &qrCode, &table.CreatedAt, &table.UpdatedAt,
 	)
+
+	// Set QR code if present
+	if qrCode.Valid {
+		table.QRCode = &qrCode.String
+	}
 
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, models.APIResponse{
@@ -192,6 +205,7 @@ func (h *TableHandler) GetTable(c *gin.Context) {
 		"seating_capacity": table.SeatingCapacity,
 		"location":         table.Location,
 		"is_occupied":      table.IsOccupied,
+		"qr_code":          table.QRCode,
 		"created_at":       table.CreatedAt,
 		"updated_at":       table.UpdatedAt,
 		"current_order":    currentOrder,
@@ -207,8 +221,8 @@ func (h *TableHandler) GetTable(c *gin.Context) {
 // GetTablesByLocation retrieves tables grouped by location
 func (h *TableHandler) GetTablesByLocation(c *gin.Context) {
 	query := `
-		SELECT t.id, t.table_number, t.seating_capacity, t.location, t.is_occupied, 
-		       t.created_at, t.updated_at,
+		SELECT t.id, t.table_number, t.seating_capacity, t.location, t.is_occupied,
+		       t.qr_code, t.created_at, t.updated_at,
 		       o.id as order_id, o.order_number, o.customer_name, o.status as order_status
 		FROM dining_tables t
 		LEFT JOIN orders o ON t.id = o.table_id AND o.status NOT IN ('completed', 'cancelled')
@@ -233,10 +247,11 @@ func (h *TableHandler) GetTablesByLocation(c *gin.Context) {
 		var table models.DiningTable
 		var orderID, orderNumber, customerName, orderStatus sql.NullString
 		var location sql.NullString
+		var qrCode sql.NullString
 
 		err := rows.Scan(
 			&table.ID, &table.TableNumber, &table.SeatingCapacity, &location, &table.IsOccupied,
-			&table.CreatedAt, &table.UpdatedAt,
+			&qrCode, &table.CreatedAt, &table.UpdatedAt,
 			&orderID, &orderNumber, &customerName, &orderStatus,
 		)
 		if err != nil {
@@ -254,6 +269,11 @@ func (h *TableHandler) GetTablesByLocation(c *gin.Context) {
 		} else {
 			defaultLocation := "General"
 			table.Location = &defaultLocation
+		}
+
+		// Set QR code
+		if qrCode.Valid {
+			table.QRCode = &qrCode.String
 		}
 
 		locationKey := *table.Location
