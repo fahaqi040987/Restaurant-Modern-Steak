@@ -174,9 +174,9 @@ CREATE TABLE contact_submissions (
     phone VARCHAR(50),
     subject VARCHAR(100) NOT NULL,
     message TEXT NOT NULL,
-    is_read BOOLEAN DEFAULT false,
-    read_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    status VARCHAR(20) DEFAULT 'new' CHECK (status IN ('new', 'in_progress', 'resolved', 'spam')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for better performance
@@ -200,7 +200,7 @@ CREATE INDEX idx_operating_hours_restaurant_id ON operating_hours (restaurant_in
 
 -- Contact submissions indexes
 CREATE INDEX idx_contact_submissions_created_at ON contact_submissions (created_at DESC);
-CREATE INDEX idx_contact_submissions_is_read ON contact_submissions (is_read);
+CREATE INDEX idx_contact_submissions_status ON contact_submissions (status);
 
 -- Create triggers for updated_at timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -220,3 +220,4 @@ CREATE TRIGGER update_order_items_updated_at BEFORE UPDATE ON order_items FOR EA
 CREATE TRIGGER update_inventory_updated_at BEFORE UPDATE ON inventory FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_restaurant_info_updated_at BEFORE UPDATE ON restaurant_info FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_operating_hours_updated_at BEFORE UPDATE ON operating_hours FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_contact_submissions_updated_at BEFORE UPDATE ON contact_submissions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

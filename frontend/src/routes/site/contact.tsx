@@ -38,7 +38,7 @@ import { apiClient } from '@/api/client'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 
-export const Route = createFileRoute('/public/contact')({
+export const Route = createFileRoute('/site/contact')({
   component: PublicContactPage,
 })
 
@@ -67,7 +67,7 @@ function PublicContactPage() {
   const queryClient = useQueryClient()
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  const { data: restaurantInfo, isLoading } = useQuery({
+  const { data: restaurantInfo, isLoading, error } = useQuery({
     queryKey: ['restaurantInfo'],
     queryFn: () => apiClient.getRestaurantInfo(),
     staleTime: 1000 * 60 * 30,
@@ -119,7 +119,21 @@ function PublicContactPage() {
   }
 
   const formatTime = (time: string): string => {
-    const [hourStr, minuteStr] = time.split(':')
+    // Handle ISO timestamp format (e.g., "0000-01-01T11:00:00Z")
+    let hourStr: string
+    let minuteStr: string
+
+    if (time.includes('T')) {
+      const timePart = time.split('T')[1] // Get "11:00:00Z"
+      const [h, m] = timePart.split(':')
+      hourStr = h
+      minuteStr = m
+    } else {
+      const [h, m] = time.split(':')
+      hourStr = h
+      minuteStr = m || '00'
+    }
+
     const hour = parseInt(hourStr, 10)
     const minute = minuteStr || '00'
     const ampm = hour >= 12 ? 'PM' : 'AM'
@@ -152,6 +166,15 @@ function PublicContactPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Left Column - Contact Info */}
             <div className="space-y-8">
+              {/* Error State */}
+              {error && (
+                <Card className="public-card border-red-500">
+                  <CardContent className="py-4">
+                    <p className="text-red-500">Error loading restaurant info: {(error as Error).message}</p>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Address Card */}
               <Card className="public-card">
                 <CardHeader>
@@ -161,11 +184,15 @@ function PublicContactPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-[var(--public-text-secondary)]">
-                    {restaurantInfo?.address || 'Address loading...'}
-                    {restaurantInfo?.city && <>, {restaurantInfo.city}</>}
-                    {restaurantInfo?.postal_code && <> {restaurantInfo.postal_code}</>}
-                  </p>
+                  {isLoading ? (
+                    <p className="text-[var(--public-text-secondary)]">Loading address...</p>
+                  ) : (
+                    <p className="text-[var(--public-text-secondary)]">
+                      {restaurantInfo?.address || 'Address not available'}
+                      {restaurantInfo?.city && <>, {restaurantInfo.city}</>}
+                      {restaurantInfo?.postal_code && <> {restaurantInfo.postal_code}</>}
+                    </p>
+                  )}
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -199,7 +226,7 @@ function PublicContactPage() {
                   {restaurantInfo?.map_latitude && restaurantInfo?.map_longitude && (
                     <div className="mt-4 rounded-lg overflow-hidden border border-[var(--public-border)]">
                       <iframe
-                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&zoom=15`}
+                        src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}&q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&zoom=15`}
                         width="100%"
                         height="200"
                         style={{ border: 0 }}
@@ -222,23 +249,33 @@ function PublicContactPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {restaurantInfo?.phone && (
-                    <a
-                      href={`tel:${restaurantInfo.phone}`}
-                      className="flex items-center gap-3 text-[var(--public-text-secondary)] hover:text-[var(--public-secondary)] transition-colors"
-                    >
-                      <Phone className="h-4 w-4" />
-                      {restaurantInfo.phone}
-                    </a>
-                  )}
-                  {restaurantInfo?.email && (
-                    <a
-                      href={`mailto:${restaurantInfo.email}`}
-                      className="flex items-center gap-3 text-[var(--public-text-secondary)] hover:text-[var(--public-secondary)] transition-colors"
-                    >
-                      <Mail className="h-4 w-4" />
-                      {restaurantInfo.email}
-                    </a>
+                  {isLoading ? (
+                    <p className="text-[var(--public-text-secondary)]">Loading contact details...</p>
+                  ) : (
+                    <>
+                      {restaurantInfo?.phone ? (
+                        <a
+                          href={`tel:${restaurantInfo.phone}`}
+                          className="flex items-center gap-3 text-[var(--public-text-secondary)] hover:text-[var(--public-secondary)] transition-colors"
+                        >
+                          <Phone className="h-4 w-4" />
+                          {restaurantInfo.phone}
+                        </a>
+                      ) : (
+                        <p className="text-[var(--public-text-secondary)]">Phone not available</p>
+                      )}
+                      {restaurantInfo?.email ? (
+                        <a
+                          href={`mailto:${restaurantInfo.email}`}
+                          className="flex items-center gap-3 text-[var(--public-text-secondary)] hover:text-[var(--public-secondary)] transition-colors"
+                        >
+                          <Mail className="h-4 w-4" />
+                          {restaurantInfo.email}
+                        </a>
+                      ) : (
+                        <p className="text-[var(--public-text-secondary)]">Email not available</p>
+                      )}
+                    </>
                   )}
                 </CardContent>
               </Card>
@@ -252,40 +289,46 @@ function PublicContactPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {restaurantInfo?.operating_hours
-                      ?.sort((a, b) => a.day_of_week - b.day_of_week)
-                      .map((hours) => (
-                        <div
-                          key={hours.id}
-                          className={cn(
-                            'flex justify-between py-2 px-3 rounded',
-                            hours.day_of_week === today
-                              ? 'bg-[var(--public-secondary)]/10 border border-[var(--public-secondary)]/30'
-                              : ''
-                          )}
-                        >
-                          <span
+                  {isLoading ? (
+                    <p className="text-[var(--public-text-secondary)]">Loading operating hours...</p>
+                  ) : restaurantInfo?.operating_hours && restaurantInfo.operating_hours.length > 0 ? (
+                    <div className="space-y-2">
+                      {restaurantInfo.operating_hours
+                        .sort((a, b) => a.day_of_week - b.day_of_week)
+                        .map((hours) => (
+                          <div
+                            key={hours.id}
                             className={cn(
-                              'font-medium',
+                              'flex justify-between py-2 px-3 rounded',
                               hours.day_of_week === today
-                                ? 'text-[var(--public-secondary)]'
-                                : 'text-[var(--public-text-primary)]'
+                                ? 'bg-[var(--public-secondary)]/10 border border-[var(--public-secondary)]/30'
+                                : ''
                             )}
                           >
-                            {DAY_NAMES[hours.day_of_week]}
-                            {hours.day_of_week === today && (
-                              <span className="ml-2 text-xs">(Today)</span>
-                            )}
-                          </span>
-                          <span className="text-[var(--public-text-secondary)]">
-                            {hours.is_closed
-                              ? 'Closed'
-                              : `${formatTime(hours.open_time)} - ${formatTime(hours.close_time)}`}
-                          </span>
-                        </div>
-                      ))}
-                  </div>
+                            <span
+                              className={cn(
+                                'font-medium',
+                                hours.day_of_week === today
+                                  ? 'text-[var(--public-secondary)]'
+                                  : 'text-[var(--public-text-primary)]'
+                              )}
+                            >
+                              {DAY_NAMES[hours.day_of_week]}
+                              {hours.day_of_week === today && (
+                                <span className="ml-2 text-xs">(Today)</span>
+                              )}
+                            </span>
+                            <span className="text-[var(--public-text-secondary)]">
+                              {hours.is_closed
+                                ? 'Closed'
+                                : `${formatTime(hours.open_time)} - ${formatTime(hours.close_time)}`}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <p className="text-[var(--public-text-secondary)]">Operating hours not available</p>
+                  )}
                 </CardContent>
               </Card>
             </div>

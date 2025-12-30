@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { PublicLayout } from '@/components/public/PublicLayout'
 import { apiClient } from '@/api/client'
 
-export const Route = createFileRoute('/public/about')({
+export const Route = createFileRoute('/site/about')({
   component: PublicAboutPage,
 })
 
@@ -153,7 +153,7 @@ function PublicAboutPage() {
             size="lg"
             className="bg-[var(--public-secondary)] text-[var(--public-text-on-gold)] hover:bg-[var(--public-secondary-light)]"
           >
-            <a href="/public/contact">
+            <a href="/site/contact">
               Get in Touch
               <ChevronRight className="ml-2 h-5 w-5" />
             </a>

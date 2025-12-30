@@ -23,7 +23,9 @@
       "Bash(make test:*)",
       "Bash(make status:*)",
       "Bash(docker ps:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(npm run test:*)",
+      "Bash(make test-e2e:*)"
     ]
   }
 }

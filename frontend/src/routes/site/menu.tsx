@@ -9,7 +9,7 @@ import { PublicLayout } from '@/components/public/PublicLayout'
 import { apiClient } from '@/api/client'
 import { cn } from '@/lib/utils'
 
-export const Route = createFileRoute('/public/menu')({
+export const Route = createFileRoute('/site/menu')({
   component: PublicMenuPage,
 })
 
