@@ -302,10 +302,14 @@ test-coverage:
 	@echo "$(YELLOW)Frontend coverage:$(NC)"
 	@docker compose -f $(COMPOSE_DEV) exec frontend npm run test:coverage || true
 
-# Run E2E tests
+# Run E2E tests (runs from project root where Playwright is installed)
 test-e2e:
 	@echo "$(GREEN)🎭 Running E2E tests...$(NC)"
-	@docker compose -f $(COMPOSE_DEV) exec frontend npx playwright test || true
+	@if [ ! -d "node_modules" ]; then \
+		echo "$(YELLOW)📦 Installing Playwright dependencies...$(NC)"; \
+		npm install; \
+	fi
+	@npx playwright test || true
 
 # Run linting checks
 lint:

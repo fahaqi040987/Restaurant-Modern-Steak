@@ -105,3 +105,4 @@ coverage.out
 *.specify
 
 .venv/
+playwright-report/
