@@ -1,7 +1,7 @@
 # POS System - Development Makefile
 # Usage: make <command>
 
-.PHONY: help dev prod up down build logs clean backup restore create-admin remove-data db-shell test lint format build-prod preview-prod deploy-prod sync-prod rollback-prod
+.PHONY: help dev prod up down build logs clean backup restore create-admin remove-data db-shell test test-coverage test-e2e lint format build-prod preview-prod deploy-prod sync-prod rollback-prod
 
 # Default target
 .DEFAULT_GOAL := help
@@ -50,7 +50,9 @@ help:
 	@echo "  make status       - Show status of all services"
 	@echo ""
 	@echo "$(GREEN)Development Tools:$(NC)"
-	@echo "  make test         - Run all tests"
+	@echo "  make test         - Run all tests (backend + frontend)"
+	@echo "  make test-coverage- Run tests with coverage reports"
+	@echo "  make test-e2e     - Run E2E tests (Playwright)"
 	@echo "  make lint         - Run linting checks"
 	@echo "  make format       - Format code"
 	@echo "  make deps         - Install/update dependencies"
@@ -288,7 +290,22 @@ test:
 	@docker compose -f $(COMPOSE_DEV) exec backend go test ./... || true
 	@echo ""
 	@echo "$(YELLOW)Frontend tests:$(NC)"
-	@docker compose -f $(COMPOSE_DEV) exec frontend npm test || true
+	@docker compose -f $(COMPOSE_DEV) exec frontend npm run test -- --run || true
+
+# Run tests with coverage reports
+test-coverage:
+	@echo "$(GREEN)📊 Running tests with coverage...$(NC)"
+	@echo "$(YELLOW)Backend coverage:$(NC)"
+	@docker compose -f $(COMPOSE_DEV) exec backend go test ./... -coverprofile=coverage.out || true
+	@docker compose -f $(COMPOSE_DEV) exec backend go tool cover -func=coverage.out | tail -1 || true
+	@echo ""
+	@echo "$(YELLOW)Frontend coverage:$(NC)"
+	@docker compose -f $(COMPOSE_DEV) exec frontend npm run test:coverage || true
+
+# Run E2E tests
+test-e2e:
+	@echo "$(GREEN)🎭 Running E2E tests...$(NC)"
+	@docker compose -f $(COMPOSE_DEV) exec frontend npx playwright test || true
 
 # Run linting checks
 lint:
