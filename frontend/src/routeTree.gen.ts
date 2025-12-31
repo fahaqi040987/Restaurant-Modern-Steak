@@ -15,10 +15,13 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SiteIndexRouteImport } from './routes/site/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as SiteReservationRouteImport } from './routes/site/reservation'
 import { Route as SiteMenuRouteImport } from './routes/site/menu'
 import { Route as SiteContactRouteImport } from './routes/site/contact'
 import { Route as SiteAboutRouteImport } from './routes/site/about'
 import { Route as OrderTableCodeRouteImport } from './routes/order.$tableCode'
+import { Route as OrderStatusOrderIdRouteImport } from './routes/order-status.$orderId'
+import { Route as CustomerSurveyRouteImport } from './routes/customer/survey'
 import { Route as AdminTablesRouteImport } from './routes/admin/tables'
 import { Route as AdminStaffRouteImport } from './routes/admin/staff'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
@@ -64,6 +67,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const SiteReservationRoute = SiteReservationRouteImport.update({
+  id: '/site/reservation',
+  path: '/site/reservation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SiteMenuRoute = SiteMenuRouteImport.update({
   id: '/site/menu',
   path: '/site/menu',
@@ -82,6 +90,16 @@ const SiteAboutRoute = SiteAboutRouteImport.update({
 const OrderTableCodeRoute = OrderTableCodeRouteImport.update({
   id: '/order/$tableCode',
   path: '/order/$tableCode',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderStatusOrderIdRoute = OrderStatusOrderIdRouteImport.update({
+  id: '/order-status/$orderId',
+  path: '/order-status/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerSurveyRoute = CustomerSurveyRouteImport.update({
+  id: '/customer/survey',
+  path: '/customer/survey',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTablesRoute = AdminTablesRouteImport.update({
@@ -174,10 +192,13 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
+  '/customer/survey': typeof CustomerSurveyRoute
+  '/order-status/$orderId': typeof OrderStatusOrderIdRoute
   '/order/$tableCode': typeof OrderTableCodeRoute
   '/site/about': typeof SiteAboutRoute
   '/site/contact': typeof SiteContactRoute
   '/site/menu': typeof SiteMenuRoute
+  '/site/reservation': typeof SiteReservationRoute
   '/admin/': typeof AdminIndexRoute
   '/site': typeof SiteIndexRoute
 }
@@ -199,10 +220,13 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
+  '/customer/survey': typeof CustomerSurveyRoute
+  '/order-status/$orderId': typeof OrderStatusOrderIdRoute
   '/order/$tableCode': typeof OrderTableCodeRoute
   '/site/about': typeof SiteAboutRoute
   '/site/contact': typeof SiteContactRoute
   '/site/menu': typeof SiteMenuRoute
+  '/site/reservation': typeof SiteReservationRoute
   '/admin': typeof AdminIndexRoute
   '/site': typeof SiteIndexRoute
 }
@@ -226,10 +250,13 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/admin/tables': typeof AdminTablesRoute
+  '/customer/survey': typeof CustomerSurveyRoute
+  '/order-status/$orderId': typeof OrderStatusOrderIdRoute
   '/order/$tableCode': typeof OrderTableCodeRoute
   '/site/about': typeof SiteAboutRoute
   '/site/contact': typeof SiteContactRoute
   '/site/menu': typeof SiteMenuRoute
+  '/site/reservation': typeof SiteReservationRoute
   '/admin/': typeof AdminIndexRoute
   '/site/': typeof SiteIndexRoute
 }
@@ -254,10 +281,13 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/tables'
+    | '/customer/survey'
+    | '/order-status/$orderId'
     | '/order/$tableCode'
     | '/site/about'
     | '/site/contact'
     | '/site/menu'
+    | '/site/reservation'
     | '/admin/'
     | '/site'
   fileRoutesByTo: FileRoutesByTo
@@ -279,10 +309,13 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/tables'
+    | '/customer/survey'
+    | '/order-status/$orderId'
     | '/order/$tableCode'
     | '/site/about'
     | '/site/contact'
     | '/site/menu'
+    | '/site/reservation'
     | '/admin'
     | '/site'
   id:
@@ -305,10 +338,13 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/tables'
+    | '/customer/survey'
+    | '/order-status/$orderId'
     | '/order/$tableCode'
     | '/site/about'
     | '/site/contact'
     | '/site/menu'
+    | '/site/reservation'
     | '/admin/'
     | '/site/'
   fileRoutesById: FileRoutesById
@@ -318,10 +354,13 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   KitchenRoute: typeof KitchenRoute
   LoginRoute: typeof LoginRoute
+  CustomerSurveyRoute: typeof CustomerSurveyRoute
+  OrderStatusOrderIdRoute: typeof OrderStatusOrderIdRoute
   OrderTableCodeRoute: typeof OrderTableCodeRoute
   SiteAboutRoute: typeof SiteAboutRoute
   SiteContactRoute: typeof SiteContactRoute
   SiteMenuRoute: typeof SiteMenuRoute
+  SiteReservationRoute: typeof SiteReservationRoute
   SiteIndexRoute: typeof SiteIndexRoute
 }
 
@@ -369,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/site/reservation': {
+      id: '/site/reservation'
+      path: '/site/reservation'
+      fullPath: '/site/reservation'
+      preLoaderRoute: typeof SiteReservationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/site/menu': {
       id: '/site/menu'
       path: '/site/menu'
@@ -395,6 +441,20 @@ declare module '@tanstack/react-router' {
       path: '/order/$tableCode'
       fullPath: '/order/$tableCode'
       preLoaderRoute: typeof OrderTableCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order-status/$orderId': {
+      id: '/order-status/$orderId'
+      path: '/order-status/$orderId'
+      fullPath: '/order-status/$orderId'
+      preLoaderRoute: typeof OrderStatusOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/survey': {
+      id: '/customer/survey'
+      path: '/customer/survey'
+      fullPath: '/customer/survey'
+      preLoaderRoute: typeof CustomerSurveyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/tables': {
@@ -541,10 +601,13 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   KitchenRoute: KitchenRoute,
   LoginRoute: LoginRoute,
+  CustomerSurveyRoute: CustomerSurveyRoute,
+  OrderStatusOrderIdRoute: OrderStatusOrderIdRoute,
   OrderTableCodeRoute: OrderTableCodeRoute,
   SiteAboutRoute: SiteAboutRoute,
   SiteContactRoute: SiteContactRoute,
   SiteMenuRoute: SiteMenuRoute,
+  SiteReservationRoute: SiteReservationRoute,
   SiteIndexRoute: SiteIndexRoute,
 }
 export const routeTree = rootRouteImport

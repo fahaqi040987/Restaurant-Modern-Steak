@@ -30,8 +30,18 @@ import type {
   RestaurantInfo,
   ContactFormData,
   ContactFormResponse,
+  CreateReservationRequest,
+  ReservationResponse,
   // Upload types
   UploadResponse,
+  // T082-T083: QR ordering types
+  CreatePaymentRequest,
+  PaymentConfirmation,
+  CreateSurveyRequest,
+  SatisfactionSurvey,
+  SurveyStatsResponse,
+  OrderNotification,
+  GetNotificationsResponse,
 } from '@/types';
 
 class APIClient {
@@ -663,6 +673,23 @@ class APIClient {
     return response.data;
   }
 
+  /**
+   * Submit reservation request
+   * @param data - Reservation form data (customer_name, email, phone, party_size, reservation_date, reservation_time required)
+   * @returns Reservation response with ID and status
+   */
+  async createReservation(data: CreateReservationRequest): Promise<ReservationResponse> {
+    const response = await this.request<APIResponse<ReservationResponse>>({
+      method: 'POST',
+      url: '/public/reservations',
+      data,
+    });
+    if (!response.data) {
+      throw new Error('Failed to submit reservation');
+    }
+    return response.data;
+  }
+
   // ===========================================
   // Customer Self-Ordering API (No Auth Required)
   // ===========================================
@@ -731,6 +758,84 @@ class APIClient {
       throw new Error('Failed to create order');
     }
     return response.data;
+  }
+
+  /**
+   * T084: Create customer payment for QR-based order (no auth required)
+   * @param orderId - UUID of the order
+   * @param paymentData - Payment details (payment_method, amount, reference_number)
+   * @returns Payment confirmation
+   */
+  async createCustomerPayment(orderId: string, paymentData: CreatePaymentRequest): Promise<PaymentConfirmation> {
+    const response = await this.request<APIResponse<PaymentConfirmation>>({
+      method: 'POST',
+      url: `/customer/orders/${orderId}/payment`,
+      data: paymentData,
+    });
+    if (!response.data) {
+      throw new Error('Failed to process payment');
+    }
+    return response.data;
+  }
+
+  /**
+   * T085: Submit satisfaction survey for completed order (no auth required)
+   * @param orderId - UUID of the completed order
+   * @param surveyData - Survey ratings and comments
+   * @returns Survey submission confirmation
+   */
+  async createSurvey(orderId: string, surveyData: CreateSurveyRequest): Promise<SatisfactionSurvey> {
+    const response = await this.request<APIResponse<SatisfactionSurvey>>({
+      method: 'POST',
+      url: `/customer/orders/${orderId}/survey`,
+      data: surveyData,
+    });
+    if (!response.data) {
+      throw new Error('Failed to submit survey');
+    }
+    return response.data;
+  }
+
+  /**
+   * T085: Get survey statistics for admin dashboard (requires auth)
+   * @returns Aggregated survey statistics
+   */
+  async getSurveyStats(): Promise<SurveyStatsResponse> {
+    const response = await this.request<APIResponse<SurveyStatsResponse>>({
+      method: 'GET',
+      url: '/admin/surveys/stats',
+    });
+    if (!response.data) {
+      throw new Error('Failed to fetch survey statistics');
+    }
+    return response.data;
+  }
+
+  /**
+   * T077: Get order notifications for customer (no auth required)
+   * @param orderId - UUID of the order
+   * @returns List of notifications and unread count
+   */
+  async getOrderNotifications(orderId: string): Promise<GetNotificationsResponse> {
+    const response = await this.request<APIResponse<GetNotificationsResponse>>({
+      method: 'GET',
+      url: `/customer/orders/${orderId}/notifications`,
+    });
+    if (!response.data) {
+      throw new Error('Failed to fetch notifications');
+    }
+    return response.data;
+  }
+
+  /**
+   * T077: Mark order notification as read (no auth required)
+   * @param notificationId - UUID of the notification
+   */
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    await this.request({
+      method: 'PUT',
+      url: `/customer/notifications/${notificationId}/read`,
+    });
   }
 
   // ============================================
@@ -920,4 +1025,7 @@ class APIClient {
 // Create and export a singleton instance
 export const apiClient = new APIClient();
 export default apiClient;
+
+// Export specific methods for easier testing and direct imports
+export const createReservation = (data: CreateReservationRequest) => apiClient.createReservation(data);
 

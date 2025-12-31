@@ -151,7 +151,7 @@ export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'ser
 export interface Payment {
   id: string;
   order_id: string;
-  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'digital_wallet';
+  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'digital_wallet' | 'qris';
   amount: number;
   reference_number?: string;
   status: 'pending' | 'completed' | 'failed' | 'refunded';
@@ -162,7 +162,7 @@ export interface Payment {
 }
 
 export interface ProcessPaymentRequest {
-  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'digital_wallet';
+  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'digital_wallet' | 'qris';
   amount: number;
   reference_number?: string;
 }
@@ -367,3 +367,159 @@ export interface UploadResponse {
   mime_type: string;
 }
 
+// ===========================================
+// Reservation Types (Feature: 004-restaurant-management)
+// Public website table booking functionality
+// ===========================================
+
+/**
+ * Reservation status enum
+ */
+export type ReservationStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'cancelled'
+  | 'completed'
+  | 'no_show';
+
+/**
+ * Full reservation data (for admin/staff views)
+ */
+export interface Reservation {
+  id: string;
+  customer_name: string;
+  email: string;
+  phone: string;
+  party_size: number;
+  reservation_date: string; // YYYY-MM-DD
+  reservation_time: string; // HH:MM
+  special_requests?: string;
+  status: ReservationStatus;
+  notes?: string;
+  confirmed_by?: string;
+  confirmed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Request payload for creating a reservation (public form)
+ */
+export interface CreateReservationRequest {
+  customer_name: string;
+  email: string;
+  phone: string;
+  party_size: number;
+  reservation_date: string; // YYYY-MM-DD
+  reservation_time: string; // HH:MM
+  special_requests?: string;
+}
+
+/**
+ * Response from public reservation creation (limited fields)
+ */
+export interface ReservationResponse {
+  id: string;
+  status: ReservationStatus;
+  reservation_date: string;
+  reservation_time: string;
+  party_size: number;
+}
+
+/**
+ * Request payload for updating reservation status (admin)
+ */
+export interface UpdateReservationStatusRequest {
+  status: ReservationStatus;
+  notes?: string;
+}
+
+/**
+ * Query parameters for listing reservations
+ */
+export interface ReservationListQuery {
+  status?: ReservationStatus;
+  date?: string;
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * Pagination metadata for reservation lists
+ */
+export interface ReservationPagination {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+}
+
+// T082: Payment types for QR-based customer ordering
+export interface CreatePaymentRequest {
+  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'digital_wallet' | 'qris';
+  amount: number;
+  reference_number?: string;
+}
+
+export interface PaymentConfirmation {
+  order_id: string;
+  payment_id: string;
+  amount: number;
+  payment_method: string;
+  status: 'pending' | 'completed' | 'failed';
+  created_at: string;
+}
+
+// T083: Satisfaction survey types for QR-based ordering
+export interface CreateSurveyRequest {
+  overall_rating: number; // 1-5 required
+  food_quality?: number; // 1-5 optional
+  service_quality?: number; // 1-5 optional
+  ambiance?: number; // 1-5 optional
+  value_for_money?: number; // 1-5 optional
+  comments?: string;
+  would_recommend?: boolean;
+  customer_name?: string;
+  customer_email?: string;
+}
+
+export interface SatisfactionSurvey {
+  id: string;
+  order_id: string;
+  overall_rating: number;
+  food_quality?: number;
+  service_quality?: number;
+  ambiance?: number;
+  value_for_money?: number;
+  comments?: string;
+  would_recommend?: boolean;
+  customer_name?: string;
+  customer_email?: string;
+  created_at: string;
+}
+
+export interface SurveyStatsResponse {
+  total_surveys: number;
+  average_rating: number;
+  average_food_quality: number;
+  average_service_quality: number;
+  average_ambiance: number;
+  average_value_for_money: number;
+  recommendation_rate: number; // Percentage
+  rating_distribution: Record<number, number>; // Count per rating (1-5)
+}
+
+// Order notification types for customer updates
+export interface OrderNotification {
+  id: string;
+  order_id: string;
+  status: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface GetNotificationsResponse {
+  notifications: OrderNotification[];
+  unread_count: number;
+}

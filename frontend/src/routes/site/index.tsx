@@ -1,13 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { MapPin, Phone, Clock, ChevronRight, Utensils } from 'lucide-react'
+import { ChevronRight, Utensils } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { PublicLayout } from '@/components/public/PublicLayout'
-import { OpenStatusBadge } from '@/components/public/OpenStatusBadge'
+import { HeroSection } from '@/components/public/HeroSection'
+import { ServiceCards, InfoCards } from '@/components/public/ServiceCards'
 import { apiClient } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { useScrollAnimation } from '@/hooks/useScrollAnimation'
 
 export const Route = createFileRoute('/site/')({
   component: PublicLandingPage,
@@ -39,273 +41,357 @@ function PublicLandingPage() {
   }
 
   return (
-    <PublicLayout>
-      {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
-        {/* Background with overlay */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: restaurantInfo?.hero_image_url
-              ? `url(${restaurantInfo.hero_image_url})`
-              : 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-          }}
-        >
-          <div className="absolute inset-0 bg-black/60" />
-        </div>
+    <PublicLayout showLoader={true} loaderDuration={2500}>
+      {/* Hero Section - Restoran-master style */}
+      <HeroSection
+        heading={restaurantInfo?.name || 'Steak Kenangan'}
+        tagline={
+          restaurantInfo?.tagline ||
+          'Experience the finest premium steaks crafted with passion and served with elegance'
+        }
+        backgroundImage={
+          restaurantInfo?.hero_image_url || '/assets/restoran/images/hero.jpg'
+        }
+      />
 
-        {/* Hero Content */}
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          {/* Status Badge */}
-          {!isLoadingInfo && restaurantInfo && (
-            <div className="flex justify-center mb-6">
-              <OpenStatusBadge
-                isOpenNow={restaurantInfo.is_open_now}
-                operatingHours={restaurantInfo.operating_hours}
-              />
-            </div>
-          )}
+      {/* Info Cards - Quick restaurant details */}
+      <InfoCards
+        info={{
+          phone: restaurantInfo?.phone,
+          address: restaurantInfo?.address,
+          hours: restaurantInfo?.operating_hours?.[0]
+            ? (() => {
+                const formatTime = (time: string): string => {
+                  const [hourStr, minStr] = time.split(':')
+                  const hour = parseInt(hourStr, 10)
+                  const min = minStr || '00'
+                  const ampm = hour >= 12 ? 'PM' : 'AM'
+                  const hour12 = hour % 12 || 12
+                  return `${hour12}:${min} ${ampm}`
+                }
+                const hours = restaurantInfo.operating_hours[0]
+                // T070: Added WIB timezone label
+                return `${formatTime(hours.open_time)} - ${formatTime(hours.close_time)} WIB`
+              })()
+            : undefined,
+        }}
+      />
 
-          {/* Restaurant Name */}
-          <h1
-            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 text-[var(--public-text-primary)]"
-            style={{ fontFamily: 'var(--public-font-heading)' }}
-          >
-            {isLoadingInfo ? (
-              <span className="animate-pulse">Loading...</span>
-            ) : (
-              <>
-                {restaurantInfo?.name?.split(' ')[0] || 'Steak'}
-                <span className="text-[var(--public-secondary)]">{restaurantInfo?.name?.split(' ')[1] || 'Kenangan'}</span>
-              </>
-            )}
-          </h1>
-
-          {/* Tagline */}
-          <p className="text-xl md:text-2xl text-[var(--public-text-secondary)] mb-8 max-w-2xl mx-auto">
-            {restaurantInfo?.tagline || 'Premium steaks crafted with passion'}
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              className="bg-[var(--public-secondary)] text-[var(--public-text-on-gold)] hover:bg-[var(--public-secondary-light)] font-semibold px-8"
-            >
-              <Link to="/site/menu">
-                <Utensils className="mr-2 h-5 w-5" />
-                View Menu
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-[var(--public-secondary)] text-[var(--public-secondary)] hover:bg-[var(--public-secondary)] hover:text-[var(--public-text-on-gold)]"
-            >
-              <Link to="/site/contact">
-                <Phone className="mr-2 h-5 w-5" />
-                Contact Us
-              </Link>
-            </Button>
-            {restaurantInfo?.google_maps_url && (
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="border-[var(--public-border)] text-[var(--public-text-secondary)] hover:bg-[var(--public-bg-hover)] hover:text-[var(--public-text-primary)]"
-              >
-                <a
-                  href={restaurantInfo.google_maps_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MapPin className="mr-2 h-5 w-5" />
-                  Get Directions
-                </a>
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <ChevronRight className="h-8 w-8 rotate-90 text-[var(--public-secondary)]" />
-        </div>
-      </section>
+      {/* Service Cards - Why Choose Us section */}
+      <ServiceCards />
 
       {/* Featured Dishes Section */}
-      <section className="py-16 md:py-24 bg-[var(--public-bg-secondary)]">
-        <div className="public-container">
-          <div className="text-center mb-12">
-            <h2
-              className="text-3xl md:text-4xl font-bold text-[var(--public-text-primary)] mb-4"
-              style={{ fontFamily: 'var(--public-font-heading)' }}
-            >
-              Featured <span className="text-[var(--public-secondary)]">Dishes</span>
-            </h2>
-            <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto">
-              Discover our chef's selection of premium cuts and signature creations
-            </p>
-          </div>
+      <FeaturedDishesSection
+        menuItems={menuItems}
+        isLoading={isLoadingMenu}
+        formatPrice={formatPrice}
+      />
 
-          {isLoadingMenu ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => (
-                <Card key={i} className="public-card animate-pulse">
-                  <div className="aspect-[4/3] bg-[var(--public-bg-hover)]" />
-                  <CardContent className="p-4">
-                    <div className="h-5 bg-[var(--public-bg-hover)] rounded mb-2" />
-                    <div className="h-4 bg-[var(--public-bg-hover)] rounded w-2/3" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : menuItems && menuItems.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {menuItems.map((item) => (
-                <Card
-                  key={item.id}
-                  className="public-card group overflow-hidden transition-all duration-300 hover:border-[var(--public-secondary)]"
-                >
-                  <div className="aspect-[4/3] bg-[var(--public-bg-hover)] relative overflow-hidden">
-                    {item.image_url ? (
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Utensils className="h-12 w-12 text-[var(--public-text-muted)]" />
-                      </div>
-                    )}
-                    <div className="absolute top-2 right-2">
-                      <span className="text-xs px-2 py-1 bg-[var(--public-primary)]/80 text-[var(--public-secondary)] rounded">
-                        {item.category_name}
-                      </span>
-                    </div>
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-[var(--public-text-primary)] mb-1 line-clamp-1">
-                      {item.name}
-                    </h3>
-                    {item.description && (
-                      <p className="text-sm text-[var(--public-text-secondary)] mb-2 line-clamp-2">
-                        {item.description}
-                      </p>
-                    )}
-                    <p className="text-[var(--public-secondary)] font-semibold">
-                      {formatPrice(item.price)}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-[var(--public-text-secondary)]">
-              No featured dishes available
-            </p>
+      {/* About Teaser Section */}
+      <AboutTeaserSection description={restaurantInfo?.description} />
+    </PublicLayout>
+  )
+}
+
+interface FeaturedDishesSectionProps {
+  menuItems?: Array<{
+    id: string
+    name: string
+    description?: string | null
+    price: number
+    image_url?: string | null
+    category_name?: string | null
+  }>
+  isLoading: boolean
+  formatPrice: (price: number) => string
+}
+
+function FeaturedDishesSection({
+  menuItems,
+  isLoading,
+  formatPrice,
+}: FeaturedDishesSectionProps) {
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation({
+    threshold: 0.1,
+    triggerOnce: true,
+  })
+
+  return (
+    <section className="py-16 md:py-24 bg-[var(--public-bg-secondary)]">
+      <div className="public-container">
+        {/* Section Header */}
+        <div
+          ref={headerRef}
+          className={cn(
+            'text-center mb-12 transition-all duration-700',
+            headerVisible
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 translate-y-8'
           )}
+        >
+          <span
+            className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
+            style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
+          >
+            Our Menu
+          </span>
+          <h2
+            className="text-3xl md:text-4xl font-bold text-[var(--public-text-primary)] mt-2 mb-4"
+            style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
+          >
+            Featured <span className="text-[var(--public-accent)]">Dishes</span>
+          </h2>
+          <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto">
+            Discover our chef's selection of premium cuts and signature creations
+          </p>
+        </div>
 
-          <div className="text-center mt-10">
+        {/* Menu Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} className="public-card animate-pulse overflow-hidden">
+                <div className="aspect-[4/3] bg-[var(--public-bg-hover)]" />
+                <CardContent className="p-4">
+                  <div className="h-5 bg-[var(--public-bg-hover)] rounded mb-2" />
+                  <div className="h-4 bg-[var(--public-bg-hover)] rounded w-2/3" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : menuItems && menuItems.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {menuItems.map((item, index) => (
+              <MenuItemCard
+                key={item.id}
+                item={item}
+                index={index}
+                formatPrice={formatPrice}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-[var(--public-text-secondary)]">
+            No featured dishes available
+          </p>
+        )}
+
+        {/* View Full Menu Button */}
+        <div className="text-center mt-10">
+          <Button
+            asChild
+            size="lg"
+            className={cn(
+              'gap-2 bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
+              'text-white font-semibold shadow-lg hover:shadow-xl',
+              'transition-all duration-300'
+            )}
+          >
+            <Link to="/site/menu">
+              View Full Menu
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+interface MenuItemCardProps {
+  item: {
+    id: string
+    name: string
+    description?: string | null
+    price: number
+    image_url?: string | null
+    category_name?: string | null
+  }
+  index: number
+  formatPrice: (price: number) => string
+}
+
+function MenuItemCard({ item, index, formatPrice }: MenuItemCardProps) {
+  const { ref, isVisible } = useScrollAnimation({
+    threshold: 0.1,
+    triggerOnce: true,
+  })
+
+  return (
+    <Card
+      ref={ref}
+      className={cn(
+        'public-card group overflow-hidden',
+        'transition-all duration-500 ease-out',
+        'hover:border-[var(--public-accent)] hover:shadow-xl hover:-translate-y-2',
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      )}
+      style={{ transitionDelay: `${index * 100}ms` }}
+    >
+      {/* Image */}
+      <div className="aspect-[4/3] bg-[var(--public-bg-hover)] relative overflow-hidden">
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Utensils className="h-12 w-12 text-[var(--public-text-muted)]" />
+          </div>
+        )}
+        {/* Category badge */}
+        {item.category_name && (
+          <div className="absolute top-3 left-3">
+            <span
+              className={cn(
+                'text-xs px-3 py-1 rounded-full',
+                'bg-[var(--public-accent)] text-white font-medium'
+              )}
+            >
+              {item.category_name}
+            </span>
+          </div>
+        )}
+        {/* Hover overlay */}
+        <div
+          className={cn(
+            'absolute inset-0 bg-black/40 flex items-center justify-center',
+            'opacity-0 group-hover:opacity-100 transition-opacity duration-300'
+          )}
+        >
+          <Button
+            asChild
+            size="sm"
+            className="bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)] text-white"
+          >
+            <Link to="/site/menu">View Details</Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <CardContent className="p-4">
+        <h3 className="font-semibold text-[var(--public-text-primary)] mb-1 line-clamp-1 group-hover:text-[var(--public-accent)] transition-colors">
+          {item.name}
+        </h3>
+        {item.description && (
+          <p className="text-sm text-[var(--public-text-secondary)] mb-2 line-clamp-2">
+            {item.description}
+          </p>
+        )}
+        <p className="text-[var(--public-accent)] font-bold text-lg">
+          {formatPrice(item.price)}
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
+
+interface AboutTeaserSectionProps {
+  description?: string | null
+}
+
+function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
+  const { ref, isVisible } = useScrollAnimation({
+    threshold: 0.1,
+    triggerOnce: true,
+  })
+
+  return (
+    <section className="py-16 md:py-24 bg-[var(--public-primary)]">
+      <div className="public-container">
+        <div
+          ref={ref}
+          className={cn(
+            'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center',
+            'transition-all duration-700',
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          )}
+        >
+          {/* Text Content */}
+          <div>
+            <span
+              className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
+              style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
+            >
+              About Us
+            </span>
+            <h2
+              className="text-3xl md:text-4xl font-bold text-[var(--public-text-primary)] mt-2 mb-6"
+              style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
+            >
+              Our <span className="text-[var(--public-accent)]">Story</span>
+            </h2>
+            <p className="text-[var(--public-text-secondary)] mb-6 leading-relaxed text-lg">
+              {description ||
+                'At Steak Kenangan, we believe in the perfect combination of premium ingredients, masterful cooking techniques, and warm hospitality. Every dish tells a story of our passion for exceptional cuisine.'}
+            </p>
+            <p className="text-[var(--public-text-secondary)] mb-8 leading-relaxed">
+              Since our establishment, we have been dedicated to providing an
+              unforgettable dining experience that celebrates the art of grilling
+              and the joy of sharing a great meal with loved ones.
+            </p>
             <Button
               asChild
+              size="lg"
               variant="outline"
-              className="border-[var(--public-secondary)] text-[var(--public-secondary)] hover:bg-[var(--public-secondary)] hover:text-[var(--public-text-on-gold)]"
+              className={cn(
+                'gap-2 border-2 border-[var(--public-accent)] text-[var(--public-accent)]',
+                'hover:bg-[var(--public-accent)] hover:text-white',
+                'font-semibold transition-all duration-300'
+              )}
             >
-              <Link to="/site/menu">
-                View Full Menu
-                <ChevronRight className="ml-2 h-4 w-4" />
+              <Link to="/site/about">
+                Learn More About Us
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
           </div>
-        </div>
-      </section>
 
-      {/* About Teaser Section */}
-      <section className="py-16 md:py-24">
-        <div className="public-container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2
-                className="text-3xl md:text-4xl font-bold text-[var(--public-text-primary)] mb-6"
-                style={{ fontFamily: 'var(--public-font-heading)' }}
-              >
-                Our <span className="text-[var(--public-secondary)]">Story</span>
-              </h2>
-              <p className="text-[var(--public-text-secondary)] mb-6 leading-relaxed">
-                {restaurantInfo?.description ||
-                  'At Steak Kenangan, we believe in the perfect combination of premium ingredients, masterful cooking techniques, and warm hospitality. Every dish tells a story of our passion for exceptional cuisine.'}
-              </p>
-              <Button
-                asChild
-                variant="outline"
-                className="border-[var(--public-secondary)] text-[var(--public-secondary)] hover:bg-[var(--public-secondary)] hover:text-[var(--public-text-on-gold)]"
-              >
-                <Link to="/site/about">
-                  Learn More About Us
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
+          {/* Image Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div className="aspect-[4/5] rounded-lg overflow-hidden">
+                <img
+                  src="/assets/restoran/images/about-1.jpg"
+                  alt="Our restaurant interior"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+              </div>
+              <div className="aspect-square rounded-lg overflow-hidden">
+                <img
+                  src="/assets/restoran/images/about-2.jpg"
+                  alt="Our signature dishes"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+              </div>
             </div>
-
-            {/* Info Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card className="public-card p-6">
-                <Clock className="h-8 w-8 text-[var(--public-secondary)] mb-4" />
-                <h3
-                  className="font-semibold text-[var(--public-text-primary)] mb-2"
-                  style={{ fontFamily: 'var(--public-font-heading)' }}
-                >
-                  Opening Hours
-                </h3>
-                <p className="text-sm text-[var(--public-text-secondary)]">
-                  Mon - Sat: 11AM - 10PM
-                  <br />
-                  Sunday: Closed
-                </p>
-              </Card>
-
-              <Card className="public-card p-6">
-                <MapPin className="h-8 w-8 text-[var(--public-secondary)] mb-4" />
-                <h3
-                  className="font-semibold text-[var(--public-text-primary)] mb-2"
-                  style={{ fontFamily: 'var(--public-font-heading)' }}
-                >
-                  Location
-                </h3>
-                <p className="text-sm text-[var(--public-text-secondary)]">
-                  {restaurantInfo?.address || 'Visit us at our location'}
-                  {restaurantInfo?.city && <>, {restaurantInfo.city}</>}
-                </p>
-              </Card>
-
-              <Card className="public-card p-6 sm:col-span-2">
-                <Phone className="h-8 w-8 text-[var(--public-secondary)] mb-4" />
-                <h3
-                  className="font-semibold text-[var(--public-text-primary)] mb-2"
-                  style={{ fontFamily: 'var(--public-font-heading)' }}
-                >
-                  Reservations
-                </h3>
-                <p className="text-sm text-[var(--public-text-secondary)] mb-3">
-                  Call us to book your table for a memorable dining experience
-                </p>
-                {restaurantInfo?.phone && (
-                  <a
-                    href={`tel:${restaurantInfo.phone}`}
-                    className="text-[var(--public-secondary)] font-semibold hover:text-[var(--public-secondary-light)] transition-colors"
-                  >
-                    {restaurantInfo.phone}
-                  </a>
-                )}
-              </Card>
+            <div className="space-y-4 pt-8">
+              <div className="aspect-square rounded-lg overflow-hidden">
+                <img
+                  src="/assets/restoran/images/about-3.jpg"
+                  alt="Our chef at work"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+              </div>
+              <div className="aspect-[4/5] rounded-lg overflow-hidden">
+                <img
+                  src="/assets/restoran/images/about-4.jpg"
+                  alt="Premium ingredients"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+              </div>
             </div>
           </div>
         </div>
-      </section>
-    </PublicLayout>
+      </div>
+    </section>
   )
 }

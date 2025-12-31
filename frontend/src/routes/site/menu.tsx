@@ -1,23 +1,29 @@
+/**
+ * T027: Menu page route with new Restoran-master design
+ * Features: Category slider, menu item cards, search, responsive grid
+ */
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { useState, useMemo, useCallback } from 'react'
-import { Search, Utensils, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, X, Utensils } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
 import { PublicLayout } from '@/components/public/PublicLayout'
+import { MenuSlider } from '@/components/public/MenuSlider'
+import { MenuItemCard } from '@/components/public/MenuItemCard'
 import { apiClient } from '@/api/client'
+import { useScrollAnimation } from '@/hooks/useScrollAnimation'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/site/menu')({
   component: PublicMenuPage,
 })
 
-// Custom hook for debouncing (if not exists, we'll implement inline)
+// Custom hook for debouncing
 function useDebounceValue<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value)
 
-  useMemo(() => {
+  useEffect(() => {
     const timer = setTimeout(() => setDebouncedValue(value), delay)
     return () => clearTimeout(timer)
   }, [value, delay])
@@ -28,17 +34,31 @@ function useDebounceValue<T>(value: T, delay: number): T {
 function PublicMenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Use debounced search value
   const debouncedSearch = useDebounceValue(searchQuery, 300)
 
+  // Animation refs
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation()
+  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 })
+
   // Fetch categories
-  const { data: categories, isLoading: isLoadingCategories } = useQuery({
+  const {
+    data: categories,
+    isLoading: isLoadingCategories,
+    error: categoriesError,
+  } = useQuery({
     queryKey: ['publicCategories'],
     queryFn: () => apiClient.getPublicCategories(),
     staleTime: 1000 * 60 * 30, // 30 minutes
   })
 
   // Fetch menu items with filters
-  const { data: menuItems, isLoading: isLoadingMenu } = useQuery({
+  const {
+    data: menuItems,
+    isLoading: isLoadingMenu,
+    error: menuError,
+  } = useQuery({
     queryKey: ['publicMenu', selectedCategory, debouncedSearch],
     queryFn: () =>
       apiClient.getPublicMenu(
@@ -47,15 +67,6 @@ function PublicMenuPage() {
       ),
     staleTime: 1000 * 60 * 15, // 15 minutes
   })
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price)
-  }
 
   const clearFilters = () => {
     setSelectedCategory(null)
@@ -68,21 +79,27 @@ function PublicMenuPage() {
     <PublicLayout>
       {/* Page Header */}
       <section className="py-12 md:py-16 bg-[var(--public-bg-secondary)]">
-        <div className="public-container text-center">
+        <div
+          ref={headerRef}
+          className={cn(
+            'public-container text-center transition-all duration-700',
+            headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          )}
+        >
           <h1
-            className="text-4xl md:text-5xl font-bold text-[var(--public-text-primary)] mb-4"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--public-text-primary)] mb-4"
             style={{ fontFamily: 'var(--public-font-heading)' }}
           >
-            Our <span className="text-[var(--public-secondary)]">Menu</span>
+            Our <span className="text-[var(--public-accent)]">Menu</span>
           </h1>
-          <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto">
+          <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto text-lg">
             Explore our selection of premium cuts, signature dishes, and culinary creations
           </p>
         </div>
       </section>
 
-      {/* Filters Section */}
-      <section className="py-6 border-b border-[var(--public-border)] sticky top-16 z-40 bg-[var(--public-bg-primary)]/95 backdrop-blur">
+      {/* Filters Section - Sticky */}
+      <section className="py-6 border-b border-[var(--public-border)] sticky top-16 z-40 bg-[var(--public-bg-primary)]/95 backdrop-blur-md">
         <div className="public-container">
           {/* Search Input */}
           <div className="relative mb-4">
@@ -92,68 +109,31 @@ function PublicMenuPage() {
               placeholder="Search menu items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-[var(--public-bg-elevated)] border-[var(--public-border)] text-[var(--public-text-primary)] placeholder:text-[var(--public-text-muted)] focus:border-[var(--public-secondary)] focus:ring-[var(--public-secondary)]"
+              className="pl-10 bg-[var(--public-bg-elevated)] border-[var(--public-border)] text-[var(--public-text-primary)] placeholder:text-[var(--public-text-muted)] focus:border-[var(--public-accent)] focus:ring-[var(--public-accent)] rounded-full"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--public-text-muted)] hover:text-[var(--public-text-primary)]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--public-text-muted)] hover:text-[var(--public-text-primary)] transition-colors"
+                aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
 
-          {/* Category Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <Button
-              variant={selectedCategory === null ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory(null)}
-              className={cn(
-                'flex-shrink-0',
-                selectedCategory === null
-                  ? 'bg-[var(--public-secondary)] text-[var(--public-text-on-gold)] hover:bg-[var(--public-secondary-light)]'
-                  : 'border-[var(--public-border)] text-[var(--public-text-secondary)] hover:bg-[var(--public-bg-hover)] hover:text-[var(--public-text-primary)]'
-              )}
-            >
-              All Items
-            </Button>
-            {isLoadingCategories ? (
-              [...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-9 w-24 bg-[var(--public-bg-hover)] rounded animate-pulse flex-shrink-0"
-                />
-              ))
-            ) : (
-              categories?.map((category) => (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.id ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={cn(
-                    'flex-shrink-0',
-                    selectedCategory === category.id
-                      ? 'bg-[var(--public-secondary)] text-[var(--public-text-on-gold)] hover:bg-[var(--public-secondary-light)]'
-                      : 'border-[var(--public-border)] text-[var(--public-text-secondary)] hover:bg-[var(--public-bg-hover)] hover:text-[var(--public-text-primary)]'
-                  )}
-                  style={
-                    category.color && selectedCategory !== category.id
-                      ? { borderColor: category.color, color: category.color }
-                      : {}
-                  }
-                >
-                  {category.name}
-                </Button>
-              ))
-            )}
-          </div>
+          {/* Category Slider */}
+          <MenuSlider
+            data-testid="menu-slider"
+            categories={categories || []}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            isLoading={isLoadingCategories}
+          />
 
           {/* Active Filters indicator */}
           {hasActiveFilters && (
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-4 flex items-center gap-2">
               <span className="text-sm text-[var(--public-text-muted)]">
                 Showing filtered results
               </span>
@@ -161,7 +141,7 @@ function PublicMenuPage() {
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="text-[var(--public-secondary)] hover:text-[var(--public-secondary-light)] p-0 h-auto"
+                className="text-[var(--public-accent)] hover:text-[var(--public-accent)]/80 p-0 h-auto"
               >
                 Clear all
               </Button>
@@ -171,67 +151,73 @@ function PublicMenuPage() {
       </section>
 
       {/* Menu Grid */}
-      <section className="py-8 md:py-12">
-        <div className="public-container">
-          {isLoadingMenu ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section className="py-8 md:py-12 lg:py-16 bg-[var(--public-bg-primary)]">
+        <div
+          ref={gridRef}
+          className={cn(
+            'public-container transition-all duration-700',
+            gridVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          )}
+        >
+          {menuError ? (
+            // Error State
+            <div className="text-center py-16">
+              <Utensils className="h-16 w-16 text-red-500/50 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-[var(--public-text-primary)] mb-2">
+                Failed to load menu
+              </h3>
+              <p className="text-[var(--public-text-secondary)] mb-4">
+                Please try again later.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+                className="border-[var(--public-accent)] text-[var(--public-accent)] hover:bg-[var(--public-accent)] hover:text-white"
+              >
+                Retry
+              </Button>
+            </div>
+          ) : isLoadingMenu ? (
+            // Loading State - Skeleton Grid
+            <div
+              data-testid="menu-grid"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
               {[...Array(6)].map((_, i) => (
-                <Card key={i} className="public-card animate-pulse">
+                <div
+                  key={i}
+                  className="public-card animate-pulse overflow-hidden"
+                >
                   <div className="aspect-[4/3] bg-[var(--public-bg-hover)]" />
-                  <CardContent className="p-4">
-                    <div className="h-5 bg-[var(--public-bg-hover)] rounded mb-2" />
+                  <div className="p-5">
+                    <div className="h-6 bg-[var(--public-bg-hover)] rounded mb-2" />
                     <div className="h-4 bg-[var(--public-bg-hover)] rounded w-2/3 mb-2" />
-                    <div className="h-4 bg-[var(--public-bg-hover)] rounded w-1/3" />
-                  </CardContent>
-                </Card>
+                    <div className="h-4 bg-[var(--public-bg-hover)] rounded w-1/2 mb-3" />
+                    <div className="h-6 bg-[var(--public-bg-hover)] rounded w-1/3" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : menuItems && menuItems.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {menuItems.map((item) => (
-                <Card
+            // Menu Items Grid
+            <div
+              data-testid="menu-grid"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {menuItems.map((item, index) => (
+                <div
                   key={item.id}
-                  className="public-card group overflow-hidden transition-all duration-300 hover:border-[var(--public-secondary)]"
+                  className="transition-all duration-500"
+                  style={{
+                    transitionDelay: `${index * 50}ms`,
+                  }}
                 >
-                  <div className="aspect-[4/3] bg-[var(--public-bg-hover)] relative overflow-hidden">
-                    {item.image_url ? (
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Utensils className="h-16 w-16 text-[var(--public-text-muted)]" />
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3">
-                      <span className="text-xs px-2 py-1 bg-[var(--public-primary)]/90 text-[var(--public-secondary)] rounded-full">
-                        {item.category_name}
-                      </span>
-                    </div>
-                  </div>
-                  <CardContent className="p-5">
-                    <h3
-                      className="font-semibold text-lg text-[var(--public-text-primary)] mb-2"
-                      style={{ fontFamily: 'var(--public-font-heading)' }}
-                    >
-                      {item.name}
-                    </h3>
-                    {item.description && (
-                      <p className="text-sm text-[var(--public-text-secondary)] mb-3 line-clamp-2">
-                        {item.description}
-                      </p>
-                    )}
-                    <p className="text-xl text-[var(--public-secondary)] font-bold">
-                      {formatPrice(item.price)}
-                    </p>
-                  </CardContent>
-                </Card>
+                  <MenuItemCard item={item} />
+                </div>
               ))}
             </div>
           ) : (
+            // Empty State
             <div className="text-center py-16">
               <Utensils className="h-16 w-16 text-[var(--public-text-muted)] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-[var(--public-text-primary)] mb-2">
@@ -246,7 +232,7 @@ function PublicMenuPage() {
                 <Button
                   variant="outline"
                   onClick={clearFilters}
-                  className="border-[var(--public-secondary)] text-[var(--public-secondary)] hover:bg-[var(--public-secondary)] hover:text-[var(--public-text-on-gold)]"
+                  className="border-[var(--public-accent)] text-[var(--public-accent)] hover:bg-[var(--public-accent)] hover:text-white"
                 >
                   Clear Filters
                 </Button>
@@ -255,6 +241,30 @@ function PublicMenuPage() {
           )}
         </div>
       </section>
+
+      {/* Bottom CTA */}
+      {!menuError && menuItems && menuItems.length > 0 && (
+        <section className="py-12 md:py-16 bg-[var(--public-bg-secondary)]">
+          <div className="public-container text-center">
+            <h2
+              className="text-2xl md:text-3xl font-bold text-[var(--public-text-primary)] mb-4"
+              style={{ fontFamily: 'var(--public-font-heading)' }}
+            >
+              Ready to Experience Our Menu?
+            </h2>
+            <p className="text-[var(--public-text-secondary)] mb-6 max-w-xl mx-auto">
+              Reserve your table now and enjoy our premium steaks and signature dishes
+            </p>
+            <Button
+              asChild
+              size="lg"
+              className="bg-[var(--public-accent)] hover:bg-[var(--public-accent)]/90 text-white rounded-full px-8"
+            >
+              <a href="/site/reservation">Book a Table</a>
+            </Button>
+          </div>
+        </section>
+      )}
     </PublicLayout>
   )
 }

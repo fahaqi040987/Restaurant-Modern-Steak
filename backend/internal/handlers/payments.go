@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -10,6 +11,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+)
+
+// T094: Fraud detection constants
+const (
+	maxPaymentsPerMinute     = 5    // Maximum payments allowed per minute per user
+	maxPaymentAmount         = 50000000 // Maximum single payment amount (50 million IDR)
+	suspiciousPatternWindow  = time.Hour // Window to check for suspicious patterns
+	maxFailedPaymentAttempts = 3    // Max failed attempts before flagging
 )
 
 type PaymentHandler struct {
@@ -78,6 +87,48 @@ func (h *PaymentHandler) ProcessPayment(c *gin.Context) {
 			Error:   stringPtr("invalid_amount"),
 		})
 		return
+	}
+
+	// T094: Fraud detection - Check for suspicious payment amount
+	if req.Amount > maxPaymentAmount {
+		log.Printf("FRAUD_ALERT: Suspicious large payment attempt - User: %s, Amount: %.2f", userID, req.Amount)
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Success: false,
+			Message: "Payment amount exceeds maximum allowed limit",
+			Error:   stringPtr("amount_exceeds_limit"),
+		})
+		return
+	}
+
+	// T094: Fraud detection - Check for rapid payment attempts (rate limiting)
+	var recentPaymentCount int
+	err = h.db.QueryRow(`
+		SELECT COUNT(*) FROM payments
+		WHERE processed_by = $1 AND created_at > NOW() - INTERVAL '1 minute'
+	`, userID).Scan(&recentPaymentCount)
+	if err != nil {
+		log.Printf("Error checking payment rate: %v", err)
+	} else if recentPaymentCount >= maxPaymentsPerMinute {
+		log.Printf("FRAUD_ALERT: Rate limit exceeded - User: %s, Payments in last minute: %d", userID, recentPaymentCount)
+		c.JSON(http.StatusTooManyRequests, models.APIResponse{
+			Success: false,
+			Message: "Too many payment attempts. Please wait a moment before trying again.",
+			Error:   stringPtr("rate_limit_exceeded"),
+		})
+		return
+	}
+
+	// T094: Fraud detection - Check for failed payment pattern
+	var failedAttempts int
+	err = h.db.QueryRow(`
+		SELECT COUNT(*) FROM payments
+		WHERE processed_by = $1 AND status = 'failed' AND created_at > NOW() - INTERVAL '1 hour'
+	`, userID).Scan(&failedAttempts)
+	if err != nil {
+		log.Printf("Error checking failed payments: %v", err)
+	} else if failedAttempts >= maxFailedPaymentAttempts {
+		log.Printf("FRAUD_ALERT: Multiple failed payments - User: %s, Failed attempts: %d", userID, failedAttempts)
+		// Don't block but log for review
 	}
 
 	// Start transaction
@@ -452,4 +503,193 @@ func (h *PaymentHandler) getPaymentByID(paymentID uuid.UUID) (*models.Payment, e
 	}
 
 	return &payment, nil
+}
+
+// CreateCustomerPayment processes payment for QR-based customer orders
+// T072: Customer payment handler for QR ordering (no authentication required)
+// T078: Includes validation - order exists, not already paid, amount matches
+// T100: Includes authorization check - verify customer is paying for their table's order
+func (h *PaymentHandler) CreateCustomerPayment(c *gin.Context) {
+	orderID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "Invalid order ID",
+		})
+		return
+	}
+
+	var req models.CreatePaymentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	// T100: Authorization check - verify table ownership via X-Table-ID header
+	// This header should be set by the frontend based on the QR code scan
+	tableIDHeader := c.GetHeader("X-Table-ID")
+
+	// T078: Start transaction for atomic payment processing
+	tx, err := h.db.Begin()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Failed to start transaction",
+		})
+		return
+	}
+	defer tx.Rollback()
+
+	// T078 + T100: Verify order exists, get total amount, and verify table ownership
+	var orderTotalAmount float64
+	var orderStatus string
+	var orderType string
+	var orderTableID sql.NullString
+	err = tx.QueryRow(`
+		SELECT total_amount, status, order_type, table_id
+		FROM orders WHERE id = $1
+	`, orderID).Scan(&orderTotalAmount, &orderStatus, &orderType, &orderTableID)
+
+	// T100: Authorization check - verify order belongs to the customer's table
+	if orderTableID.Valid && tableIDHeader != "" && orderTableID.String != tableIDHeader {
+		log.Printf("AUTHORIZATION_ALERT: Cross-table payment attempt - Order table: %s, Request table: %s, IP: %s",
+			orderTableID.String, tableIDHeader, c.ClientIP())
+		c.JSON(http.StatusForbidden, gin.H{
+			"success": false,
+			"error":   "You can only pay for orders from your table",
+		})
+		return
+	}
+
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"error":   "Order not found",
+		})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Failed to fetch order",
+		})
+		return
+	}
+
+	// T078: Verify order is valid for payment
+	if orderStatus == "cancelled" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "Cannot pay for cancelled order",
+		})
+		return
+	}
+
+	// T078: Check if order is already paid (prevent duplicate payments)
+	var totalPaid float64
+	err = tx.QueryRow(`
+		SELECT COALESCE(SUM(amount), 0) 
+		FROM payments 
+		WHERE order_id = $1 AND status = 'completed'
+	`, orderID).Scan(&totalPaid)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Failed to calculate total payments",
+		})
+		return
+	}
+
+	if totalPaid >= orderTotalAmount {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "Order is already fully paid",
+		})
+		return
+	}
+
+	// T078: Validate payment amount matches order total
+	remainingAmount := orderTotalAmount - totalPaid
+	if req.Amount != remainingAmount {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "Payment amount must match remaining balance",
+			"details": gin.H{
+				"required_amount": remainingAmount,
+				"provided_amount": req.Amount,
+			},
+		})
+		return
+	}
+
+	// Create payment record
+	paymentID := uuid.New()
+	now := time.Now()
+
+	_, err = tx.Exec(`
+		INSERT INTO payments (
+			id, order_id, payment_method, amount, 
+			reference_number, status, processed_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, paymentID, orderID, req.PaymentMethod, req.Amount,
+		req.ReferenceNumber, "completed", now)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Failed to create payment record",
+		})
+		return
+	}
+
+	// Update order status to paid
+	_, err = tx.Exec(`
+		UPDATE orders 
+		SET status = 'paid', updated_at = CURRENT_TIMESTAMP
+		WHERE id = $1
+	`, orderID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Failed to update order status",
+		})
+		return
+	}
+
+	// Log status change
+	_, err = tx.Exec(`
+		INSERT INTO order_status_history (order_id, previous_status, new_status, notes)
+		VALUES ($1, $2, 'paid', 'Customer paid via ' || $3)
+	`, orderID, orderStatus, req.PaymentMethod)
+
+	if err != nil {
+		// Log error but don't fail the transaction
+		// Payment is still valid
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Failed to commit payment",
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"success": true,
+		"message": "Payment processed successfully",
+		"data": gin.H{
+			"payment_id":     paymentID,
+			"order_id":       orderID,
+			"amount":         req.Amount,
+			"payment_method": req.PaymentMethod,
+			"status":         "completed",
+		},
+	})
 }

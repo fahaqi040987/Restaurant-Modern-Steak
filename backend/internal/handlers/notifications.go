@@ -352,3 +352,183 @@ func UpdateNotificationPreferences(db *sql.DB) gin.HandlerFunc {
 		})
 	}
 }
+
+// T077: Customer order notification handlers for QR-based ordering
+
+// GetOrderNotifications retrieves notifications for a specific order (customer-facing)
+// GET /customer/orders/:id/notifications
+func GetOrderNotifications(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		orderID, err := uuid.Parse(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, models.APIResponse{
+				Success: false,
+				Message: "Invalid order ID",
+				Error:   stringPtr("invalid_uuid"),
+			})
+			return
+		}
+
+		// Verify order exists
+		var orderExists bool
+		err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM orders WHERE id = $1)", orderID).Scan(&orderExists)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.APIResponse{
+				Success: false,
+				Message: "Failed to verify order",
+				Error:   stringPtr(err.Error()),
+			})
+			return
+		}
+
+		if !orderExists {
+			c.JSON(http.StatusNotFound, models.APIResponse{
+				Success: false,
+				Message: "Order not found",
+				Error:   stringPtr("order_not_found"),
+			})
+			return
+		}
+
+		// Fetch notifications for this order
+		query := `
+			SELECT id, order_id, status, message, is_read, created_at
+			FROM order_notifications
+			WHERE order_id = $1
+			ORDER BY created_at DESC
+		`
+
+		rows, err := db.Query(query, orderID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.APIResponse{
+				Success: false,
+				Message: "Failed to fetch notifications",
+				Error:   stringPtr(err.Error()),
+			})
+			return
+		}
+		defer rows.Close()
+
+		var notifications []models.OrderNotification
+		unreadCount := 0
+
+		for rows.Next() {
+			var notification models.OrderNotification
+			err := rows.Scan(
+				&notification.ID,
+				&notification.OrderID,
+				&notification.Status,
+				&notification.Message,
+				&notification.IsRead,
+				&notification.CreatedAt,
+			)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, models.APIResponse{
+					Success: false,
+					Message: "Failed to parse notification",
+					Error:   stringPtr(err.Error()),
+				})
+				return
+			}
+
+			if !notification.IsRead {
+				unreadCount++
+			}
+
+			notifications = append(notifications, notification)
+		}
+
+		if err = rows.Err(); err != nil {
+			c.JSON(http.StatusInternalServerError, models.APIResponse{
+				Success: false,
+				Message: "Failed to read notifications",
+				Error:   stringPtr(err.Error()),
+			})
+			return
+		}
+
+		// Return empty array if no notifications
+		if notifications == nil {
+			notifications = []models.OrderNotification{}
+		}
+
+		response := models.GetNotificationsResponse{
+			Notifications: notifications,
+			UnreadCount:   unreadCount,
+		}
+
+		c.JSON(http.StatusOK, models.APIResponse{
+			Success: true,
+			Message: "Notifications retrieved successfully",
+			Data:    response,
+		})
+	}
+}
+
+// MarkOrderNotificationAsRead marks a customer order notification as read
+// PUT /customer/notifications/:id/read
+func MarkOrderNotificationAsRead(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		notificationID, err := uuid.Parse(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, models.APIResponse{
+				Success: false,
+				Message: "Invalid notification ID",
+				Error:   stringPtr("invalid_uuid"),
+			})
+			return
+		}
+
+		// Update notification to mark as read
+		result, err := db.Exec(`
+			UPDATE order_notifications
+			SET is_read = true
+			WHERE id = $1
+		`, notificationID)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.APIResponse{
+				Success: false,
+				Message: "Failed to update notification",
+				Error:   stringPtr(err.Error()),
+			})
+			return
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.APIResponse{
+				Success: false,
+				Message: "Failed to check update result",
+				Error:   stringPtr(err.Error()),
+			})
+			return
+		}
+
+		if rowsAffected == 0 {
+			c.JSON(http.StatusNotFound, models.APIResponse{
+				Success: false,
+				Message: "Notification not found",
+				Error:   stringPtr("notification_not_found"),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.APIResponse{
+			Success: true,
+			Message: "Notification marked as read",
+			Data:    nil,
+		})
+	}
+}
+
+// CreateOrderNotification creates a notification for order status change
+// Internal helper method called when order status changes
+func CreateOrderNotification(db *sql.DB, orderID uuid.UUID, status, message string) error {
+	_, err := db.Exec(`
+		INSERT INTO order_notifications (order_id, status, message, is_read)
+		VALUES ($1, $2, $3, false)
+	`, orderID, status, message)
+
+	return err
+}

@@ -30,6 +30,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	inventoryHandler := handlers.NewInventoryHandler(db)
 	ingredientsHandler := handlers.NewIngredientsHandler(db)
 	uploadHandler := handlers.NewUploadHandler("./uploads")
+	surveyHandler := handlers.NewSurveyHandler(db) // T075: Added for satisfaction surveys
 
 	// Rate limiters for different endpoint types
 	publicRateLimiter := middleware.PublicRateLimiter()
@@ -53,14 +54,27 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		publicAPI.GET("/restaurant", publicHandler.GetRestaurantInfo)
 		// Contact form has stricter limit (3/5min) to prevent spam
 		publicAPI.POST("/contact", contactFormLimiter, publicHandler.SubmitContactForm)
+		// Reservation submission (uses contact form rate limiter + CSRF protection)
+		reservationHandler := handlers.NewHandler(db)
+		publicAPI.POST("/reservations", contactFormLimiter, middleware.CSRFProtection(), reservationHandler.CreateReservation)
 	}
 
 	// Customer self-ordering API routes (no authentication required)
 	customerAPI := router.Group("/customer")
 	customerAPI.Use(publicRateLimiter) // 30 requests/min per IP
 	{
+		// T099: CSRF token endpoint for customer order creation
+		customerAPI.GET("/csrf-token", publicHandler.GetCSRFToken)
 		customerAPI.GET("/table/:qr_code", publicHandler.GetTableByQRCode)
-		customerAPI.POST("/orders", publicHandler.CreateCustomerOrder)
+		// T099: CSRF protection added to order creation
+		customerAPI.POST("/orders", middleware.CSRFProtection(), publicHandler.CreateCustomerOrder)
+		// T073: Payment route for QR-based ordering
+		customerAPI.POST("/orders/:id/payment", middleware.CSRFProtection(), paymentHandler.CreateCustomerPayment)
+		// T076: Survey route for customer feedback
+		customerAPI.POST("/orders/:id/survey", middleware.CSRFProtection(), surveyHandler.CreateSurvey)
+		// T077: Notification routes for QR-based ordering
+		customerAPI.GET("/orders/:id/notifications", handlers.GetOrderNotifications(db))
+		customerAPI.PUT("/notifications/:id/read", handlers.MarkOrderNotificationAsRead(db))
 	}
 
 	// Protected routes (authentication required)
@@ -133,6 +147,8 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		admin.GET("/reports/sales", getSalesReport(db))
 		admin.GET("/reports/orders", getOrdersReport(db))
 		admin.GET("/reports/income", getIncomeReport(db))
+		// T076: Survey statistics for admin dashboard
+		admin.GET("/surveys/stats", surveyHandler.GetSurveyStats)
 
 		// System settings (admin only)
 		admin.GET("/settings", handlers.GetSettings(db))
@@ -146,6 +162,13 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		admin.GET("/contacts/counts/new", contactHandler.GetNewContactsCount) // Badge counter
 		admin.PUT("/contacts/:id/status", contactHandler.UpdateContactStatus)
 		admin.DELETE("/contacts/:id", contactHandler.DeleteContactSubmission)
+
+		// Reservation management
+		admin.GET("/reservations", contactHandler.GetReservations)
+		admin.GET("/reservations/:id", contactHandler.GetReservation)
+		admin.GET("/reservations/counts/pending", contactHandler.GetPendingReservationsCount) // Badge counter
+		admin.PATCH("/reservations/:id/status", contactHandler.UpdateReservationStatus)
+		admin.DELETE("/reservations/:id", contactHandler.DeleteReservation)
 
 		// Inventory management
 		admin.GET("/inventory", inventoryHandler.GetInventory)
@@ -1741,7 +1764,7 @@ func getAdminTables(db *sql.DB) gin.HandlerFunc {
 		// Build query with filters
 		queryBuilder := `
 			SELECT t.id, t.table_number, t.seating_capacity, t.location, t.is_occupied,
-			       t.created_at, t.updated_at,
+			       t.qr_code, t.created_at, t.updated_at,
 			       o.id as order_id, o.order_number, o.customer_name, o.status as order_status,
 			       o.created_at as order_created_at, o.total_amount
 			FROM dining_tables t
@@ -1809,10 +1832,11 @@ func getAdminTables(db *sql.DB) gin.HandlerFunc {
 			var orderID, orderNumber, customerName, orderStatus sql.NullString
 			var orderCreatedAt sql.NullTime
 			var totalAmount sql.NullFloat64
+			var qrCode sql.NullString
 
 			err := rows.Scan(
 				&table.ID, &table.TableNumber, &table.SeatingCapacity, &table.Location, &table.IsOccupied,
-				&table.CreatedAt, &table.UpdatedAt,
+				&qrCode, &table.CreatedAt, &table.UpdatedAt,
 				&orderID, &orderNumber, &customerName, &orderStatus, &orderCreatedAt, &totalAmount,
 			)
 			if err != nil {
@@ -1824,6 +1848,11 @@ func getAdminTables(db *sql.DB) gin.HandlerFunc {
 				return
 			}
 
+			// Set QR code
+			if qrCode.Valid {
+				table.QRCode = &qrCode.String
+			}
+
 			// Create table data with current order info
 			tableData := map[string]interface{}{
 				"id":               table.ID,
@@ -1831,6 +1860,7 @@ func getAdminTables(db *sql.DB) gin.HandlerFunc {
 				"seating_capacity": table.SeatingCapacity,
 				"location":         table.Location,
 				"is_occupied":      table.IsOccupied,
+				"qr_code":          table.QRCode,
 				"created_at":       table.CreatedAt,
 				"updated_at":       table.UpdatedAt,
 				"current_order":    nil,
