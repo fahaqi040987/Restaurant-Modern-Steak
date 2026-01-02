@@ -11,6 +11,34 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReservationForm } from '../ReservationForm'
 
+// Mock i18n
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'reservation.fullName': 'Full Name',
+        'reservation.emailAddress': 'Email Address',
+        'reservation.phoneNumber': 'Phone Number',
+        'reservation.numberOfGuests': 'Number of Guests',
+        'reservation.date': 'Date',
+        'reservation.time': 'Time',
+        'reservation.specialRequests': 'Special Requests',
+        'reservation.submitReservation': 'Submit Reservation',
+        'reservation.namePlaceholder': 'Enter your name',
+        'reservation.emailPlaceholder': 'Enter your email',
+        'reservation.phonePlaceholder': 'Enter your phone',
+        'reservation.partySizePlaceholder': 'Enter party size',
+        'reservation.specialRequestsPlaceholder': 'Any special requests?',
+        'reservation.requestReceived': 'Request Received',
+        'reservation.thankYouMessage': 'Thank you for your reservation',
+        'reservation.makeAnother': 'Make Another Reservation',
+        'reservation.submitFailed': 'Submission failed',
+      }
+      return translations[key] || key
+    },
+  }),
+}))
+
 // Create a fresh QueryClient for each test
 const createTestQueryClient = () =>
   new QueryClient({

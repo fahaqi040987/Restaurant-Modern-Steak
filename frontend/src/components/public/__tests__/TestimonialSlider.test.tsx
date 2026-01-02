@@ -6,6 +6,20 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
+// Mock i18n
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'public.testimonials': 'Testimonials',
+        'public.whatOurGuestsSay': 'What Our Guests Say',
+        'public.noTestimonials': 'No testimonials available',
+      }
+      return translations[key] || key
+    },
+  }),
+}))
+
 // Mock Embla Carousel
 vi.mock('embla-carousel-react', () => ({
   default: () => {

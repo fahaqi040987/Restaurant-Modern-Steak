@@ -28,7 +28,8 @@
       "Bash(make test-e2e:*)",
       "Bash(npm run test:run:*)",
       "Bash(curl:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(npx playwright test:*)"
     ]
   }
 }

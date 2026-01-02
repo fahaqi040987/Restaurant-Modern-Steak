@@ -264,3 +264,226 @@ test.describe('Accessibility', () => {
     expect(activeElement).toBeTruthy();
   });
 });
+
+test.describe('Landing Page Scroll Indicator', () => {
+  test('should have hover effect on scroll indicator', async ({ page }) => {
+    // Navigate to landing page
+    await page.goto('/site');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for loader to disappear
+    await page.waitForTimeout(3000);
+
+    // Locate scroll indicator
+    const scrollIndicator = page.getByTestId('scroll-indicator');
+    await expect(scrollIndicator).toBeVisible();
+
+    // Verify hover styles are present in the class list
+    const classes = await scrollIndicator.getAttribute('class');
+    expect(classes).toContain('hover:scale-110');
+    expect(classes).toContain('transition');
+
+    // Verify cursor changes to pointer (check class instead of computed style due to animation)
+    expect(classes).toContain('cursor-pointer');
+
+    // Verify the element has active state class for tap feedback
+    expect(classes).toContain('active:scale-95');
+
+    // Verify hover color transition class
+    expect(classes).toContain('hover:text-white');
+
+    // Verify transition utilities
+    expect(classes).toContain('duration-200');
+  });
+
+  test('should scroll to next section when scroll indicator is clicked', async ({ page }) => {
+    // Navigate to landing page
+    await page.goto('/site');
+    await page.waitForLoadState('networkidle');
+    
+    // Wait for loader to disappear (PublicLayout has 2500ms loader)
+    await page.waitForTimeout(3000);
+    
+    // Ensure page starts at top
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+    
+    // Locate scroll indicator by test ID
+    const scrollIndicator = page.getByTestId('scroll-indicator');
+    await expect(scrollIndicator).toBeVisible();
+    
+    // Capture initial position of the target section and page scroll
+    const infoCardsSection = page.locator('#info-cards-section');
+    const initialTop = await infoCardsSection.evaluate(el => el.getBoundingClientRect().top);
+    const initialScroll = await page.evaluate(() => window.scrollY);
+    
+    console.log('Before click - initialTop:', initialTop, 'initialScroll:', initialScroll);
+    
+    // Click the scroll indicator (force click to bypass animation stability check)
+    await scrollIndicator.click({ force: true });
+    
+    // Wait for smooth scroll animation
+    await page.waitForTimeout(1500);
+
+    // Verify the section moved closer to the viewport and is visible
+    const afterTop = await infoCardsSection.evaluate(el => el.getBoundingClientRect().top);
+    const afterScroll = await page.evaluate(() => window.scrollY);
+    
+    console.log('After click - afterTop:', afterTop, 'afterScroll:', afterScroll);
+    
+    // Check if scroll occurred (either position changed OR scroll position increased)
+    expect(afterScroll).toBeGreaterThan(initialScroll);
+    await expect(infoCardsSection).toBeInViewport();
+  });
+
+  test('should work on mobile viewport', async ({ page }) => {
+    // Set mobile viewport
+    await page.setViewportSize({ width: 375, height: 667 });
+
+    // Navigate to landing page
+    await page.goto('/site');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for loader
+    await page.waitForTimeout(3000);
+
+    // Ensure page starts at top
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+
+    // Locate scroll indicator
+    const scrollIndicator = page.getByTestId('scroll-indicator');
+    await expect(scrollIndicator).toBeVisible();
+
+    // Verify scroll works on mobile
+    const infoCardsSection = page.locator('#info-cards-section');
+    const initialScroll = await page.evaluate(() => window.scrollY);
+
+    // Click scroll indicator (force due to animation)
+    await scrollIndicator.click({ force: true });
+    await page.waitForTimeout(1500);
+
+    const afterScroll = await page.evaluate(() => window.scrollY);
+    expect(afterScroll).toBeGreaterThan(initialScroll);
+    await expect(infoCardsSection).toBeInViewport();
+  });
+
+  test('should respect reduced motion preference', async ({ page }) => {
+    // Emulate prefers-reduced-motion: reduce
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+
+    // Navigate to landing page
+    await page.goto('/site');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for loader
+    await page.waitForTimeout(3000);
+
+    // Ensure page starts at top
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+
+    // Click scroll indicator
+    const scrollIndicator = page.getByTestId('scroll-indicator');
+    await scrollIndicator.click({ force: true });
+
+    // With reduced motion, scroll should still work (with behavior: 'auto')
+    await page.waitForTimeout(500); // Shorter wait since instant scroll
+
+    const scrollY = await page.evaluate(() => window.scrollY);
+    expect(scrollY).toBeGreaterThan(0);
+  });
+
+  test('should meet accessibility requirements', async ({ page }) => {
+    // Navigate to landing page
+    await page.goto('/site');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for loader
+    await page.waitForTimeout(3000);
+
+    // Locate scroll indicator
+    const scrollIndicator = page.getByTestId('scroll-indicator');
+    await expect(scrollIndicator).toBeVisible();
+
+    // Verify it's a button element (semantic HTML)
+    const tagName = await scrollIndicator.evaluate(el => el.tagName);
+    expect(tagName).toBe('BUTTON');
+
+    // Verify aria-label is present and non-empty
+    const ariaLabel = await scrollIndicator.getAttribute('aria-label');
+    expect(ariaLabel).toBeTruthy();
+    expect(ariaLabel!.length).toBeGreaterThan(0);
+
+    // Verify type="button" is set (prevents form submission)
+    const type = await scrollIndicator.getAttribute('type');
+    expect(type).toBe('button');
+
+    // Verify focus ring classes are present for keyboard users
+    const classes = await scrollIndicator.getAttribute('class');
+    expect(classes).toContain('focus:ring');
+    expect(classes).toContain('focus:outline-none');
+
+    // Verify the button is focusable
+    await scrollIndicator.focus();
+    const isFocused = await scrollIndicator.evaluate(el => el === document.activeElement);
+    expect(isFocused).toBeTruthy();
+  });
+
+  test('should support keyboard navigation (Tab, Enter, Space)', async ({ page }) => {
+    // Navigate to landing page
+    await page.goto('/site');
+    await page.waitForLoadState('networkidle');
+    
+    // Wait for loader to disappear
+    await page.waitForTimeout(3000);
+    
+    // Ensure page starts at top
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+    
+    // Locate scroll indicator by test ID
+    const scrollIndicator = page.getByTestId('scroll-indicator');
+    await expect(scrollIndicator).toBeVisible();
+    
+    // Verify aria-label is present for screen readers
+    const ariaLabel = await scrollIndicator.getAttribute('aria-label');
+    expect(ariaLabel).toBeTruthy();
+    console.log('Scroll indicator aria-label:', ariaLabel);
+    
+    // Verify the button can receive focus (is keyboard navigable)
+    await scrollIndicator.focus();
+    const isFocused = await scrollIndicator.evaluate(el => el === document.activeElement);
+    expect(isFocused).toBeTruthy();
+    
+    // Test Enter key activation
+    const infoCardsSection = page.locator('#info-cards-section');
+    const initialScroll = await page.evaluate(() => window.scrollY);
+    
+    console.log('Before Enter key - scroll position:', initialScroll);
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(1500);
+    
+    const afterScrollEnter = await page.evaluate(() => window.scrollY);
+    console.log('After Enter key - scroll position:', afterScrollEnter);
+    expect(afterScrollEnter).toBeGreaterThan(initialScroll);
+    await expect(infoCardsSection).toBeInViewport();
+    
+    // Reset scroll position for Space key test
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+    
+    // Focus scroll indicator again
+    await scrollIndicator.focus();
+    const initialScroll2 = await page.evaluate(() => window.scrollY);
+    
+    console.log('Before Space key - scroll position:', initialScroll2);
+    await page.keyboard.press('Space');
+    await page.waitForTimeout(1500);
+    
+    const afterScrollSpace = await page.evaluate(() => window.scrollY);
+    console.log('After Space key - scroll position:', afterScrollSpace);
+    expect(afterScrollSpace).toBeGreaterThan(initialScroll2);
+  });
+});
+

@@ -36,6 +36,31 @@ export function HeroSection({
 }: HeroSectionProps) {
   const { t } = useTranslation()
 
+  // Scroll handler for scroll indicator
+  const handleScrollClick = () => {
+    const targetSection = document.getElementById('info-cards-section')
+    
+    if (targetSection) {
+      // Check for reduced motion preference
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      
+      targetSection.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start',
+      })
+    } else {
+      console.warn('Scroll target #info-cards-section not found')
+    }
+  }
+
+  // Keyboard handler for accessibility (Enter and Space keys)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault() // Prevent default Space scrolling behavior
+      handleScrollClick()
+    }
+  }
+
   const { ref: headingRef, isVisible: headingVisible } = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true,
@@ -156,13 +181,30 @@ export function HeroSection({
       </div>
 
       {/* Scroll indicator */}
-      <div
+      <button
+        onClick={handleScrollClick}
+        onKeyDown={handleKeyDown}
         data-testid="scroll-indicator"
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce"
-        aria-hidden="true"
+        className={cn(
+          'absolute bottom-8 left-1/2 -translate-x-1/2',
+          'animate-bounce cursor-pointer',
+          // T025: Hover scale animation
+          'hover:scale-110',
+          // T026: Hover color transition
+          'text-white/80 hover:text-white',
+          // T027: Active state feedback (tap feedback for touch)
+          'active:scale-95',
+          // T028: Smooth transition utilities
+          'transition-all duration-200 ease-out',
+          // Focus ring for keyboard navigation
+          'focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent',
+          'bg-transparent border-none p-2 rounded-full'
+        )}
+        aria-label={t('public.scrollDown')}
+        type="button"
       >
-        <ChevronDown className="h-8 w-8 text-white/80" />
-      </div>
+        <ChevronDown className="h-8 w-8" />
+      </button>
 
       {/* Decorative corner accents */}
       <div

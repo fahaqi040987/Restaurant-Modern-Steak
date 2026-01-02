@@ -12,6 +12,67 @@ import { TakeawayBoard } from '../TakeawayBoard';
 import { SoundSettings } from '../SoundSettings';
 import type { Order, User, OrderItem } from '@/types';
 
+// Mock i18n
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const translations: Record<string, string> = {
+        // Enhanced Kitchen Order Card
+        'kitchen.justNow': 'Just now',
+        'kitchen.minutesAgo': '{{minutes}}m ago',
+        'kitchen.hoursMinutesAgo': '{{hours}}h {{minutes}}m ago',
+        'kitchen.startPreparing': 'Start Preparing',
+        'kitchen.markReady': 'Mark Ready',
+        'kitchen.markServed': 'Mark Served',
+        'kitchen.progress': 'Progress',
+        'kitchen.itemsProgress': '{{ready}}/{{total}} items',
+        'kitchen.table': 'Table',
+        'kitchen.readyToServe': 'Ready to serve',
+        'kitchen.completionProgress': 'Completion',
+        'kitchen.itemsReady': '{{ready}}/{{total}} ready',
+        'kitchen.note': 'Note:',
+        'kitchen.estPrepTime': 'Est. {{time}}',
+        'kitchen.ready': '✓ Ready',
+        'kitchen.preparing': 'Preparing',
+        'kitchen.showMoreItems': '+{{count}} more',
+        'kitchen.specialInstructions': 'Special Instructions',
+        'kitchen.reset': 'Reset',
+        'kitchen.completeAllItemsHint': 'Complete all items to mark as ready',
+        // Sound Settings
+        'kitchen.soundSettings': 'Sound Settings',
+        'kitchen.enableSounds': 'Enable Sounds',
+        'kitchen.soundsDescription': 'Play sounds for new orders and status updates',
+        'kitchen.volume': 'Volume',
+        'kitchen.soundTypes': 'Sound Types',
+        'kitchen.newOrdersSound': 'New Orders',
+        'kitchen.newOrdersSoundDesc': 'Plays when a new order is received',
+        'kitchen.orderReadySound': 'Order Ready',
+        'kitchen.orderReadySoundDesc': 'Plays when an order is ready for pickup',
+        'kitchen.takeawayReadySound': 'Takeaway Ready',
+        'kitchen.takeawayReadySoundDesc': 'Plays when a takeaway order is ready',
+        'kitchen.testSounds': 'Test Sounds',
+        'kitchen.newOrderAlert': 'New Order Alert',
+        'kitchen.newOrderAlertDesc': 'Test new order sound',
+        'kitchen.orderReadyAlert': 'Order Ready Alert',
+        'kitchen.orderReadyAlertDesc': 'Test order ready sound',
+        'kitchen.takeawayReadyAlert': 'Takeaway Ready Alert',
+        'kitchen.takeawayReadyAlertDesc': 'Test takeaway ready sound',
+        'kitchen.done': 'Done',
+        // Takeaway Board
+        'kitchen.takeawayBoard': 'Takeaway Orders',
+        'kitchen.noTakeawayOrders': 'No takeaway orders',
+      }
+      let text = translations[key] || key
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          text = text.replace(`{{${k}}}`, String(v))
+        })
+      }
+      return text
+    },
+  }),
+}));
+
 // Mock the sound service
 vi.mock('@/services/soundService', () => ({
   kitchenSoundService: {

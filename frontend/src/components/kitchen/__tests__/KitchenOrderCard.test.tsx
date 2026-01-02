@@ -9,6 +9,44 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { KitchenOrderCard } from '../KitchenOrderCard';
 import type { Order, OrderItem } from '@/types';
 
+// Mock i18n translations
+vi.mock('react-i18next', () => {
+  const translations: Record<string, string> = {
+    'kitchen.justNow': 'Just now',
+    'kitchen.minutesAgo': '{{minutes}}m ago',
+    'kitchen.hoursMinutesAgo': '{{hours}}h {{minutes}}m ago',
+    'kitchen.itemsCount': '{{count}} items',
+    'kitchen.estPrepTime': 'Est. {{time}} prep time',
+    'kitchen.table': 'Table',
+    'kitchen.startPreparing': 'Start Preparing',
+    'kitchen.markReady': 'Mark Ready',
+    'kitchen.markServed': 'Mark Served',
+    'kitchen.reset': 'Reset',
+    'kitchen.preparing': 'Preparing',
+    'kitchen.ready': '✓ Ready',
+    'kitchen.moreItems': '+{{count}} more items',
+    'kitchen.specialInstructions': 'Special Instructions:',
+    'kitchen.update': 'Update',
+    'kitchen.note': 'Note:',
+    'kitchen.prepTime': 'Prep time: {{time}} min',
+    'kitchen.orderDetails': 'Order Details',
+  };
+
+  return {
+    useTranslation: () => ({
+      t: (key: string, params?: Record<string, unknown>) => {
+        let text = translations[key] || key;
+        if (params) {
+          Object.entries(params).forEach(([k, v]) => {
+            text = text.replace(`{{${k}}}`, String(v));
+          });
+        }
+        return text;
+      },
+    }),
+  };
+});
+
 // Mock data factory
 const createMockOrderItem = (overrides: Partial<OrderItem> = {}): OrderItem => ({
   id: 'item-1',

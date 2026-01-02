@@ -11,6 +11,18 @@ import userEvent from '@testing-library/user-event'
 import { MenuSlider } from '../MenuSlider'
 import type { PublicCategory } from '@/types'
 
+// Mock i18n
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'public.allItems': 'All Items',
+      }
+      return translations[key] || key
+    },
+  }),
+}))
+
 // Sample categories for testing
 const mockCategories: PublicCategory[] = [
   {

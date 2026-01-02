@@ -7,6 +7,56 @@ import { AdminDashboard } from '../AdminDashboard';
 // T190: Create test file frontend/src/components/admin/__tests__/Dashboard.test.tsx
 // ========================
 
+// Mock i18n
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'admin.dashboardTitle': 'Admin Dashboard',
+        'admin.dashboardSubtitle': 'Manage your restaurant operations',
+        'admin.welcomeBack': 'Welcome back!',
+        'admin.settings': 'Settings',
+        'admin.reports': 'Reports',
+        'admin.todayOrders': "Today's Orders",
+        'admin.todayRevenue': "Today's Revenue",
+        'admin.activeOrders': 'Active Orders',
+        'admin.occupiedTables': 'Occupied Tables',
+        'admin.fromYesterday': 'from yesterday',
+        'admin.currentlyProcessed': 'currently being processed',
+        'admin.tablesInUse': 'tables in use',
+        'admin.incomeReport': 'Income Report',
+        'admin.incomeDescription': 'Detailed breakdown of revenue',
+        'admin.today': 'Today',
+        'admin.week': 'Week',
+        'admin.month': 'Month',
+        'admin.totalOrders': 'Total Orders',
+        'admin.grossIncome': 'Gross Income',
+        'admin.taxCollected': 'Tax Collected',
+        'admin.netIncome': 'Net Income',
+        'admin.period': 'Period',
+        'admin.orders': 'Orders',
+        'admin.gross': 'Gross',
+        'admin.tax': 'Tax',
+        'admin.net': 'Net',
+        'admin.noIncomeData': 'No income data available',
+        'admin.manageMenu': 'Manage Menu',
+        'admin.manageMenuDesc': 'Add, edit, or remove menu items',
+        'admin.manageTables': 'Manage Tables',
+        'admin.manageTablesDesc': 'Configure dining tables and sections',
+        'admin.manageStaff': 'Manage Staff',
+        'admin.manageStaffDesc': 'Add, edit staff accounts and permissions',
+        'admin.viewReports': 'View Reports',
+        'admin.viewReportsDesc': 'Detailed analytics and sales reports',
+      }
+      return translations[key] || key
+    },
+    i18n: {
+      language: 'en-US',
+      changeLanguage: vi.fn(),
+    },
+  }),
+}));
+
 // Mock the API client
 vi.mock('@/api/client', () => ({
   default: {

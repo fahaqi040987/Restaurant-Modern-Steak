@@ -10,6 +10,38 @@ import userEvent from '@testing-library/user-event';
 import { SoundSettings } from '../SoundSettings';
 import { kitchenSoundService } from '@/services/soundService';
 
+// Mock i18n
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'kitchen.soundSettings': 'Sound Settings',
+        'kitchen.enableSounds': 'Enable Sounds',
+        'kitchen.soundsDescription': 'Play sounds for new orders and status updates',
+        'kitchen.volume': 'Volume',
+        'kitchen.soundTypes': 'Sound Types',
+        // Sound type switches
+        'kitchen.newOrdersSound': 'New Orders',
+        'kitchen.newOrdersSoundDesc': 'Plays when a new order is received',
+        'kitchen.orderReadySound': 'Order Ready',
+        'kitchen.orderReadySoundDesc': 'Plays when an order is ready for pickup',
+        'kitchen.takeawayReadySound': 'Takeaway Ready',
+        'kitchen.takeawayReadySoundDesc': 'Plays when a takeaway order is ready',
+        // Sound test buttons
+        'kitchen.testSounds': 'Test Sounds',
+        'kitchen.newOrderAlert': 'New Order Alert',
+        'kitchen.newOrderAlertDesc': 'Test new order sound',
+        'kitchen.orderReadyAlert': 'Order Ready Alert',
+        'kitchen.orderReadyAlertDesc': 'Test order ready sound',
+        'kitchen.takeawayReadyAlert': 'Takeaway Ready Alert',
+        'kitchen.takeawayReadyAlertDesc': 'Test takeaway ready sound',
+        'kitchen.done': 'Done',
+      }
+      return translations[key] || key
+    },
+  }),
+}));
+
 // Mock the sound service - must match the import path in the component
 vi.mock('@/services/soundService', () => ({
   kitchenSoundService: {

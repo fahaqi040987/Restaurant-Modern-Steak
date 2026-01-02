@@ -3,6 +3,54 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProfilePage } from '../ProfilePage';
 
+// Mock i18n
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'admin.loadProfileFailed': 'Failed to load profile',
+        'admin.profileTitle': 'Profile',
+        'admin.profileManageSettings': 'Manage your account settings and preferences',
+        'admin.personalInfo': 'Personal Information',
+        'admin.personalInfoDesc': 'Update your personal details',
+        'admin.firstName': 'First Name',
+        'admin.lastName': 'Last Name',
+        'admin.email': 'Email',
+        'admin.username': 'Username',
+        'admin.usernameCannotChange': 'Username cannot be changed',
+        'admin.role': 'Role',
+        'admin.saveChanges': 'Save Changes',
+        'admin.security': 'Security',
+        'admin.securityDesc': 'Manage your password and security settings',
+        'admin.changePassword': 'Change Password',
+        'admin.currentPassword': 'Current Password',
+        'admin.newPassword': 'New Password',
+        'admin.confirmNewPassword': 'Confirm New Password',
+        'admin.updatePassword': 'Update Password',
+        'admin.accountInfo': 'Account Information',
+        'admin.accountCreated': 'Account Created',
+        'admin.profileUpdatedSuccess': 'Profile updated successfully',
+        'admin.profileUpdateFailed': 'Failed to update profile',
+        'admin.passwordChangedSuccess': 'Password changed successfully',
+        'admin.passwordChangeFailed': 'Failed to change password',
+        'common.cancel': 'Cancel',
+        'common.status': 'Status',
+        'common.active': 'Active',
+        'roles.admin': 'Administrator',
+        'roles.manager': 'Manager',
+        'roles.server': 'Server',
+        'roles.counter': 'Counter',
+        'roles.kitchen': 'Kitchen',
+      }
+      return translations[key] || key
+    },
+    i18n: {
+      language: 'en-US',
+      changeLanguage: vi.fn(),
+    },
+  }),
+}));
+
 // Mock the API client
 vi.mock('@/api/client', () => ({
   default: {

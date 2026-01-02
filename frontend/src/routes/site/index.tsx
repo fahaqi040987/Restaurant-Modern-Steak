@@ -60,8 +60,9 @@ function PublicLandingPage() {
       />
 
       {/* Info Cards - Quick restaurant details */}
-      <InfoCards
-        info={{
+      <section id="info-cards-section">
+        <InfoCards
+          info={{
           phone: restaurantInfo?.phone,
           address: restaurantInfo?.address,
           hours: restaurantInfo?.operating_hours
@@ -98,7 +99,8 @@ function PublicLandingPage() {
               })()
             : undefined,
         }}
-      />
+        />
+      </section>
 
       {/* Service Cards - Why Choose Us section */}
       <ServiceCards />
@@ -395,7 +397,7 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
             <div className="space-y-4">
               <div className="aspect-[4/5] rounded-lg overflow-hidden">
                 <img
-                  src="/assets/restoran/images/about-1.jpg"
+                  src="/assets/restoran/images/image_grid_1.jpeg"
                   alt="Our restaurant interior"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
@@ -403,7 +405,7 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
               </div>
               <div className="aspect-square rounded-lg overflow-hidden">
                 <img
-                  src="/assets/restoran/images/about-2.jpg"
+                  src="/assets/restoran/images/image_grid_2.jpeg"
                   alt="Our signature dishes"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
@@ -413,7 +415,7 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
             <div className="space-y-4 pt-8">
               <div className="aspect-square rounded-lg overflow-hidden">
                 <img
-                  src="/assets/restoran/images/about-3.jpg"
+                  src="/assets/restoran/images/image_grid_3.jpeg"
                   alt="Our chef at work"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
@@ -421,7 +423,7 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
               </div>
               <div className="aspect-[4/5] rounded-lg overflow-hidden">
                 <img
-                  src="/assets/restoran/images/about-4.jpg"
+                  src="/assets/restoran/images/image_grid_4.jpeg"
                   alt="Premium ingredients"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
