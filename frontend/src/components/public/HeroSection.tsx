@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Calendar, ChevronDown, Utensils } from 'lucide-react'
+import { BookOpenCheck, Calendar, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
@@ -137,16 +137,15 @@ export function HeroSection({
           <Button
             asChild
             size="lg"
-            variant="outline"
             className={cn(
               'gap-2 px-8 py-6 text-lg font-semibold',
-              'border-2 border-white text-white',
-              'hover:bg-white hover:text-[var(--public-primary-dark)]',
+              'bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
+              'text-white shadow-lg hover:shadow-xl',
               'transition-all duration-300 hover:scale-105'
             )}
           >
             <Link to="/site/menu">
-              <Utensils className="h-5 w-5" aria-hidden="true" />
+              <BookOpenCheck className="h-5 w-5" aria-hidden="true" />
               <span>View Menu</span>
             </Link>
           </Button>

@@ -24,6 +24,26 @@ function formatPrice(price: number): string {
   }).format(price)
 }
 
+/**
+ * Build the full image URL from a relative path
+ * Handles /uploads and /images paths by prefixing with backend URL
+ */
+function getImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  // If it's already a full URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  // If it's a relative URL starting with /uploads or /images, prepend the API base
+  if (url.startsWith('/uploads') || url.startsWith('/images')) {
+    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1'
+    // Remove /api/v1 from the API URL to get the base URL
+    const baseUrl = apiUrl.replace('/api/v1', '')
+    return `${baseUrl}${url}`
+  }
+  return url
+}
+
 export function MenuItemCard({ item, className }: MenuItemCardProps) {
   return (
     <Card
@@ -37,7 +57,7 @@ export function MenuItemCard({ item, className }: MenuItemCardProps) {
       <div className="aspect-[4/3] bg-[var(--public-bg-hover)] relative overflow-hidden">
         {item.image_url ? (
           <img
-            src={item.image_url}
+            src={getImageUrl(item.image_url) || ''}
             alt={item.name}
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"

@@ -1,14 +1,8 @@
 -- Indonesian Steakhouse Menu Data
--- This replaces the Western menu with authentic Indonesian steak specialties
+-- Authentic Indonesian steak specialties for Steak Kenangan
 -- All prices in Indonesian Rupiah (IDR)
 
 BEGIN;
-
--- Clear existing demo data
-DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders);
-DELETE FROM orders;
-DELETE FROM products;
-DELETE FROM categories;
 
 -- Indonesian Steak Categories
 INSERT INTO categories (name, description, sort_order, created_at, updated_at) VALUES
@@ -85,6 +79,16 @@ BEGIN
     (cat_dessert_id, 'Martabak Manis Mini', 'Martabak manis coklat keju kacang', 45000, '/images/martabak.jpg', true, NOW(), NOW());
 
 END $$;
+
+-- Initialize inventory for all products
+INSERT INTO inventory (product_id, current_stock, minimum_stock, maximum_stock, unit_cost)
+SELECT
+    id as product_id,
+    50 as current_stock,
+    10 as minimum_stock,
+    100 as maximum_stock,
+    price * 0.4 as unit_cost
+FROM products;
 
 COMMIT;
 

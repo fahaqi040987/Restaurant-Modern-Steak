@@ -24,10 +24,10 @@ import {
   Edit,
   Trash2,
   Package,
-  DollarSign,
   Clock,
   Image,
-  Tag
+  Tag,
+  Banknote
 } from "lucide-react"
 import type { Product, Category } from "@/types"
 
@@ -191,8 +191,8 @@ export function AdminMenuTable({
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="h-8 px-2 lg:px-3"
           >
-            <DollarSign className="mr-2 h-4 w-4" />
-            Price
+            <Banknote className="mr-2 h-4 w-4" />
+            Harga
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (

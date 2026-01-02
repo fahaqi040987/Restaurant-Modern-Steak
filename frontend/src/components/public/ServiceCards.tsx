@@ -1,12 +1,11 @@
 import { Link } from '@tanstack/react-router'
 import {
-  Utensils,
   Clock,
   MapPin,
   Phone,
   ChefHat,
-  Wine,
   CalendarDays,
+  Beef,
   Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -30,12 +29,14 @@ const defaultCards: ServiceCard[] = [
   {
     icon: ChefHat,
     title: 'Master Chefs',
-    description: 'Our experienced chefs craft each dish with precision and passion',
+    description: 'Koki yang berpengalaman dengan keahlian internasional',
+    link: '/site/about',
   },
   {
-    icon: Utensils,
+    icon: Beef,
     title: 'Premium Ingredients',
     description: 'We source only the finest cuts and freshest ingredients',
+    link: '/site/menu',
   },
   {
     icon: CalendarDays,
@@ -48,7 +49,7 @@ const defaultCards: ServiceCard[] = [
     title: 'Private Events',
     description: 'Host memorable gatherings in our elegant private dining spaces',
     link: '/site/contact',
-  },
+  }
 ]
 
 /**
@@ -110,7 +111,6 @@ function ServiceCardItem({ card, index }: ServiceCardItemProps) {
   })
 
   const Icon = card.icon
-  const isClickable = !!card.link
 
   const cardContent = (
     <div
@@ -121,7 +121,6 @@ function ServiceCardItem({ card, index }: ServiceCardItemProps) {
         'transition-all duration-500 ease-out',
         'hover:border-[var(--public-accent)] hover:shadow-xl',
         'hover:-translate-y-2',
-        isClickable && 'cursor-pointer',
         isVisible
           ? 'opacity-100 translate-y-0'
           : 'opacity-0 translate-y-8'
@@ -130,31 +129,17 @@ function ServiceCardItem({ card, index }: ServiceCardItemProps) {
         transitionDelay: `${index * 100}ms`,
       }}
     >
-      {/* Icon Container */}
-      <div
-        className={cn(
-          'w-16 h-16 rounded-full flex items-center justify-center mb-6',
-          'bg-[var(--public-accent)]/10',
-          'group-hover:bg-[var(--public-accent)] group-hover:scale-110',
-          'transition-all duration-300'
-        )}
-      >
-        <Icon
-          className={cn(
-            'h-8 w-8 text-[var(--public-accent)]',
-            'group-hover:text-white',
-            'transition-colors duration-300'
-          )}
-          aria-hidden="true"
-        />
+      {/* Icon Container - Hidden, only visible on hover overlay */}
+      <div className="hidden">
+        <Icon aria-hidden="true" />
       </div>
 
       {/* Title */}
       <h3
         className={cn(
           'text-xl font-bold text-[var(--public-text-primary)] mb-3',
-          'group-hover:text-[var(--public-accent)]',
-          'transition-colors duration-300'
+          'group-hover:opacity-0',
+          'transition-all duration-300'
         )}
         style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
       >
@@ -162,9 +147,30 @@ function ServiceCardItem({ card, index }: ServiceCardItemProps) {
       </h3>
 
       {/* Description */}
-      <p className="text-[var(--public-text-secondary)] text-sm leading-relaxed">
+      <p className="text-[var(--public-text-secondary)] text-sm leading-relaxed group-hover:opacity-0 transition-opacity duration-300">
         {card.description}
       </p>
+
+      {/* Hover Overlay with Example Text */}
+      <div
+        className={cn(
+          'absolute inset-0 rounded-lg',
+          'bg-[var(--public-accent)]/95',
+          'flex flex-col items-center justify-center p-6',
+          'opacity-0 group-hover:opacity-100',
+          'transition-opacity duration-300',
+          'text-white text-center'
+        )}
+      >
+        <Icon className="h-12 w-12 mb-4" aria-hidden="true" />
+        <h4 className="text-xl font-bold mb-2">{card.title}</h4>
+        {/* <p className="text-sm mb-4">{card.description}</p> */}
+        {card.link && (
+          <span className="text-xs font-semibold uppercase tracking-wider border-b-2 border-white pb-1">
+            Learn More →
+          </span>
+        )}
+      </div>
 
       {/* Hover accent line */}
       <div
@@ -183,14 +189,13 @@ function ServiceCardItem({ card, index }: ServiceCardItemProps) {
       <Link
         to={card.link}
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)] rounded-lg"
-        aria-label={`Learn more about ${card.title}`}
       >
         {cardContent}
       </Link>
     )
   }
 
-  return <div className="block">{cardContent}</div>
+  return cardContent
 }
 
 /**
@@ -218,14 +223,14 @@ const defaultInfoCards: InfoCard[] = [
   {
     icon: Clock,
     title: 'Opening Hours',
-    value: 'Mon - Sat: 11AM - 10PM',
-    subtitle: 'Sunday: Closed',
+    value: 'Senin - Sabtu: 11:00 WIB - 22:00 WIB',
+    subtitle: 'Minggu: Tutup',
   },
   {
     icon: Phone,
     title: 'Reservations',
-    value: '+62 21 123 456',
-    subtitle: 'Call us anytime',
+    value: '+62 812-3456-7890',
+    subtitle: 'Hubungi kami kapan saja',
   },
   {
     icon: MapPin,
@@ -241,7 +246,7 @@ export function InfoCards({ className, info }: InfoCardsProps) {
         {
           icon: Clock,
           title: 'Opening Hours',
-          value: info.hours || 'Mon - Sat: 11AM - 10PM',
+          value: info.hours || 'Senin - Sabtu: 09:00 WIB - 22:00 WIB',
           subtitle: 'Sunday: Closed',
         },
         {

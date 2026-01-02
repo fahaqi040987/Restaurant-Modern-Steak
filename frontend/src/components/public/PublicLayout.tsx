@@ -65,7 +65,8 @@ export function PublicLayout({
   const { data: restaurantInfo } = useQuery({
     queryKey: ['restaurantInfo'],
     queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 30, // 30 minutes - restaurant info rarely changes
+    staleTime: 1000 * 60 * 5, // 5 minutes for faster updates after admin changes
+    refetchOnMount: true,
     retry: 1,
   })
 

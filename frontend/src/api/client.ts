@@ -32,6 +32,8 @@ import type {
   ContactFormResponse,
   CreateReservationRequest,
   ReservationResponse,
+  UpdateRestaurantInfoRequest,
+  UpdateOperatingHoursRequest,
   // Upload types
   UploadResponse,
   // T082-T083: QR ordering types
@@ -654,6 +656,32 @@ class APIClient {
       throw new Error('Restaurant information not found');
     }
     return response.data;
+  }
+
+  /**
+   * Update restaurant information (admin only)
+   * @param data - Restaurant info data to update
+   * @returns Success response
+   */
+  async updateRestaurantInfo(data: UpdateRestaurantInfoRequest): Promise<APIResponse> {
+    return this.request<APIResponse>({
+      method: 'PUT',
+      url: '/admin/restaurant-info',
+      data,
+    });
+  }
+
+  /**
+   * Update restaurant operating hours (admin only)
+   * @param data - Operating hours for all 7 days
+   * @returns Success response
+   */
+  async updateOperatingHours(data: UpdateOperatingHoursRequest): Promise<APIResponse> {
+    return this.request<APIResponse>({
+      method: 'PUT',
+      url: '/admin/operating-hours',
+      data,
+    });
   }
 
   /**

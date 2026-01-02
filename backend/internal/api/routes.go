@@ -30,7 +30,8 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	inventoryHandler := handlers.NewInventoryHandler(db)
 	ingredientsHandler := handlers.NewIngredientsHandler(db)
 	uploadHandler := handlers.NewUploadHandler("./uploads")
-	surveyHandler := handlers.NewSurveyHandler(db) // T075: Added for satisfaction surveys
+	surveyHandler := handlers.NewSurveyHandler(db)                 // T075: Added for satisfaction surveys
+	restaurantInfoHandler := handlers.NewRestaurantInfoHandler(db) // Restaurant info management
 
 	// Rate limiters for different endpoint types
 	publicRateLimiter := middleware.PublicRateLimiter()
@@ -154,6 +155,10 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		admin.GET("/settings", handlers.GetSettings(db))
 		admin.PUT("/settings", handlers.UpdateSettings(db))
 		admin.GET("/health", handlers.GetSystemHealth(db))
+
+		// Restaurant information management (admin only)
+		admin.PUT("/restaurant-info", restaurantInfoHandler.UpdateRestaurantInfo)
+		admin.PUT("/operating-hours", restaurantInfoHandler.UpdateOperatingHours)
 
 		// Contact submissions management
 		contactHandler := handlers.NewHandler(db)

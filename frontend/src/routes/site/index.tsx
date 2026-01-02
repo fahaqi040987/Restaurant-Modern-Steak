@@ -20,7 +20,8 @@ function PublicLandingPage() {
   const { data: restaurantInfo, isLoading: isLoadingInfo } = useQuery({
     queryKey: ['restaurantInfo'],
     queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes for faster updates
+    refetchOnMount: true, // Always refetch on mount to get latest data
   })
 
   // Fetch featured menu items (limit to 4)
@@ -59,19 +60,37 @@ function PublicLandingPage() {
         info={{
           phone: restaurantInfo?.phone,
           address: restaurantInfo?.address,
-          hours: restaurantInfo?.operating_hours?.[0]
+          hours: restaurantInfo?.operating_hours
             ? (() => {
                 const formatTime = (time: string): string => {
                   const [hourStr, minStr] = time.split(':')
                   const hour = parseInt(hourStr, 10)
                   const min = minStr || '00'
-                  const ampm = hour >= 12 ? 'PM' : 'AM'
-                  const hour12 = hour % 12 || 12
-                  return `${hour12}:${min} ${ampm}`
+                  return `${hour}:${min}`
                 }
-                const hours = restaurantInfo.operating_hours[0]
-                // T070: Added WIB timezone label
-                return `${formatTime(hours.open_time)} - ${formatTime(hours.close_time)} WIB`
+                
+                const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', "Jum'at", 'Sabtu']
+                const today = new Date().getDay()
+                const todayHours = restaurantInfo.operating_hours.find(h => h.day_of_week === today)
+                
+                if (todayHours?.is_closed) {
+                  // If closed today, show next open day
+                  const nextOpenDay = restaurantInfo.operating_hours.find((h, idx) => {
+                    const dayOffset = (h.day_of_week - today + 7) % 7
+                    return dayOffset > 0 && !h.is_closed
+                  })
+                  
+                  if (nextOpenDay) {
+                    return `Hari ini Tutup - Buka ${dayNames[nextOpenDay.day_of_week]}: ${formatTime(nextOpenDay.open_time)} - ${formatTime(nextOpenDay.close_time)} WIB`
+                  }
+                  return 'Hari ini Tutup'
+                }
+                
+                if (todayHours) {
+                  return `Hari ini: ${formatTime(todayHours.open_time)} - ${formatTime(todayHours.close_time)} WIB`
+                }
+                
+                return undefined
               })()
             : undefined,
         }}

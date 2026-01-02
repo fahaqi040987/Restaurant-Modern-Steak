@@ -287,7 +287,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
             <ul className="space-y-4">
               <li>
                 <a
-                  href={`tel:${restaurantInfo?.phone || '+6221123456'}`}
+                  href={`tel:${restaurantInfo?.phone || '+622112345678'}`}
                   className={cn(
                     'flex items-center gap-3 text-sm',
                     'text-[var(--public-text-secondary)] hover:text-[var(--public-accent)]',
@@ -297,7 +297,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                   <span className="w-8 h-8 rounded-full bg-[var(--public-bg-hover)] flex items-center justify-center flex-shrink-0">
                     <Phone className="h-4 w-4" aria-hidden="true" />
                   </span>
-                  <span>{restaurantInfo?.phone || '+62 21 123 456'}</span>
+                  <span>{restaurantInfo?.phone || '+62 811 717 112'}</span>
                 </a>
               </li>
               <li>

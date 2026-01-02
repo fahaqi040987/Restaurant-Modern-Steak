@@ -38,8 +38,14 @@ export const createProductSchema = z.object({
   name: requiredStringSchema.min(2, 'Product name must be at least 2 characters'),
   description: z.string().optional(),
   price: priceSchema,
-  category_id: z.string().or(z.number()).transform(val => Number(val)),
-  image_url: z.string().url().optional().or(z.literal('')),
+  category_id: z.string().min(1, 'Please select a category'),
+  image_url: z.string()
+    .refine(
+      (val) => val === '' || val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
+      'Image URL must be a valid URL or empty'
+    )
+    .optional()
+    .or(z.literal('')),
   status: productStatusSchema.default('active'),
   preparation_time: z.number().min(0).max(120).default(5), // minutes
 })
@@ -52,7 +58,13 @@ export const updateProductSchema = createProductSchema.partial().extend({
 export const createCategorySchema = z.object({
   name: requiredStringSchema.min(2, 'Category name must be at least 2 characters'),
   description: z.string().optional(),
-  image_url: z.string().url().optional().or(z.literal('')),
+  image_url: z.string()
+    .refine(
+      (val) => val === '' || val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
+      'Image URL must be a valid URL or empty'
+    )
+    .optional()
+    .or(z.literal('')),
   sort_order: z.number().min(0).default(0),
 })
 

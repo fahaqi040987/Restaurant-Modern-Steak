@@ -353,6 +353,47 @@ export interface ContactFormResponse {
   id: string;
 }
 
+/**
+ * Update restaurant info request (admin only)
+ */
+export interface UpdateRestaurantInfoRequest {
+  name: string;
+  tagline?: string | null;
+  description?: string | null;
+  address?: string | null
+  city?: string | null
+  postal_code?: string | null
+  country?: string | null
+  phone?: string | null
+  email?: string | null
+  whatsapp?: string | null;
+  map_latitude?: number | null;
+  map_longitude?: number | null;
+  google_maps_url?: string | null;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
+  twitter_url?: string | null;
+  logo_url?: string | null;
+  hero_image_url?: string | null;
+}
+
+/**
+ * Operating hour update for a single day
+ */
+export interface OperatingHourUpdate {
+  day_of_week: number; // 0-6 (Sunday-Saturday)
+  open_time: string; // HH:MM format
+  close_time: string; // HH:MM format
+  is_closed: boolean;
+}
+
+/**
+ * Update operating hours request (admin only)
+ */
+export interface UpdateOperatingHoursRequest {
+  hours: OperatingHourUpdate[];
+}
+
 // ===========================================
 // Upload Types
 // ===========================================

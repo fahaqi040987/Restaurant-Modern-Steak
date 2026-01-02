@@ -30,7 +30,7 @@ export function FormDemo() {
       name: '',
       description: '',
       price: 0,
-      category_id: 1,
+      category_id: '',
       image_url: '',
       status: 'active',
       preparation_time: 5,

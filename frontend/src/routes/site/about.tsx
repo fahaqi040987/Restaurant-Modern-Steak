@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronRight, Calendar } from 'lucide-react'
+import { ChevronRight, Calendar, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { PublicLayout } from '@/components/public/PublicLayout'
@@ -19,7 +19,8 @@ function PublicAboutPage() {
   const { data: restaurantInfo } = useQuery({
     queryKey: ['restaurantInfo'],
     queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5, // 5 minutes for faster updates
+    refetchOnMount: true,
   })
 
   return (
@@ -265,10 +266,11 @@ function CTASection() {
             <Button
               asChild
               size="lg"
+              variant="outline"
               className={cn(
                 'gap-2 px-8 font-semibold',
-                'bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
-                'text-white shadow-lg hover:shadow-xl',
+                'border-2 border-[var(--public-accent)] text-[var(--public-accent)]',
+                'hover:bg-[var(--public-accent)] hover:text-black',
                 'transition-all duration-300'
               )}
             >
@@ -284,11 +286,12 @@ function CTASection() {
               className={cn(
                 'gap-2 px-8 font-semibold',
                 'border-2 border-[var(--public-accent)] text-[var(--public-accent)]',
-                'hover:bg-[var(--public-accent)] hover:text-white',
+                'hover:bg-[var(--public-accent)] hover:text-black',
                 'transition-all duration-300'
               )}
             >
               <Link to="/site/contact">
+                <Phone className="h-5 w-5" aria-hidden="true" />
                 <span>Get in Touch</span>
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </Link>

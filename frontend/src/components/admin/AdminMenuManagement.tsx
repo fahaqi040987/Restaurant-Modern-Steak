@@ -14,7 +14,6 @@ import {
   Trash2,
   Table,
   Grid3X3,
-  DollarSign,
   Clock,
   UtensilsCrossed
 } from 'lucide-react'
@@ -111,31 +110,32 @@ export function AdminMenuManagement() {
   }, [categorySearch, debouncedCategorySearch])
 
   // Fetch products with pagination
-  const { data: productsData, isLoading: isLoadingProducts, isFetching: isFetchingProducts } = useQuery({
+  const { data: productsResponse, isLoading: isLoadingProducts, isFetching: isFetchingProducts } = useQuery({
     queryKey: ['admin-products', productsPagination.page, productsPagination.pageSize, debouncedSearch],
     queryFn: () => apiClient.getAdminProducts({
       page: productsPagination.page,
       per_page: productsPagination.pageSize,
       search: debouncedSearch || undefined
-    }).then((res: any) => res.data)
+    })
   })
 
   // Fetch categories with pagination
-  const { data: categoriesData, isLoading: isLoadingCategories, isFetching: isFetchingCategories } = useQuery({
+  const { data: categoriesResponse, isLoading: isLoadingCategories, isFetching: isFetchingCategories } = useQuery({
     queryKey: ['admin-categories', categoriesPagination.page, categoriesPagination.pageSize, debouncedCategorySearch],
     queryFn: () => apiClient.getAdminCategories({
       page: categoriesPagination.page,
       per_page: categoriesPagination.pageSize,
       search: debouncedCategorySearch || undefined
-    }).then((res: any) => res.data)
+    })
   })
 
-  // Extract data and pagination info
-  const products = Array.isArray(productsData) ? productsData : (productsData as any)?.data || []
-  const productsPaginationInfo = (productsData as any)?.pagination || { total: 0 }
+  // Extract data and pagination info from response
+  // Backend returns: { success, message, data: products[], meta: { currentPage, perPage, total, totalPages } }
+  const products = (productsResponse as any)?.data || []
+  const productsPaginationInfo = (productsResponse as any)?.meta || { total: 0, currentPage: 1, perPage: 10, totalPages: 1 }
 
-  const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.data || []
-  const categoriesPaginationInfo = (categoriesData as any)?.pagination || { total: 0 }
+  const categories = (categoriesResponse as any)?.data || []
+  const categoriesPaginationInfo = (categoriesResponse as any)?.meta || { total: 0, currentPage: 1, perPage: 10, totalPages: 1 }
 
   // Delete product mutation
   const deleteProductMutation = useMutation({
@@ -364,8 +364,7 @@ export function AdminMenuManagement() {
                             </p>
                             <div className="flex items-center gap-2 mt-2">
                               <Badge variant="outline" className="text-green-600">
-                                <DollarSign className="w-3 h-3 mr-1" />
-                                {product.price}
+                                Rp {new Intl.NumberFormat('id-ID').format(product.price)}
                               </Badge>
                               <Badge variant="outline" className="text-blue-600">
                                 <Clock className="w-3 h-3 mr-1" />

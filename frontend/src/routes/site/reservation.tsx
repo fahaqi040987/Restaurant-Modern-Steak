@@ -40,7 +40,8 @@ function ReservationPage() {
   const { data: restaurantInfo, isLoading } = useQuery({
     queryKey: ['restaurantInfo'],
     queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5, // 5 minutes for faster updates
+    refetchOnMount: true,
   })
 
   const formatTime = (time: string): string => {
