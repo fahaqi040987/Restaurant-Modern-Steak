@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -55,6 +56,7 @@ export function PaymentConfirmationModal({
   orderNotes,
   onSuccess
 }: PaymentConfirmationModalProps) {
+  const { t } = useTranslation()
   const [currentStep, setCurrentStep] = useState<'payment' | 'processing' | 'success'>('payment')
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [orderId, setOrderId] = useState<string>('')
@@ -271,12 +273,12 @@ export function PaymentConfirmationModal({
           <Card className="bg-white">
             <CardContent className="p-8 text-center">
               <ButtonLoadingSpinner />
-              <h3 className="text-lg font-semibold mb-2 mt-4">Processing Payment</h3>
+              <h3 className="text-lg font-semibold mb-2 mt-4">{t('pos.processingPayment')}</h3>
               <p className="text-gray-600">
-                {createOrderMutation.isPending && 'Creating order...'}
-                {processPaymentMutation.isPending && 'Processing payment...'}
+                {createOrderMutation.isPending && t('pos.creatingOrder')}
+                {processPaymentMutation.isPending && t('pos.processingPaymentStatus')}
               </p>
-              <p className="text-sm text-gray-500 mt-2">Please wait...</p>
+              <p className="text-sm text-gray-500 mt-2">{t('pos.pleaseWait')}</p>
             </CardContent>
           </Card>
         )}
@@ -287,8 +289,8 @@ export function PaymentConfirmationModal({
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <CardTitle className="text-xl text-green-900">Payment Successful!</CardTitle>
-              <p className="text-gray-600">Order #{orderId.slice(-8).toUpperCase()}</p>
+              <CardTitle className="text-xl text-green-900">{t('pos.paymentSuccessful')}</CardTitle>
+              <p className="text-gray-600">{t('pos.orderNumber', { number: orderId.slice(-8).toUpperCase() })}</p>
             </CardHeader>
 
             <CardContent className="space-y-4">
@@ -310,12 +312,12 @@ export function PaymentConfirmationModal({
                 {paymentData!.method === 'cash' && paymentData!.cash_tendered && (
                   <div className="text-sm text-gray-600 space-y-1">
                     <div className="flex justify-between">
-                      <span>Cash Tendered:</span>
+                      <span>{t('pos.cashTenderedLabel')}</span>
                       <span>{formatCurrency(paymentData!.cash_tendered!)}</span>
                     </div>
                     {paymentData!.change_amount! > 0 && (
                       <div className="flex justify-between font-medium text-green-700">
-                        <span>Change Due:</span>
+                        <span>{t('pos.changeDue')}</span>
                         <span>{formatCurrency(paymentData!.change_amount!)}</span>
                       </div>
                     )}
@@ -324,7 +326,7 @@ export function PaymentConfirmationModal({
 
                 {paymentData!.reference_number && (
                   <div className="text-sm text-gray-600 mt-2">
-                    <span>Reference: </span>
+                    <span>{t('pos.reference')} </span>
                     <span className="font-mono">{paymentData!.reference_number}</span>
                   </div>
                 )}
@@ -333,19 +335,19 @@ export function PaymentConfirmationModal({
               {/* Order Details */}
               <div className="border rounded-lg p-4">
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Items:</span>
+                  <span className="text-gray-600">{t('pos.items')}</span>
                   <span>{items.reduce((sum, item) => sum + item.quantity, 0)}</span>
                 </div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="text-gray-600">{t('pos.subtotalLabel')}</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Tax:</span>
+                  <span className="text-gray-600">{t('pos.taxLabel')}</span>
                   <span>{formatCurrency(taxAmount)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t pt-2">
-                  <span>Total:</span>
+                  <span>{t('pos.totalLabel')}</span>
                   <span>{formatCurrency(totalAmount)}</span>
                 </div>
               </div>
@@ -357,7 +359,7 @@ export function PaymentConfirmationModal({
                 </Badge>
                 {selectedTable && (
                   <Badge variant="outline">
-                    Table {selectedTable.table_number}
+                    {t('pos.tableNumber', { number: selectedTable.table_number })}
                   </Badge>
                 )}
                 {customerName && (
@@ -380,14 +382,14 @@ export function PaymentConfirmationModal({
                   ) : (
                     <Printer className="w-4 h-4 mr-2" />
                   )}
-                  {isPrinting ? 'Mencetak...' : 'Cetak Struk'}
+                  {isPrinting ? t('pos.printing') : t('pos.printReceipt')}
                 </Button>
                 <Button
                   onClick={handleComplete}
                   className="flex-1"
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Complete
+                  {t('pos.complete')}
                 </Button>
               </div>
             </CardContent>

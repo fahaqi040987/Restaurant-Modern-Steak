@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { POSHeader } from './POSHeader'
 import { CategorySidebar } from './CategorySidebar'
 import { ProductGrid } from './ProductGrid'
@@ -14,6 +15,8 @@ interface POSLayoutProps {
 }
 
 export function POSLayout({ user }: POSLayoutProps) {
+  const { t } = useTranslation()
+
   // State management
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [cart, setCart] = useState<CartItem[]>([])
@@ -144,7 +147,7 @@ export function POSLayout({ user }: POSLayoutProps) {
     <div className="h-screen flex flex-col bg-gray-50">
             {/* Header - temporarily disabled for debugging */}
       <div className="bg-white border-b border-gray-200 p-4">
-        <h1 className="text-xl font-bold">POS System - Debugging Mode</h1>
+        <h1 className="text-xl font-bold">{t('pos.debuggingMode')}</h1>
       </div>
       {/* <POSHeader
         user={user}
@@ -190,13 +193,13 @@ export function POSLayout({ user }: POSLayoutProps) {
           <div className="p-4 bg-white border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
-                {selectedCategory 
-                  ? categories.find(c => c.id === selectedCategory)?.name || 'Products'
-                  : 'All Products'
+                {selectedCategory
+                  ? categories.find(c => c.id === selectedCategory)?.name || t('pos.products')
+                  : t('pos.allProducts')
                 }
               </h2>
               <p className="text-sm text-gray-500">
-                {products.length} items available
+                {t('pos.itemsAvailable', { count: products.length })}
               </p>
             </div>
           </div>

@@ -1,10 +1,11 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Receipt, 
-  Printer, 
-  Download, 
+import {
+  Receipt,
+  Printer,
+  Download,
   X,
   MapPin,
   Clock,
@@ -48,6 +49,8 @@ export function ReceiptDisplay({
   cashTendered,
   changeAmount
 }: ReceiptDisplayProps) {
+  const { t } = useTranslation()
+
   if (!isOpen) return null
 
   const getPaymentIcon = (method: string) => {
@@ -150,7 +153,7 @@ Thank you for your business!
         <CardHeader className="text-center pb-4">
           <div className="flex items-center justify-between">
             <Receipt className="w-6 h-6 text-gray-600" />
-            <CardTitle className="text-lg font-semibold">Receipt</CardTitle>
+            <CardTitle className="text-lg font-semibold">{t('pos.receipt')}</CardTitle>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="w-4 h-4" />
             </Button>
@@ -162,8 +165,8 @@ Thank you for your business!
           <div id="receipt-content" className="px-6 pb-6">
             {/* Header */}
             <div className="text-center border-b pb-4 mb-4">
-              <h2 className="text-xl font-bold">Restaurant POS</h2>
-              <p className="text-sm text-gray-600">Receipt #{order.id.slice(-8).toUpperCase()}</p>
+              <h2 className="text-xl font-bold">{t('pos.restaurantPOS')}</h2>
+              <p className="text-sm text-gray-600">{t('pos.receiptNumber', { number: order.id.slice(-8).toUpperCase() })}</p>
               <p className="text-xs text-gray-500">{formatDate(order.created_at)}</p>
             </div>
 
@@ -176,22 +179,22 @@ Thank you for your business!
                 {selectedTable && (
                   <Badge variant="outline" className="flex items-center gap-1 text-xs">
                     <MapPin className="w-3 h-3" />
-                    Table {selectedTable.table_number}
+                    {t('pos.tableNumber', { number: selectedTable.table_number })}
                   </Badge>
                 )}
               </div>
-              
+
               {customerName && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <User className="w-4 h-4" />
-                  <span>{orderType === 'delivery' ? 'Delivery Address' : 'Customer'}: {customerName}</span>
+                  <span>{orderType === 'delivery' ? t('pos.deliveryAddress') : t('pos.customer')}: {customerName}</span>
                 </div>
               )}
             </div>
 
             {/* Items */}
             <div className="border-t border-b py-4 mb-4">
-              <h3 className="font-semibold mb-3">Items Ordered:</h3>
+              <h3 className="font-semibold mb-3">{t('pos.itemsOrdered')}</h3>
               <div className="space-y-2">
                 {items.map((item, index) => (
                   <div key={index} className="flex justify-between text-sm">
@@ -212,22 +215,22 @@ Thank you for your business!
             {/* Totals */}
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
-                <span>Subtotal:</span>
+                <span>{t('pos.subtotalLabel')}</span>
                 <span>{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Tax (10%):</span>
+                <span>{t('pos.taxPercent', { percent: 10 })}</span>
                 <span>{formatCurrency(taxAmount)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold border-t pt-2">
-                <span>Total:</span>
+                <span>{t('pos.totalLabel')}</span>
                 <span>{formatCurrency(totalAmount)}</span>
               </div>
             </div>
 
             {/* Payment Info */}
             <div className="border-t pt-4 mb-4">
-              <h3 className="font-semibold mb-2">Payment Information:</h3>
+              <h3 className="font-semibold mb-2">{t('pos.paymentInformation')}</h3>
               <div className="space-y-1 text-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -243,27 +246,27 @@ Thank you for your business!
                 {cashTendered && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Cash Tendered:</span>
+                      <span className="text-gray-600">{t('pos.cashTenderedLabel')}</span>
                       <span>{formatCurrency(cashTendered)}</span>
                     </div>
                     {changeAmount && changeAmount > 0 && (
                       <div className="flex justify-between font-semibold text-green-700">
-                        <span>Change Due:</span>
+                        <span>{t('pos.changeDue')}</span>
                         <span>{formatCurrency(changeAmount)}</span>
                       </div>
                     )}
                   </>
                 )}
-                
+
                 {payment.reference_number && (
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-600">Reference:</span>
+                    <span className="text-gray-600">{t('pos.reference')}</span>
                     <span className="font-mono">{payment.reference_number}</span>
                   </div>
                 )}
-                
+
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-600">Status:</span>
+                  <span className="text-gray-600">{t('pos.status')}</span>
                   <Badge variant="outline" className="text-xs">
                     {payment.status}
                   </Badge>
@@ -273,8 +276,8 @@ Thank you for your business!
 
             {/* Footer */}
             <div className="text-center text-xs text-gray-500 border-t pt-4">
-              <p>Thank you for your business!</p>
-              <p>Visit us again soon</p>
+              <p>{t('pos.thankYou')}</p>
+              <p>{t('pos.visitAgain')}</p>
             </div>
           </div>
 
@@ -282,11 +285,11 @@ Thank you for your business!
           <div className="flex gap-2 p-6 border-t">
             <Button variant="outline" onClick={handlePrint} className="flex-1">
               <Printer className="w-4 h-4 mr-2" />
-              Print
+              {t('pos.print')}
             </Button>
             <Button variant="outline" onClick={handleDownload} className="flex-1">
               <Download className="w-4 h-4 mr-2" />
-              Download
+              {t('pos.download')}
             </Button>
           </div>
         </CardContent>

@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { CardSkeleton } from '@/components/ui/loading-skeletons'
-import { 
+import {
   Search,
   Filter,
   Calendar,
@@ -33,6 +34,7 @@ interface PaymentWithOrder extends Payment {
 }
 
 export function PaymentHistory({ isOpen, onClose }: PaymentHistoryProps) {
+  const { t } = useTranslation()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [methodFilter, setMethodFilter] = useState<string>('all')
@@ -133,7 +135,7 @@ export function PaymentHistory({ isOpen, onClose }: PaymentHistoryProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold flex items-center gap-2">
               <CreditCard className="w-5 h-5" />
-              Payment History
+              {t('pos.paymentHistory')}
             </CardTitle>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={() => refetch()}>
@@ -151,7 +153,7 @@ export function PaymentHistory({ isOpen, onClose }: PaymentHistoryProps) {
             <div className="relative flex-1 min-w-60">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="Search by order ID, reference, or customer..."
+                placeholder={t('pos.searchPayments')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -164,11 +166,11 @@ export function PaymentHistory({ isOpen, onClose }: PaymentHistoryProps) {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="all">All Status</option>
-              <option value="completed">Completed</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
+              <option value="all">{t('pos.allStatus')}</option>
+              <option value="completed">{t('pos.completed')}</option>
+              <option value="pending">{t('pos.pending')}</option>
+              <option value="failed">{t('pos.failed')}</option>
+              <option value="refunded">{t('pos.refunded')}</option>
             </select>
 
             {/* Method Filter */}
@@ -177,11 +179,11 @@ export function PaymentHistory({ isOpen, onClose }: PaymentHistoryProps) {
               onChange={(e) => setMethodFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="all">All Methods</option>
-              <option value="cash">Cash</option>
-              <option value="credit_card">Credit Card</option>
-              <option value="debit_card">Debit Card</option>
-              <option value="digital_wallet">Digital Wallet</option>
+              <option value="all">{t('pos.allMethods')}</option>
+              <option value="cash">{t('pos.cash')}</option>
+              <option value="credit_card">{t('pos.creditCard')}</option>
+              <option value="debit_card">{t('pos.debitCard')}</option>
+              <option value="digital_wallet">{t('pos.digitalWallet')}</option>
             </select>
           </div>
         </CardHeader>
@@ -195,11 +197,11 @@ export function PaymentHistory({ isOpen, onClose }: PaymentHistoryProps) {
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No payments found</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('pos.noPaymentsFound')}</h3>
                 <p className="text-gray-500">
                   {searchTerm || statusFilter !== 'all' || methodFilter !== 'all'
-                    ? 'Try adjusting your search or filters'
-                    : 'Payment history will appear here as transactions are processed'
+                    ? t('pos.noPaymentsFoundDesc')
+                    : t('pos.paymentHistoryEmpty')
                   }
                 </p>
               </div>
@@ -298,10 +300,10 @@ export function PaymentHistory({ isOpen, onClose }: PaymentHistoryProps) {
           <div className="flex-shrink-0 border-t bg-gray-50 px-6 py-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">
-                {filteredPayments.length} payment{filteredPayments.length !== 1 ? 's' : ''} found
+                {t('pos.paymentsFound', { count: filteredPayments.length })}
               </span>
               <span className="font-semibold">
-                Total: {formatCurrency(
+                {t('pos.totalLabel')} {formatCurrency(
                   filteredPayments.reduce((sum, payment) => sum + payment.amount, 0)
                 )}
               </span>

@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Keyboard, 
+import {
+  Keyboard,
   X,
   Zap,
   Info
@@ -24,6 +25,8 @@ interface KeyboardShortcutsHelpProps {
 }
 
 export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardShortcutsHelpProps) {
+  const { t } = useTranslation()
+
   if (!isOpen) return null
 
   const formatShortcut = (shortcut: ShortcutInfo) => {
@@ -42,7 +45,7 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Keyboard className="h-5 w-5" />
-              Keyboard Shortcuts
+              {t('pos.keyboardShortcuts')}
             </CardTitle>
             <Button
               variant="ghost"
@@ -58,7 +61,7 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
               <Zap className="h-4 w-4 text-yellow-500" />
-              <span>Speed up your workflow with these shortcuts</span>
+              <span>{t('pos.shortcutsDesc')}</span>
             </div>
 
             <div className="space-y-3">
@@ -79,13 +82,13 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
                 <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-blue-900 mb-1">
-                    Pro Tips
+                    {t('pos.proTips')}
                   </p>
                   <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• Shortcuts work when not typing in input fields</li>
-                    <li>• Use product search (Ctrl+F) for instant item lookup</li>
-                    <li>• Navigate search results with arrow keys</li>
-                    <li>• Press this shortcut again to close this help</li>
+                    <li>• {t('pos.tipShortcutsWork')}</li>
+                    <li>• {t('pos.tipProductSearch')}</li>
+                    <li>• {t('pos.tipArrowKeys')}</li>
+                    <li>• {t('pos.tipCloseHelp')}</li>
                   </ul>
                 </div>
               </div>

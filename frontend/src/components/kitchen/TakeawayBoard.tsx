@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ export function TakeawayBoard({
   autoRefresh = true,
   onOrderComplete,
 }: TakeawayBoardProps) {
+  const { t } = useTranslation();
   const [previousReadyOrders, setPreviousReadyOrders] = useState<Set<string>>(new Set());
   const [soundPlayed, setSoundPlayed] = useState<Set<string>>(new Set());
 
@@ -98,9 +100,9 @@ export function TakeawayBoard({
       <Card className={cn("text-center", className)}>
         <CardContent className="py-12">
           <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">No Takeaway Orders Ready</h3>
+          <h3 className="text-lg font-medium mb-2">{t('kitchen.noTakeawayOrdersReady')}</h3>
           <p className="text-muted-foreground">
-            Completed takeaway orders will appear here for customer pickup
+            {t('kitchen.completedTakeawayDesc')}
           </p>
         </CardContent>
       </Card>
@@ -112,11 +114,11 @@ export function TakeawayBoard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="h-5 w-5" />
-          Ready for Pickup ({orders.length})
+          {t('kitchen.readyForPickup', { count: orders.length })}
           {orders.some(order => order.isNewlyReady) && (
             <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 animate-pulse">
               <Volume2 className="h-3 w-3 mr-1" />
-              New!
+              {t('kitchen.newBadge')}
             </Badge>
           )}
         </CardTitle>
@@ -142,11 +144,13 @@ interface TakeawayOrderCardProps {
 }
 
 function TakeawayOrderCard({ order, onComplete }: TakeawayOrderCardProps) {
+  const { t } = useTranslation();
+
   const getUrgencyLevel = (waitTime: number) => {
-    if (waitTime >= 20) return { level: 'critical', color: 'bg-red-500', text: 'Very Urgent' };
-    if (waitTime >= 15) return { level: 'high', color: 'bg-orange-500', text: 'Urgent' };
-    if (waitTime >= 10) return { level: 'medium', color: 'bg-yellow-500', text: 'Ready' };
-    return { level: 'normal', color: 'bg-green-500', text: 'Fresh' };
+    if (waitTime >= 20) return { level: 'critical', color: 'bg-red-500', textKey: 'kitchen.veryUrgent' };
+    if (waitTime >= 15) return { level: 'high', color: 'bg-orange-500', textKey: 'kitchen.urgent' };
+    if (waitTime >= 10) return { level: 'medium', color: 'bg-yellow-500', textKey: 'kitchen.ready' };
+    return { level: 'normal', color: 'bg-green-500', textKey: 'kitchen.fresh' };
   };
 
   const urgency = getUrgencyLevel(order.waitTime);
@@ -170,14 +174,14 @@ function TakeawayOrderCard({ order, onComplete }: TakeawayOrderCardProps) {
               #{order.order_number}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {order.customer_name || 'Customer'}
+              {order.customer_name || t('kitchen.customer')}
             </p>
           </div>
-          <Badge 
+          <Badge
             variant={urgency.level === 'critical' ? 'destructive' : 'secondary'}
             className="text-xs"
           >
-            {urgency.text}
+            {t(urgency.textKey)}
           </Badge>
         </div>
 
@@ -191,14 +195,14 @@ function TakeawayOrderCard({ order, onComplete }: TakeawayOrderCardProps) {
             urgency.level === 'medium' && "text-yellow-600",
             urgency.level === 'normal' && "text-green-600"
           )}>
-            {order.waitTime === 0 ? 'Just ready' : `${order.waitTime} min waiting`}
+            {order.waitTime === 0 ? t('kitchen.justReady') : t('kitchen.minWaiting', { minutes: order.waitTime })}
           </span>
         </div>
 
         {/* Order Items Preview */}
         <div className="mb-4">
           <div className="text-xs text-muted-foreground mb-1">
-            {order.items?.length || 0} items
+            {t('kitchen.itemsCount', { count: order.items?.length || 0 })}
           </div>
           <div className="space-y-1">
             {order.items?.slice(0, 3).map((item) => (
@@ -211,7 +215,7 @@ function TakeawayOrderCard({ order, onComplete }: TakeawayOrderCardProps) {
             ))}
             {(order.items?.length || 0) > 3 && (
               <div className="text-xs text-muted-foreground">
-                +{(order.items?.length || 0) - 3} more items
+                {t('kitchen.moreItems', { count: (order.items?.length || 0) - 3 })}
               </div>
             )}
           </div>
@@ -219,7 +223,7 @@ function TakeawayOrderCard({ order, onComplete }: TakeawayOrderCardProps) {
 
         {/* Total Amount */}
         <div className="flex justify-between items-center mb-3 text-sm">
-          <span className="text-muted-foreground">Total:</span>
+          <span className="text-muted-foreground">{t('kitchen.total')}</span>
           <span className="font-semibold">${order.total_amount.toFixed(2)}</span>
         </div>
 
@@ -232,7 +236,7 @@ function TakeawayOrderCard({ order, onComplete }: TakeawayOrderCardProps) {
             variant={urgency.level === 'critical' ? 'destructive' : 'default'}
           >
             <CheckCircle className="h-4 w-4 mr-1" />
-            Mark Served
+            {t('kitchen.markServed')}
           </Button>
         </div>
       </CardContent>

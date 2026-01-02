@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ export function EnhancedKitchenOrderCard({
   className,
   isMinimalistic = false,
 }: EnhancedKitchenOrderCardProps) {
+  const { t } = useTranslation();
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -37,14 +39,14 @@ export function EnhancedKitchenOrderCard({
     const createdAt = new Date(order.created_at);
     const now = new Date();
     const diffMinutes = Math.floor((now.getTime() - createdAt.getTime()) / 1000 / 60);
-    
-    if (diffMinutes < 1) return 'Just now';
-    if (diffMinutes < 60) return `${diffMinutes}m ago`;
-    
+
+    if (diffMinutes < 1) return t('kitchen.justNow');
+    if (diffMinutes < 60) return t('kitchen.minutesAgo', { minutes: diffMinutes });
+
     const hours = Math.floor(diffMinutes / 60);
     const minutes = diffMinutes % 60;
-    return `${hours}h ${minutes}m ago`;
-  }, [order.created_at]);
+    return t('kitchen.hoursMinutesAgo', { hours, minutes });
+  }, [order.created_at, t]);
 
   // Get status styling
   const getStatusStyling = useCallback(() => {
@@ -137,20 +139,20 @@ export function EnhancedKitchenOrderCard({
   const getNextAction = useCallback(() => {
     switch (order.status) {
       case 'confirmed':
-        return { label: 'Start Preparing', status: 'preparing', icon: <Circle className="h-4 w-4" /> };
+        return { label: t('kitchen.startPreparing'), status: 'preparing', icon: <Circle className="h-4 w-4" /> };
       case 'preparing':
-        return { 
-          label: 'Mark Ready', 
-          status: 'ready', 
+        return {
+          label: t('kitchen.markReady'),
+          status: 'ready',
           icon: <CheckCircle className="h-4 w-4" />,
           disabled: progressPercentage < 100
         };
       case 'ready':
-        return { label: 'Mark Served', status: 'served', icon: <CheckCircle className="h-4 w-4" /> };
+        return { label: t('kitchen.markServed'), status: 'served', icon: <CheckCircle className="h-4 w-4" /> };
       default:
         return null;
     }
-  }, [order.status, progressPercentage]);
+  }, [order.status, progressPercentage, t]);
 
   const nextAction = getNextAction();
 
@@ -180,8 +182,8 @@ export function EnhancedKitchenOrderCard({
           {order.status === 'preparing' && (
             <div className="mb-3">
               <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                <span>Progress</span>
-                <span>{readyItems}/{totalItems} items</span>
+                <span>{t('kitchen.progress')}</span>
+                <span>{t('kitchen.itemsProgress', { ready: readyItems, total: totalItems })}</span>
               </div>
               <Progress value={progressPercentage} className="h-2" />
             </div>
@@ -192,7 +194,7 @@ export function EnhancedKitchenOrderCard({
             {order.table && (
               <span className="flex items-center gap-1">
                 <MapPin className="h-3 w-3" />
-                Table {order.table.table_number}
+                {t('kitchen.table')} {order.table.table_number}
               </span>
             )}
             {order.customer_name && (
@@ -271,7 +273,7 @@ export function EnhancedKitchenOrderCard({
               </Badge>
               {order.status === 'preparing' && progressPercentage === 100 && (
                 <Badge variant="outline" className="text-green-600 border-green-600">
-                  Ready to serve
+                  {t('kitchen.readyToServe')}
                 </Badge>
               )}
             </div>
@@ -284,7 +286,7 @@ export function EnhancedKitchenOrderCard({
               {order.table && (
                 <span className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
-                  Table {order.table.table_number}
+                  {t('kitchen.table')} {order.table.table_number}
                 </span>
               )}
               {order.customer_name && (
@@ -315,8 +317,8 @@ export function EnhancedKitchenOrderCard({
         {order.status === 'preparing' && (
           <div className="mt-3">
             <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>Completion Progress</span>
-              <span>{readyItems}/{totalItems} items ready</span>
+              <span>{t('kitchen.completionProgress')}</span>
+              <span>{t('kitchen.itemsReady', { ready: readyItems, total: totalItems })}</span>
             </div>
             <Progress value={progressPercentage} className="h-2" />
           </div>
@@ -368,13 +370,13 @@ export function EnhancedKitchenOrderCard({
                 
                 {item.special_instructions && (
                   <p className="text-sm text-muted-foreground italic mt-1">
-                    Note: {item.special_instructions}
+                    {t('kitchen.note')} {item.special_instructions}
                   </p>
                 )}
-                
+
                 {item.product?.preparation_time && (
                   <p className="text-xs text-muted-foreground">
-                    Est. prep time: {item.product.preparation_time} min
+                    {t('kitchen.estPrepTime', { time: `${item.product.preparation_time} min` })}
                   </p>
                 )}
               </div>
@@ -383,7 +385,7 @@ export function EnhancedKitchenOrderCard({
                 variant={item.status === 'ready' ? 'default' : 'secondary'}
                 className="text-xs"
               >
-                {item.status === 'ready' ? 'Ready' : 'Preparing'}
+                {item.status === 'ready' ? t('kitchen.ready') : t('kitchen.preparing')}
               </Badge>
             </div>
           ))}
@@ -395,7 +397,7 @@ export function EnhancedKitchenOrderCard({
               onClick={() => setIsExpanded(true)}
               className="w-full"
             >
-              Show {(order.items?.length || 0) - 3} more items
+              {t('kitchen.showMoreItems', { count: (order.items?.length || 0) - 3 })}
             </Button>
           )}
         </div>
@@ -403,7 +405,7 @@ export function EnhancedKitchenOrderCard({
         {/* Expanded Details */}
         {isExpanded && order.notes && (
           <div className="p-3 bg-white rounded-md border mb-4">
-            <h4 className="font-medium mb-1">Special Instructions:</h4>
+            <h4 className="font-medium mb-1">{t('kitchen.specialInstructions')}:</h4>
             <p className="text-sm text-muted-foreground">{order.notes}</p>
           </div>
         )}
@@ -434,14 +436,14 @@ export function EnhancedKitchenOrderCard({
               size="lg"
               className="h-12"
             >
-              Reset
+              {t('kitchen.reset')}
             </Button>
           )}
         </div>
 
         {nextAction?.disabled && (
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Complete all items before marking order as ready
+            {t('kitchen.completeAllItemsHint')}
           </p>
         )}
       </CardContent>

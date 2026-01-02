@@ -1,13 +1,14 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { 
-  CreditCard, 
-  Wallet, 
-  Banknote, 
-  Smartphone, 
+import {
+  CreditCard,
+  Wallet,
+  Banknote,
+  Smartphone,
   ArrowLeft,
   CheckCircle
 } from 'lucide-react'
@@ -30,11 +31,12 @@ export interface PaymentData {
   change_amount?: number
 }
 
-export function PaymentMethodSelection({ 
-  totalAmount, 
-  onMethodSelect, 
-  onCancel 
+export function PaymentMethodSelection({
+  totalAmount,
+  onMethodSelect,
+  onCancel
 }: PaymentMethodSelectionProps) {
+  const { t } = useTranslation()
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
   const [cashTendered, setCashTendered] = useState(totalAmount.toString())
   const [referenceNumber, setReferenceNumber] = useState('')
@@ -43,32 +45,32 @@ export function PaymentMethodSelection({
   const paymentMethods = [
     {
       id: 'cash' as PaymentMethod,
-      name: 'Cash',
-      description: 'Physical cash payment',
+      nameKey: 'pos.cash',
+      descriptionKey: 'pos.cashDesc',
       icon: Banknote,
       color: 'bg-green-500',
       available: true
     },
     {
       id: 'credit_card' as PaymentMethod,
-      name: 'Credit Card',
-      description: 'Visa, Mastercard, Amex',
+      nameKey: 'pos.creditCard',
+      descriptionKey: 'pos.creditCardDesc',
       icon: CreditCard,
       color: 'bg-blue-500',
       available: true
     },
     {
       id: 'debit_card' as PaymentMethod,
-      name: 'Debit Card',
-      description: 'Direct bank payment',
+      nameKey: 'pos.debitCard',
+      descriptionKey: 'pos.debitCardDesc',
       icon: Wallet,
       color: 'bg-purple-500',
       available: true
     },
     {
       id: 'digital_wallet' as PaymentMethod,
-      name: 'Digital Wallet',
-      description: 'Apple Pay, Google Pay, etc.',
+      nameKey: 'pos.digitalWallet',
+      descriptionKey: 'pos.digitalWalletDesc',
       icon: Smartphone,
       color: 'bg-orange-500',
       available: true
@@ -97,7 +99,7 @@ export function PaymentMethodSelection({
     if (selectedMethod === 'cash') {
       const tendered = parseFloat(cashTendered) || 0
       if (tendered < totalAmount) {
-        alert('Cash tendered must be at least the total amount')
+        alert(t('pos.insufficientCash'))
         setIsProcessing(false)
         return
       }
@@ -126,7 +128,7 @@ export function PaymentMethodSelection({
       <div className="bg-white rounded-lg shadow-lg max-w-md mx-auto">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold">Select Payment Method</CardTitle>
+            <CardTitle className="text-lg font-semibold">{t('pos.selectPaymentMethod')}</CardTitle>
             <Button variant="ghost" size="sm" onClick={onCancel}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -135,18 +137,18 @@ export function PaymentMethodSelection({
             <p className="text-2xl font-bold text-gray-900">
               {formatCurrency(totalAmount)}
             </p>
-            <p className="text-sm text-gray-500">Total Amount</p>
+            <p className="text-sm text-gray-500">{t('pos.totalAmount')}</p>
           </div>
         </CardHeader>
 
         <CardContent className="pt-0">
           <div className="grid gap-3">
             {paymentMethods.map((method) => (
-              <Card 
+              <Card
                 key={method.id}
                 className={`cursor-pointer border-2 transition-all hover:shadow-md ${
-                  method.available 
-                    ? 'hover:border-blue-300 border-gray-200' 
+                  method.available
+                    ? 'hover:border-blue-300 border-gray-200'
                     : 'opacity-50 cursor-not-allowed border-gray-100'
                 }`}
                 onClick={() => method.available && handleMethodSelect(method.id)}
@@ -157,12 +159,12 @@ export function PaymentMethodSelection({
                       <method.icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{method.name}</h3>
-                      <p className="text-sm text-gray-500">{method.description}</p>
+                      <h3 className="font-medium text-gray-900">{t(method.nameKey)}</h3>
+                      <p className="text-sm text-gray-500">{t(method.descriptionKey)}</p>
                     </div>
                     {method.available && (
                       <Badge variant="outline" className="text-xs">
-                        Available
+                        {t('pos.available')}
                       </Badge>
                     )}
                   </div>
@@ -175,19 +177,24 @@ export function PaymentMethodSelection({
     )
   }
 
+  const getMethodName = () => {
+    const method = paymentMethods.find(m => m.id === selectedMethod)
+    return method ? t(method.nameKey) : ''
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-lg max-w-md mx-auto">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setSelectedMethod(null)}
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <CardTitle className="text-lg font-semibold">
-            {paymentMethods.find(m => m.id === selectedMethod)?.name} Payment
+            {t('pos.paymentTitle', { method: getMethodName() })}
           </CardTitle>
           <Button variant="ghost" size="sm" onClick={onCancel}>
             ×
@@ -197,7 +204,7 @@ export function PaymentMethodSelection({
           <p className="text-2xl font-bold text-gray-900">
             {formatCurrency(totalAmount)}
           </p>
-          <p className="text-sm text-gray-500">Total Amount</p>
+          <p className="text-sm text-gray-500">{t('pos.totalAmount')}</p>
         </div>
       </CardHeader>
 
@@ -206,7 +213,7 @@ export function PaymentMethodSelection({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cash Tendered
+                {t('pos.cashTendered')}
               </label>
               <Input
                 type="number"
@@ -214,15 +221,15 @@ export function PaymentMethodSelection({
                 min={totalAmount}
                 value={cashTendered}
                 onChange={(e) => setCashTendered(e.target.value)}
-                placeholder="Enter amount received"
+                placeholder={t('pos.enterAmountReceived')}
                 className="text-lg font-semibold text-right"
               />
             </div>
-            
+
             {changeAmount > 0 && (
               <div className="bg-green-50 p-3 rounded-lg border border-green-200">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-green-800">Change Due:</span>
+                  <span className="text-sm font-medium text-green-800">{t('pos.changeDue')}</span>
                   <span className="text-lg font-bold text-green-900">
                     {formatCurrency(changeAmount)}
                   </span>
@@ -233,7 +240,7 @@ export function PaymentMethodSelection({
             {changeAmount < 0 && (
               <div className="bg-red-50 p-3 rounded-lg border border-red-200">
                 <p className="text-sm font-medium text-red-800">
-                  Insufficient amount. Need {formatCurrency(Math.abs(changeAmount))} more.
+                  {t('pos.insufficientAmount', { amount: formatCurrency(Math.abs(changeAmount)) })}
                 </p>
               </div>
             )}
@@ -244,24 +251,23 @@ export function PaymentMethodSelection({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Reference Number (Optional)
+                {t('pos.referenceNumber')}
               </label>
               <Input
                 type="text"
                 value={referenceNumber}
                 onChange={(e) => setReferenceNumber(e.target.value)}
-                placeholder="Transaction ID, confirmation number, etc."
+                placeholder={t('pos.referencePlaceholder')}
                 className="font-mono"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Enter any reference number from the payment terminal
+                {t('pos.referenceHint')}
               </p>
             </div>
 
             <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-800">
-                📱 Process the payment on your {selectedMethod.replace('_', ' ')} terminal, 
-                then click confirm below.
+                📱 {t('pos.processPaymentHint', { method: selectedMethod.replace('_', ' ') })}
               </p>
             </div>
           </div>
@@ -274,7 +280,7 @@ export function PaymentMethodSelection({
             className="flex-1"
             disabled={isProcessing}
           >
-            Back
+            {t('pos.back')}
           </Button>
           <Button
             onClick={handleConfirmPayment}
@@ -284,12 +290,12 @@ export function PaymentMethodSelection({
             {isProcessing ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Processing...
+                {t('pos.processing')}
               </>
             ) : (
               <>
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Confirm Payment
+                {t('pos.confirmPayment')}
               </>
             )}
           </Button>

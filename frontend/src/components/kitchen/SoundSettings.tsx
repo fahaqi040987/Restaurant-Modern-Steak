@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -22,6 +23,7 @@ const defaultSettings: SoundSettingsType = {
 };
 
 export function SoundSettings({ className, onClose }: SoundSettingsProps) {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<SoundSettingsType>(
     kitchenSoundService.getSettings() ?? defaultSettings
   );
@@ -62,20 +64,20 @@ export function SoundSettings({ className, onClose }: SoundSettingsProps) {
   const soundTests = [
     {
       type: 'new_order' as const,
-      label: 'New Order Alert',
-      description: 'Plays when a new order is received',
+      labelKey: 'kitchen.newOrderAlert',
+      descriptionKey: 'kitchen.newOrderAlertDesc',
       icon: '🆕',
     },
     {
       type: 'order_ready' as const,
-      label: 'Order Ready Alert',
-      description: 'Plays when an order is ready for pickup',
+      labelKey: 'kitchen.orderReadyAlert',
+      descriptionKey: 'kitchen.orderReadyAlertDesc',
       icon: '✅',
     },
     {
       type: 'takeaway_ready' as const,
-      label: 'Takeaway Ready Alert',
-      description: 'Plays when a takeaway order is ready',
+      labelKey: 'kitchen.takeawayReadyAlert',
+      descriptionKey: 'kitchen.takeawayReadyAlertDesc',
       icon: '📦',
     },
   ];
@@ -85,16 +87,16 @@ export function SoundSettings({ className, onClose }: SoundSettingsProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Volume2 className="h-5 w-5" />
-          Sound Settings
+          {t('kitchen.soundSettings')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Master Sound Control */}
         <div className="flex items-center justify-between space-x-2">
           <div className="space-y-0.5">
-            <Label className="text-base font-medium">Enable Sounds</Label>
+            <Label className="text-base font-medium">{t('kitchen.enableSounds')}</Label>
             <p className="text-sm text-muted-foreground">
-              Turn on/off all kitchen notifications (no microphone access required)
+              {t('kitchen.soundsDescription')}
             </p>
           </div>
           <Switch
@@ -107,7 +109,7 @@ export function SoundSettings({ className, onClose }: SoundSettingsProps) {
         <div className="space-y-2">
           <Label className="text-base font-medium flex items-center gap-2">
             {settings.enabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-            Volume: {Math.round(settings.volume * 100)}%
+            {t('kitchen.volume')}: {Math.round(settings.volume * 100)}%
           </Label>
           <Slider
             value={[settings.volume]}
@@ -122,14 +124,14 @@ export function SoundSettings({ className, onClose }: SoundSettingsProps) {
 
         {/* Individual Sound Controls */}
         <div className="space-y-4">
-          <Label className="text-base font-medium">Sound Types</Label>
-          
+          <Label className="text-base font-medium">{t('kitchen.soundTypes')}</Label>
+
           <div className="space-y-3">
             <div className="flex items-center justify-between space-x-2">
               <div className="space-y-0.5">
-                <Label className="text-sm font-medium">New Orders</Label>
+                <Label className="text-sm font-medium">{t('kitchen.newOrdersSound')}</Label>
                 <p className="text-xs text-muted-foreground">
-                  Alert when new orders arrive
+                  {t('kitchen.newOrdersSoundDesc')}
                 </p>
               </div>
               <Switch
@@ -141,9 +143,9 @@ export function SoundSettings({ className, onClose }: SoundSettingsProps) {
 
             <div className="flex items-center justify-between space-x-2">
               <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Order Ready</Label>
+                <Label className="text-sm font-medium">{t('kitchen.orderReadySound')}</Label>
                 <p className="text-xs text-muted-foreground">
-                  Alert when orders are ready
+                  {t('kitchen.orderReadySoundDesc')}
                 </p>
               </div>
               <Switch
@@ -155,9 +157,9 @@ export function SoundSettings({ className, onClose }: SoundSettingsProps) {
 
             <div className="flex items-center justify-between space-x-2">
               <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Takeaway Ready</Label>
+                <Label className="text-sm font-medium">{t('kitchen.takeawayReadySound')}</Label>
                 <p className="text-xs text-muted-foreground">
-                  Alert when takeaway orders are ready
+                  {t('kitchen.takeawayReadySoundDesc')}
                 </p>
               </div>
               <Switch
@@ -171,7 +173,7 @@ export function SoundSettings({ className, onClose }: SoundSettingsProps) {
 
         {/* Sound Test Section */}
         <div className="space-y-3">
-          <Label className="text-base font-medium">Test Sounds</Label>
+          <Label className="text-base font-medium">{t('kitchen.testSounds')}</Label>
           <div className="grid gap-2">
             {soundTests.map((sound) => (
               <Button
@@ -185,9 +187,9 @@ export function SoundSettings({ className, onClose }: SoundSettingsProps) {
                 <div className="flex items-center gap-3 w-full">
                   <span className="text-lg">{sound.icon}</span>
                   <div className="flex-1 text-left">
-                    <div className="font-medium text-sm">{sound.label}</div>
+                    <div className="font-medium text-sm">{t(sound.labelKey)}</div>
                     <div className="text-xs text-muted-foreground">
-                      {sound.description}
+                      {t(sound.descriptionKey)}
                     </div>
                   </div>
                   {isTestingSound === sound.type ? (
@@ -205,7 +207,7 @@ export function SoundSettings({ className, onClose }: SoundSettingsProps) {
         {onClose && (
           <div className="flex justify-end pt-4 border-t">
             <Button onClick={onClose} variant="outline">
-              Done
+              {t('kitchen.done')}
             </Button>
           </div>
         )}
