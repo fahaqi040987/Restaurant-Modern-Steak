@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { Menu, X, User, Phone, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,6 +11,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { apiClient } from '@/api/client'
 
 interface NavLinkProps {
   to: string
@@ -64,6 +66,13 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
 
+  // Fetch restaurant info for logo
+  const { data: restaurantInfo } = useQuery({
+    queryKey: ['restaurantInfo'],
+    queryFn: () => apiClient.getRestaurantInfo(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+
   // Handle scroll behavior for header background
   useEffect(() => {
     const handleScroll = () => {
@@ -100,15 +109,23 @@ export function Header() {
           className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]"
           aria-label="Steak Kenangan - Home"
         >
-          <span
-            className={cn(
-              'font-accent text-2xl md:text-3xl transition-colors duration-300',
-              isScrolled ? 'text-[var(--public-accent)]' : 'text-white'
-            )}
-            style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
-          >
-            Steak Kenangan
-          </span>
+          {restaurantInfo?.logo_url ? (
+            <img
+              src={restaurantInfo.logo_url}
+              alt={restaurantInfo.name || 'Steak Kenangan'}
+              className="h-28 md:h-30 lg:h-32 w-auto object-contain transition-all duration-300"
+            />
+          ) : (
+            <span
+              className={cn(
+                'font-accent text-2xl md:text-3xl transition-colors duration-300',
+                isScrolled ? 'text-[var(--public-accent)]' : 'text-white'
+              )}
+              style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
+            >
+              Steak Kenangan
+            </span>
+          )}
         </Link>
 
         {/* Desktop Navigation */}
@@ -187,11 +204,21 @@ export function Header() {
             id="mobile-menu"
           >
             <SheetHeader>
-              <SheetTitle
-                className="text-left font-accent text-2xl text-[var(--public-accent)]"
-                style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
-              >
-                Steak Kenangan
+              <SheetTitle className="text-left">
+                {restaurantInfo?.logo_url ? (
+                  <img
+                    src={restaurantInfo.logo_url}
+                    alt={restaurantInfo.name || 'Steak Kenangan'}
+                    className="h-28 w-auto object-contain"
+                  />
+                ) : (
+                  <span
+                    className="font-accent text-2xl text-[var(--public-accent)]"
+                    style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
+                  >
+                    Steak Kenangan
+                  </span>
+                )}
               </SheetTitle>
             </SheetHeader>
 

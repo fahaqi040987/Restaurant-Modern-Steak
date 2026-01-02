@@ -29,7 +29,7 @@ const defaultCards: ServiceCard[] = [
   {
     icon: ChefHat,
     title: 'Master Chefs',
-    description: 'Koki yang berpengalaman dengan keahlian internasional',
+    description: 'Experienced chefs with international expertise',
     link: '/site/about',
   },
   {

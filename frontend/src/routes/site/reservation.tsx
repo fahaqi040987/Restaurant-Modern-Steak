@@ -71,7 +71,7 @@ function ReservationPage() {
   return (
     <PublicLayout>
       {/* Hero Section */}
-      <section className="py-12 md:py-16 bg-[var(--public-bg-secondary)]">
+      <section className="pt-28 md:pt-36 pb-12 md:pb-16 bg-[var(--public-bg-secondary)]">
         <div className="public-container text-center">
           <span
             className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"

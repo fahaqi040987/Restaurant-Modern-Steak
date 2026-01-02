@@ -1,22 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
+import {
   BarChart3,
   TrendingUp,
   DollarSign,
   ShoppingCart,
   Calendar,
   Download,
-  Search,
-  Filter,
-  FileBarChart,
-  Users,
-  Clock
+  FileBarChart
 } from 'lucide-react'
 import apiClient from '@/api/client'
 
@@ -33,6 +29,7 @@ interface OrdersReportItem {
 }
 
 export function AdminReports() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'sales' | 'orders' | 'analytics'>('sales')
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('today')
 
@@ -78,45 +75,45 @@ export function AdminReports() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reports & Analytics</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('admin.reportsTitle')}</h1>
           <p className="text-muted-foreground">
-            Detailed insights into your restaurant performance
+            {t('admin.reportsDesc')}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
-            Export
+            {t('common.export')}
           </Button>
           <Button variant="outline" size="sm">
             <Calendar className="w-4 h-4 mr-2" />
-            Custom Range
+            {t('admin.dateRange')}
           </Button>
         </div>
       </div>
 
       {/* Period Selection */}
       <div className="flex gap-2">
-        <Button 
-          variant={selectedPeriod === 'today' ? 'default' : 'outline'} 
+        <Button
+          variant={selectedPeriod === 'today' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setSelectedPeriod('today')}
         >
-          Today
+          {t('admin.today')}
         </Button>
-        <Button 
-          variant={selectedPeriod === 'week' ? 'default' : 'outline'} 
+        <Button
+          variant={selectedPeriod === 'week' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setSelectedPeriod('week')}
         >
-          This Week
+          {t('admin.week')}
         </Button>
-        <Button 
-          variant={selectedPeriod === 'month' ? 'default' : 'outline'} 
+        <Button
+          variant={selectedPeriod === 'month' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setSelectedPeriod('month')}
         >
-          This Month
+          {t('admin.month')}
         </Button>
       </div>
 
@@ -124,7 +121,7 @@ export function AdminReports() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('reports.totalSales')}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -132,14 +129,14 @@ export function AdminReports() {
               {salesLoading ? '...' : formatCurrency(totalRevenue)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {selectedPeriod === 'today' ? 'Today' : `This ${selectedPeriod}`}
+              {selectedPeriod === 'today' ? t('admin.today') : t(`admin.${selectedPeriod}`)}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.totalOrders')}</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -147,14 +144,14 @@ export function AdminReports() {
               {salesLoading ? '...' : totalOrders}
             </div>
             <p className="text-xs text-muted-foreground">
-              {selectedPeriod === 'today' ? 'Today' : `This ${selectedPeriod}`}
+              {selectedPeriod === 'today' ? t('admin.today') : t(`admin.${selectedPeriod}`)}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Order</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('reports.averageOrder')}</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -162,20 +159,20 @@ export function AdminReports() {
               {salesLoading ? '...' : formatCurrency(averageOrderValue)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Per order value
+              {t('reports.averageOrder')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Growth Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('reports.revenue')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">+12.5%</div>
             <p className="text-xs text-muted-foreground">
-              Compared to previous period
+              {t('admin.fromYesterday')}
             </p>
           </CardContent>
         </Card>
@@ -184,9 +181,9 @@ export function AdminReports() {
       {/* Reports Tabs */}
       <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
         <TabsList>
-          <TabsTrigger value="sales">Sales Report</TabsTrigger>
-          <TabsTrigger value="orders">Orders Report</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="sales">{t('admin.salesReport')}</TabsTrigger>
+          <TabsTrigger value="orders">{t('admin.orderReport')}</TabsTrigger>
+          <TabsTrigger value="analytics">{t('reports.incomeReport')}</TabsTrigger>
         </TabsList>
 
         {/* Sales Report Tab */}
@@ -195,7 +192,7 @@ export function AdminReports() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Sales Report - {selectedPeriod}
+                {t('admin.salesReport')} - {t(`admin.${selectedPeriod}`)}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -203,15 +200,15 @@ export function AdminReports() {
                 <LoadingState />
               ) : salesError ? (
                 <div className="text-center py-8 text-red-600">
-                  Error loading sales data: {(salesError as any).message}
+                  {t('common.error')}: {(salesError as any).message}
                 </div>
               ) : salesData && salesData.length > 0 ? (
                 <div className="space-y-4">
                   <div className="border rounded-lg">
                     <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 font-medium text-sm">
-                      <div>Date/Period</div>
-                      <div className="text-center">Orders</div>
-                      <div className="text-center">Revenue</div>
+                      <div>{t('admin.period')}</div>
+                      <div className="text-center">{t('admin.orders')}</div>
+                      <div className="text-center">{t('reports.revenue')}</div>
                     </div>
                     {salesData.map((item: SalesReportItem, index: number) => (
                       <div key={index} className="grid grid-cols-3 gap-4 p-4 border-t text-sm">
@@ -228,7 +225,7 @@ export function AdminReports() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No sales data available for this period
+                  {t('admin.noDataAvailable')}
                 </div>
               )}
             </CardContent>
@@ -241,7 +238,7 @@ export function AdminReports() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5" />
-                Orders by Status - Today
+                {t('admin.orderReport')} - {t('admin.today')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -249,21 +246,21 @@ export function AdminReports() {
                 <LoadingState />
               ) : ordersError ? (
                 <div className="text-center py-8 text-red-600">
-                  Error loading orders data: {(ordersError as any).message}
+                  {t('common.error')}: {(ordersError as any).message}
                 </div>
               ) : ordersData && ordersData.length > 0 ? (
                 <div className="space-y-4">
                   <div className="border rounded-lg">
                     <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 font-medium text-sm">
-                      <div>Status</div>
-                      <div className="text-center">Count</div>
-                      <div className="text-center">Avg Amount</div>
+                      <div>{t('common.status')}</div>
+                      <div className="text-center">{t('inventory.count')}</div>
+                      <div className="text-center">{t('reports.averageOrder')}</div>
                     </div>
                     {ordersData.map((item: OrdersReportItem, index: number) => (
                       <div key={index} className="grid grid-cols-3 gap-4 p-4 border-t text-sm">
                         <div className="font-medium">
                           <Badge variant={item.status === 'completed' ? 'default' : 'secondary'}>
-                            {item.status}
+                            {t(`orders.${item.status}`)}
                           </Badge>
                         </div>
                         <div className="text-center">{item.count}</div>
@@ -276,7 +273,7 @@ export function AdminReports() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No orders data available
+                  {t('admin.noDataAvailable')}
                 </div>
               )}
             </CardContent>
@@ -289,7 +286,7 @@ export function AdminReports() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileBarChart className="h-5 w-5" />
-                Income Analysis - {selectedPeriod}
+                {t('admin.incomeReport')} - {t(`admin.${selectedPeriod}`)}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -303,25 +300,25 @@ export function AdminReports() {
                       <div className="text-2xl font-bold text-blue-600">
                         {incomeData.summary?.total_orders || 0}
                       </div>
-                      <div className="text-sm text-muted-foreground">Total Orders</div>
+                      <div className="text-sm text-muted-foreground">{t('admin.totalOrders')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
                         {formatCurrency(incomeData.summary?.gross_income || 0)}
                       </div>
-                      <div className="text-sm text-muted-foreground">Gross Income</div>
+                      <div className="text-sm text-muted-foreground">{t('admin.grossIncome')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
                         {formatCurrency(incomeData.summary?.tax_collected || 0)}
                       </div>
-                      <div className="text-sm text-muted-foreground">Tax Collected</div>
+                      <div className="text-sm text-muted-foreground">{t('admin.taxCollected')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
                         {formatCurrency(incomeData.summary?.net_income || 0)}
                       </div>
-                      <div className="text-sm text-muted-foreground">Net Income</div>
+                      <div className="text-sm text-muted-foreground">{t('admin.netIncome')}</div>
                     </div>
                   </div>
 
@@ -329,11 +326,11 @@ export function AdminReports() {
                   {incomeData.breakdown && incomeData.breakdown.length > 0 && (
                     <div className="border rounded-lg">
                       <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium text-sm">
-                        <div>Period</div>
-                        <div className="text-center">Orders</div>
-                        <div className="text-center">Gross</div>
-                        <div className="text-center">Tax</div>
-                        <div className="text-center">Net</div>
+                        <div>{t('admin.period')}</div>
+                        <div className="text-center">{t('admin.orders')}</div>
+                        <div className="text-center">{t('admin.gross')}</div>
+                        <div className="text-center">{t('admin.tax')}</div>
+                        <div className="text-center">{t('admin.net')}</div>
                       </div>
                       {incomeData.breakdown.slice(0, 10).map((item: any, index: number) => (
                         <div key={index} className="grid grid-cols-5 gap-4 p-4 border-t text-sm">
@@ -351,7 +348,7 @@ export function AdminReports() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No analytics data available
+                  {t('admin.noIncomeData')}
                 </div>
               )}
             </CardContent>

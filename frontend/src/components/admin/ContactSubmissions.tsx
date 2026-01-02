@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/api/client'
 import { jsonToCSV, downloadCSV } from '@/lib/csv-utils'
@@ -48,6 +49,7 @@ interface ContactSubmission {
 }
 
 export default function ContactSubmissions() {
+  const { t } = useTranslation()
   const [selectedContact, setSelectedContact] = useState<ContactSubmission | null>(null)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -79,10 +81,10 @@ export default function ContactSubmissions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contactSubmissions'] })
-      showSuccessToast('Status berhasil diperbarui')
+      showSuccessToast(t('admin.statusUpdateSuccess'))
     },
     onError: () => {
-      showErrorToast('Gagal memperbarui status')
+      showErrorToast(t('admin.statusUpdateError'))
     },
   })
 
@@ -93,11 +95,11 @@ export default function ContactSubmissions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contactSubmissions'] })
-      showSuccessToast('Pesan berhasil dihapus')
+      showSuccessToast(t('admin.deleteSuccess'))
       setViewDialogOpen(false)
     },
     onError: () => {
-      showErrorToast('Gagal menghapus pesan')
+      showErrorToast(t('admin.deleteError'))
     },
   })
 
@@ -119,13 +121,13 @@ export default function ContactSubmissions() {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'new':
-        return 'Baru'
+        return t('admin.statusNew')
       case 'in_progress':
-        return 'Diproses'
+        return t('admin.statusInProgress')
       case 'resolved':
-        return 'Selesai'
+        return t('admin.statusResolved')
       case 'spam':
-        return 'Spam'
+        return t('admin.statusSpam')
       default:
         return status
     }
@@ -144,37 +146,37 @@ export default function ContactSubmissions() {
   }
 
   const handleDelete = () => {
-    if (selectedContact && confirm('Yakin ingin menghapus pesan ini?')) {
+    if (selectedContact && confirm(t('admin.confirmDelete'))) {
       deleteMutation.mutate(selectedContact.id)
     }
   }
 
   const handleExportCSV = () => {
     const csvData = jsonToCSV(contacts, [
-      { key: 'created_at', label: 'Tanggal' },
-      { key: 'name', label: 'Nama' },
-      { key: 'email', label: 'Email' },
-      { key: 'phone', label: 'Telepon' },
-      { key: 'subject', label: 'Subjek' },
-      { key: 'message', label: 'Pesan' },
-      { key: 'status', label: 'Status' },
+      { key: 'created_at', label: t('admin.contactDate') },
+      { key: 'name', label: t('admin.contactName') },
+      { key: 'email', label: t('admin.contactEmail') },
+      { key: 'phone', label: t('admin.contactPhone') },
+      { key: 'subject', label: t('admin.contactSubject') },
+      { key: 'message', label: t('admin.contactMessage') },
+      { key: 'status', label: t('admin.contactStatus') },
     ])
-    
+
     const timestamp = new Date().toISOString().split('T')[0]
     downloadCSV(csvData, `contact-submissions-${timestamp}`)
-    showSuccessToast('Data berhasil diekspor ke CSV')
+    showSuccessToast(t('admin.exportSuccess'))
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Pesan Kontak</h1>
-          <p className="text-muted-foreground">Kelola pesan dari formulir kontak</p>
+          <h1 className="text-2xl font-bold">{t('admin.contactSubmissions')}</h1>
+          <p className="text-muted-foreground">{t('admin.contactSubmissionsDesc')}</p>
         </div>
         <Button onClick={handleExportCSV} variant="outline" disabled={contacts.length === 0}>
           <Download size={16} className="mr-2" />
-          Export CSV
+          {t('common.export')} CSV
         </Button>
       </div>
 
@@ -183,18 +185,18 @@ export default function ContactSubmissions() {
         <div className="space-y-2">
           <Label htmlFor="statusFilter" className="flex items-center gap-2">
             <Filter size={16} />
-            Status
+            {t('common.status')}
           </Label>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger id="statusFilter" className="w-[180px]">
-              <SelectValue placeholder="Semua Status" />
+              <SelectValue placeholder={t('admin.allStatus')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="new">Baru</SelectItem>
-              <SelectItem value="in_progress">Diproses</SelectItem>
-              <SelectItem value="resolved">Selesai</SelectItem>
-              <SelectItem value="spam">Spam</SelectItem>
+              <SelectItem value="all">{t('admin.allStatus')}</SelectItem>
+              <SelectItem value="new">{t('admin.statusNew')}</SelectItem>
+              <SelectItem value="in_progress">{t('admin.statusInProgress')}</SelectItem>
+              <SelectItem value="resolved">{t('admin.statusResolved')}</SelectItem>
+              <SelectItem value="spam">{t('admin.statusSpam')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -202,7 +204,7 @@ export default function ContactSubmissions() {
         <div className="space-y-2">
           <Label htmlFor="startDate" className="flex items-center gap-2">
             <Calendar size={16} />
-            Dari Tanggal
+            {t('admin.fromDate')}
           </Label>
           <Input
             id="startDate"
@@ -214,7 +216,7 @@ export default function ContactSubmissions() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="endDate">Sampai Tanggal</Label>
+          <Label htmlFor="endDate">{t('admin.toDate')}</Label>
           <Input
             id="endDate"
             type="date"
@@ -233,29 +235,29 @@ export default function ContactSubmissions() {
               setEndDate('')
             }}
           >
-            Reset Filter
+            {t('admin.resetFilter')}
           </Button>
         )}
       </div>
 
       {/* Table */}
       {isLoading ? (
-        <div className="text-center py-8">Loading...</div>
+        <div className="text-center py-8">{t('common.loading')}</div>
       ) : contacts.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          Tidak ada pesan kontak
+          {t('admin.noContacts')}
         </div>
       ) : (
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Tanggal</TableHead>
-                <TableHead>Nama</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Subjek</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+                <TableHead>{t('admin.contactDate')}</TableHead>
+                <TableHead>{t('admin.contactName')}</TableHead>
+                <TableHead>{t('admin.contactEmail')}</TableHead>
+                <TableHead>{t('admin.contactSubject')}</TableHead>
+                <TableHead>{t('admin.contactStatus')}</TableHead>
+                <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -266,18 +268,18 @@ export default function ContactSubmissions() {
                       icon={Inbox}
                       title={
                         statusFilter !== 'all'
-                          ? 'Tidak ada pesan dengan status ini'
-                          : 'Belum ada pesan kontak'
+                          ? t('admin.noContactsFiltered')
+                          : t('admin.noContactsYet')
                       }
                       description={
                         statusFilter !== 'all'
-                          ? 'Tidak ada pesan kontak yang cocok dengan filter status. Coba pilih status lain.'
-                          : 'Pesan dari formulir kontak website akan muncul di sini. Anda akan mendapat notifikasi saat ada pesan baru.'
+                          ? t('admin.noContactsFilteredDesc')
+                          : t('admin.noContactsYetDesc')
                       }
                       action={
                         statusFilter !== 'all'
                           ? {
-                              label: 'Lihat Semua Pesan',
+                              label: t('admin.viewAllMessages'),
                               onClick: () => setStatusFilter('all'),
                             }
                           : undefined
@@ -322,9 +324,9 @@ export default function ContactSubmissions() {
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Detail Pesan Kontak</DialogTitle>
+            <DialogTitle>{t('admin.contactDetail')}</DialogTitle>
             <DialogDescription>
-              Diterima pada{' '}
+              {t('admin.receivedOn')}{' '}
               {selectedContact &&
                 format(new Date(selectedContact.created_at), 'dd MMMM yyyy HH:mm', {
                   locale: localeId,
@@ -338,7 +340,7 @@ export default function ContactSubmissions() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <User size={16} />
-                    Nama
+                    {t('admin.contactName')}
                   </Label>
                   <p className="text-sm">{selectedContact.name}</p>
                 </div>
@@ -346,7 +348,7 @@ export default function ContactSubmissions() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Mail size={16} />
-                    Email
+                    {t('admin.contactEmail')}
                   </Label>
                   <p className="text-sm">{selectedContact.email}</p>
                 </div>
@@ -354,13 +356,13 @@ export default function ContactSubmissions() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Phone size={16} />
-                    Telepon
+                    {t('admin.contactPhone')}
                   </Label>
                   <p className="text-sm">{selectedContact.phone}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Status</Label>
+                  <Label>{t('admin.contactStatus')}</Label>
                   <Select
                     value={selectedContact.status}
                     onValueChange={handleUpdateStatus}
@@ -369,22 +371,22 @@ export default function ContactSubmissions() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="new">Baru</SelectItem>
-                      <SelectItem value="in_progress">Diproses</SelectItem>
-                      <SelectItem value="resolved">Selesai</SelectItem>
-                      <SelectItem value="spam">Spam</SelectItem>
+                      <SelectItem value="new">{t('admin.statusNew')}</SelectItem>
+                      <SelectItem value="in_progress">{t('admin.statusInProgress')}</SelectItem>
+                      <SelectItem value="resolved">{t('admin.statusResolved')}</SelectItem>
+                      <SelectItem value="spam">{t('admin.statusSpam')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Subjek</Label>
+                <Label>{t('admin.contactSubject')}</Label>
                 <p className="text-sm font-medium">{selectedContact.subject}</p>
               </div>
 
               <div className="space-y-2">
-                <Label>Pesan</Label>
+                <Label>{t('admin.contactMessage')}</Label>
                 <div className="border rounded-md p-4 bg-muted/50">
                   <p className="text-sm whitespace-pre-wrap">{selectedContact.message}</p>
                 </div>
@@ -395,10 +397,10 @@ export default function ContactSubmissions() {
           <DialogFooter className="flex justify-between">
             <Button variant="destructive" onClick={handleDelete}>
               <Trash2 size={16} className="mr-2" />
-              Hapus
+              {t('common.delete')}
             </Button>
             <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
-              Tutup
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

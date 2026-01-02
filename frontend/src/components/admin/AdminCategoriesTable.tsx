@@ -7,6 +7,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -42,6 +43,7 @@ export function AdminCategoriesTable({
   onDelete,
   isLoading = false
 }: AdminCategoriesTableProps) {
+  const { t } = useTranslation()
   const [sorting, setSorting] = useState<SortingState>([])
 
   const columns: ColumnDef<Category>[] = [
@@ -56,7 +58,7 @@ export function AdminCategoriesTable({
             className="h-8 px-2 lg:px-3"
           >
             <Tag className="mr-2 h-4 w-4" />
-            Category
+            {t('admin.categories')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -87,7 +89,7 @@ export function AdminCategoriesTable({
                 {category.name}
               </div>
               <div className="text-sm text-gray-500 line-clamp-1">
-                {category.description || "No description"}
+                {category.description || t('common.noData')}
               </div>
             </div>
           </div>
@@ -105,7 +107,7 @@ export function AdminCategoriesTable({
             className="h-8 px-2 lg:px-3"
           >
             <Hash className="mr-2 h-4 w-4" />
-            Order
+            {t('admin.orders')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -127,13 +129,13 @@ export function AdminCategoriesTable({
     },
     {
       accessorKey: "is_active",
-      header: "Status",
+      header: t('common.status'),
       cell: ({ getValue }) => {
         const isActive = getValue() as boolean
         return (
           <Badge variant={isActive ? "default" : "secondary"}>
             <div className={`w-2 h-2 rounded-full mr-2 ${isActive ? 'bg-green-400' : 'bg-gray-400'}`} />
-            {isActive ? "Active" : "Inactive"}
+            {isActive ? t('common.active') : t('common.inactive')}
           </Badge>
         )
       },
@@ -149,7 +151,7 @@ export function AdminCategoriesTable({
             className="h-8 px-2 lg:px-3"
           >
             <Calendar className="mr-2 h-4 w-4" />
-            Created
+            {t('common.date')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -171,7 +173,7 @@ export function AdminCategoriesTable({
     },
     {
       id: "actions",
-      header: "Actions",
+      header: t('common.actions'),
       cell: ({ row }) => {
         const category = row.original
         return (
@@ -183,7 +185,7 @@ export function AdminCategoriesTable({
               className="h-8 px-2 lg:px-3"
             >
               <Edit className="h-4 w-4" />
-              <span className="sr-only lg:not-sr-only lg:ml-2">Edit</span>
+              <span className="sr-only lg:not-sr-only lg:ml-2">{t('common.edit')}</span>
             </Button>
             <Button
               size="sm"
@@ -192,7 +194,7 @@ export function AdminCategoriesTable({
               className="h-8 px-2 lg:px-3 text-red-600 hover:text-red-700 hover:border-red-300"
             >
               <Trash2 className="h-4 w-4" />
-              <span className="sr-only lg:not-sr-only lg:ml-2">Delete</span>
+              <span className="sr-only lg:not-sr-only lg:ml-2">{t('common.delete')}</span>
             </Button>
           </div>
         )
@@ -265,8 +267,8 @@ export function AdminCategoriesTable({
                     <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                       <Tag className="w-6 h-6 text-gray-400" />
                     </div>
-                    <p className="text-gray-500">No categories found</p>
-                    <p className="text-sm text-gray-400">Create your first category to get started</p>
+                    <p className="text-gray-500">{t('common.noData')}</p>
+                    <p className="text-sm text-gray-400">{t('admin.addCategory')}</p>
                   </div>
                 </TableCell>
               </TableRow>

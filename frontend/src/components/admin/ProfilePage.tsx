@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,6 +33,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export function ProfilePage() {
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
@@ -84,10 +86,10 @@ export function ProfilePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       queryClient.invalidateQueries({ queryKey: ['current-user'] });
-      toastHelpers.success('Profile updated successfully');
+      toastHelpers.success(t('admin.profileUpdatedSuccess'));
     },
     onError: (error: Error) => {
-      toastHelpers.error(error.message || 'Failed to update profile');
+      toastHelpers.error(error.message || t('admin.profileUpdateFailed'));
     },
   });
 
@@ -104,12 +106,12 @@ export function ProfilePage() {
       return response;
     },
     onSuccess: () => {
-      toastHelpers.success('Password changed successfully');
+      toastHelpers.success(t('admin.passwordChangedSuccess'));
       resetPassword();
       setShowPasswordForm(false);
     },
     onError: (error: Error) => {
-      toastHelpers.error(error.message || 'Failed to change password');
+      toastHelpers.error(error.message || t('admin.passwordChangeFailed'));
     },
   });
 
@@ -132,7 +134,7 @@ export function ProfilePage() {
   if (error) {
     return (
       <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-        Failed to load profile: {error.message}
+        {t('admin.loadProfileFailed')}: {error.message}
       </div>
     );
   }
@@ -140,9 +142,9 @@ export function ProfilePage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Profile</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t('admin.profileTitle')}</h2>
         <p className="text-muted-foreground">
-          Manage your account settings and preferences
+          {t('admin.profileManageSettings')}
         </p>
       </div>
 
@@ -151,17 +153,17 @@ export function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserIcon className="h-5 w-5" />
-            Personal Information
+            {t('admin.personalInfo')}
           </CardTitle>
           <CardDescription>
-            Update your profile details and contact information
+            {t('admin.personalInfoDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="first_name">First Name</Label>
+                <Label htmlFor="first_name">{t('admin.firstName')}</Label>
                 <Input
                   id="first_name"
                   {...registerProfile('first_name')}
@@ -173,7 +175,7 @@ export function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="last_name">Last Name</Label>
+                <Label htmlFor="last_name">{t('admin.lastName')}</Label>
                 <Input
                   id="last_name"
                   {...registerProfile('last_name')}
@@ -186,7 +188,7 @@ export function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('admin.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -200,19 +202,19 @@ export function ProfilePage() {
 
             {profileData && (
               <div className="space-y-2">
-                <Label>Username</Label>
+                <Label>{t('admin.username')}</Label>
                 <Input value={profileData.username} disabled className="bg-muted" />
-                <p className="text-xs text-muted-foreground">Username cannot be changed</p>
+                <p className="text-xs text-muted-foreground">{t('admin.usernameCannotChange')}</p>
               </div>
             )}
 
             {profileData && (
               <div className="space-y-2">
-                <Label>Role</Label>
-                <Input 
-                  value={profileData.role.charAt(0).toUpperCase() + profileData.role.slice(1)} 
-                  disabled 
-                  className="bg-muted" 
+                <Label>{t('admin.role')}</Label>
+                <Input
+                  value={t(`roles.${profileData.role}`)}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
             )}
@@ -226,13 +228,13 @@ export function ProfilePage() {
                 onClick={() => resetProfile()}
                 disabled={updateProfileMutation.isPending}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={updateProfileMutation.isPending}>
                 {updateProfileMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Save Changes
+                {t('admin.saveChanges')}
               </Button>
             </div>
           </form>
@@ -244,21 +246,21 @@ export function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lock className="h-5 w-5" />
-            Security
+            {t('admin.security')}
           </CardTitle>
           <CardDescription>
-            Change your password to keep your account secure
+            {t('admin.securityDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!showPasswordForm ? (
             <Button onClick={() => setShowPasswordForm(true)}>
-              Change Password
+              {t('admin.changePassword')}
             </Button>
           ) : (
             <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="current_password">Current Password</Label>
+                <Label htmlFor="current_password">{t('admin.currentPassword')}</Label>
                 <Input
                   id="current_password"
                   type="password"
@@ -271,7 +273,7 @@ export function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="new_password">New Password</Label>
+                <Label htmlFor="new_password">{t('admin.newPassword')}</Label>
                 <Input
                   id="new_password"
                   type="password"
@@ -284,7 +286,7 @@ export function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm_password">Confirm New Password</Label>
+                <Label htmlFor="confirm_password">{t('admin.confirmNewPassword')}</Label>
                 <Input
                   id="confirm_password"
                   type="password"
@@ -308,13 +310,13 @@ export function ProfilePage() {
                   }}
                   disabled={changePasswordMutation.isPending}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button type="submit" disabled={changePasswordMutation.isPending}>
                   {changePasswordMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Update Password
+                  {t('admin.updatePassword')}
                 </Button>
               </div>
             </form>
@@ -326,13 +328,13 @@ export function ProfilePage() {
       {profileData && (
         <Card>
           <CardHeader>
-            <CardTitle>Account Information</CardTitle>
+            <CardTitle>{t('admin.accountInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Account Created</span>
+              <span className="text-muted-foreground">{t('admin.accountCreated')}</span>
               <span className="font-medium">
-                {new Date(profileData.created_at).toLocaleDateString('en-US', {
+                {new Date(profileData.created_at).toLocaleDateString(i18n.language === 'id-ID' ? 'id-ID' : 'en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
@@ -340,10 +342,10 @@ export function ProfilePage() {
               </span>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Status</span>
+              <span className="text-muted-foreground">{t('common.status')}</span>
               <span className="flex items-center gap-1 font-medium text-green-600">
                 <CheckCircle2 className="h-4 w-4" />
-                Active
+                {t('common.active')}
               </span>
             </div>
           </CardContent>

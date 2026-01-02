@@ -78,7 +78,7 @@ function PublicMenuPage() {
   return (
     <PublicLayout>
       {/* Page Header */}
-      <section className="py-12 md:py-16 bg-[var(--public-bg-secondary)]">
+      <section className="pt-28 md:pt-36 pb-12 md:pb-16 bg-[var(--public-bg-secondary)]">
         <div
           ref={headerRef}
           className={cn(

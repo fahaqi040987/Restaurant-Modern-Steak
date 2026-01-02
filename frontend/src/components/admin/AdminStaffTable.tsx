@@ -7,6 +7,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -43,6 +44,7 @@ export function AdminStaffTable({
   onDelete,
   isLoading = false
 }: AdminStaffTableProps) {
+  const { t } = useTranslation()
   const [sorting, setSorting] = useState<SortingState>([])
 
   const getRoleBadgeColor = (role: string) => {
@@ -67,7 +69,7 @@ export function AdminStaffTable({
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="h-8 px-2 lg:px-3"
           >
-            Name
+            {t('admin.staffName')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -110,7 +112,7 @@ export function AdminStaffTable({
             className="h-8 px-2 lg:px-3"
           >
             <Mail className="mr-2 h-4 w-4" />
-            Email
+            {t('admin.contactEmail')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -141,7 +143,7 @@ export function AdminStaffTable({
             className="h-8 px-2 lg:px-3"
           >
             <Shield className="mr-2 h-4 w-4" />
-            Role
+            {t('admin.staffRole')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -163,13 +165,13 @@ export function AdminStaffTable({
     },
     {
       accessorKey: "is_active",
-      header: "Status",
+      header: t('admin.staffStatus'),
       cell: ({ getValue }) => {
         const isActive = getValue() as boolean
         return (
           <Badge variant={isActive ? "default" : "secondary"}>
             <div className={`w-2 h-2 rounded-full mr-2 ${isActive ? 'bg-green-400' : 'bg-gray-400'}`} />
-            {isActive ? "Active" : "Inactive"}
+            {isActive ? t('admin.active') : t('admin.inactive')}
           </Badge>
         )
       },
@@ -185,7 +187,7 @@ export function AdminStaffTable({
             className="h-8 px-2 lg:px-3"
           >
             <Calendar className="mr-2 h-4 w-4" />
-            Joined
+            {t('admin.joined')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -207,7 +209,7 @@ export function AdminStaffTable({
     },
     {
       id: "actions",
-      header: "Actions",
+      header: t('admin.staffActions'),
       cell: ({ row }) => {
         const user = row.original
         return (
@@ -219,7 +221,7 @@ export function AdminStaffTable({
               className="h-8 px-2 lg:px-3"
             >
               <Edit className="h-4 w-4" />
-              <span className="sr-only lg:not-sr-only lg:ml-2">Edit</span>
+              <span className="sr-only lg:not-sr-only lg:ml-2">{t('admin.editStaff')}</span>
             </Button>
             <Button
               size="sm"
@@ -228,7 +230,7 @@ export function AdminStaffTable({
               className="h-8 px-2 lg:px-3 text-red-600 hover:text-red-700 hover:border-red-300"
             >
               <Trash2 className="h-4 w-4" />
-              <span className="sr-only lg:not-sr-only lg:ml-2">Delete</span>
+              <span className="sr-only lg:not-sr-only lg:ml-2">{t('admin.deleteStaff')}</span>
             </Button>
           </div>
         )
@@ -301,7 +303,7 @@ export function AdminStaffTable({
                     <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                       <Shield className="w-6 h-6 text-gray-400" />
                     </div>
-                    <p className="text-gray-500">No staff members found</p>
+                    <p className="text-gray-500">{t('admin.noStaffFound')}</p>
                   </div>
                 </TableCell>
               </TableRow>

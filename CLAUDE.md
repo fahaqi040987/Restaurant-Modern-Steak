@@ -241,3 +241,5 @@ The project includes 17 Cursor AI rule files in `.cursor/rules/` covering:
 - PostgreSQL 14+ (mocked via go-sqlmock for unit tests) (002-restaurant-management)
 - TypeScript 5+ (strict mode), Go 1.23+ + React 18.3.1, TanStack Router v1.57.15, TanStack Query v5.56.2, Embla Carousel (new), Tailwind CSS, Gin v1.9.1 (004-restaurant-management)
 - PostgreSQL 14+ (existing database schema) (004-restaurant-management)
+- TypeScript 5+ (strict mode), React 18.3.1 + i18next v25.7.2, react-i18next v16.5.0 (005-admin-language-settings)
+- Browser localStorage (key: `i18nextLng`) (005-admin-language-settings)

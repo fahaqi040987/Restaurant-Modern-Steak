@@ -70,8 +70,8 @@ INSERT INTO restaurant_info (
     'https://instagram.com/steakkenangan',
     'https://facebook.com/steakkenangan',
     'https://twitter.com/steakkenangan',
-    '/images/logo.png',
-    '/images/hero-steak.jpg'
+    '/assets/restoran/images/LogoSteakKenangan.png',
+    '/assets/restoran/images/banner_landing_page.jpg'
 );
 
 -- Insert operating hours for all 7 days

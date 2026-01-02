@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link, useRouter, useLocation } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { UserMenu } from '@/components/ui/user-menu'
-import { 
-  LayoutDashboard, 
-  Users, 
-  CreditCard, 
+import {
+  LayoutDashboard,
+  Users,
+  CreditCard,
   ChefHat,
   Settings,
   User,
@@ -26,87 +27,96 @@ interface AdminSidebarProps {
   user: UserType
 }
 
-const adminSections = [
+interface AdminSection {
+  id: string
+  labelKey: string
+  icon: React.ReactNode
+  descriptionKey: string
+  href: string
+}
+
+const adminSections: AdminSection[] = [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    labelKey: 'admin.dashboard',
     icon: <LayoutDashboard className="w-5 h-5" />,
-    description: 'Overview and statistics',
+    descriptionKey: 'admin.dashboardDescription',
     href: '/admin/dashboard'
   },
   {
     id: 'server',
-    label: 'Server Interface',
+    labelKey: 'admin.serverInterface',
     icon: <Users className="w-5 h-5" />,
-    description: 'Server order interface',
+    descriptionKey: 'admin.serverDescription',
     href: '/admin/server'
   },
   {
     id: 'counter',
-    label: 'Counter/Checkout',
+    labelKey: 'admin.counterCheckout',
     icon: <CreditCard className="w-5 h-5" />,
-    description: 'Payment processing',
+    descriptionKey: 'admin.counterDescription',
     href: '/admin/counter'
   },
   {
     id: 'kitchen',
-    label: 'Kitchen Display',
+    labelKey: 'admin.kitchenDisplay',
     icon: <ChefHat className="w-5 h-5" />,
-    description: 'Kitchen order display',
+    descriptionKey: 'admin.kitchenDescription',
     href: '/admin/kitchen'
   },
   {
     id: 'settings',
-    label: 'Settings',
+    labelKey: 'admin.settings',
     icon: <Settings className="w-5 h-5" />,
-    description: 'System configuration',
+    descriptionKey: 'admin.settingsDescription',
     href: '/admin/settings'
   },
   {
     id: 'contacts',
-    label: 'Contact Messages',
+    labelKey: 'admin.contactMessages',
     icon: <MessageSquare className="w-5 h-5" />,
-    description: 'Customer contact submissions',
+    descriptionKey: 'admin.contactDescription',
     href: '/admin/contacts'
   },
   {
     id: 'inventory',
-    label: 'Inventory',
+    labelKey: 'admin.inventory',
     icon: <Package className="w-5 h-5" />,
-    description: 'Stock management and tracking',
+    descriptionKey: 'admin.inventoryDescription',
     href: '/admin/inventory'
   },
   {
     id: 'staff',
-    label: 'Manage Staff',
+    labelKey: 'admin.manageStaff',
     icon: <UserCog className="w-5 h-5" />,
-    description: 'User and role management',
+    descriptionKey: 'admin.staffDescription',
     href: '/admin/staff'
   },
   {
     id: 'menu',
-    label: 'Manage Menu',
+    labelKey: 'admin.manageMenu',
     icon: <Menu className="w-5 h-5" />,
-    description: 'Categories and products',
+    descriptionKey: 'admin.menuDescription',
     href: '/admin/menu'
   },
   {
     id: 'tables',
-    label: 'Manage Tables',
+    labelKey: 'admin.manageTables',
     icon: <LayoutGrid className="w-5 h-5" />,
-    description: 'Dining table management',
+    descriptionKey: 'admin.tablesDescription',
     href: '/admin/tables'
   },
   {
     id: 'reports',
-    label: 'View Reports',
+    labelKey: 'admin.viewReports',
     icon: <BarChart3 className="w-5 h-5" />,
-    description: 'Analytics and reports',
+    descriptionKey: 'admin.reportsDescription',
     href: '/admin/reports'
   }
 ]
 
 export function AdminSidebar({ user }: AdminSidebarProps) {
+  const { t } = useTranslation()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
@@ -160,8 +170,8 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
                   <LayoutDashboard className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <h1 className="font-bold text-foreground">Admin Panel</h1>
-                  <p className="text-xs text-muted-foreground">Restaurant Management</p>
+                  <h1 className="font-bold text-foreground">{t('admin.panelTitle')}</h1>
+                  <p className="text-xs text-muted-foreground">{t('admin.restaurantManagement')}</p>
                 </div>
               </div>
             )}
@@ -199,7 +209,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
               >
                 {section.icon}
                 {(!sidebarCollapsed || isMobile || isTablet) && (
-                  <span className="ml-3">{section.label}</span>
+                  <span className="ml-3">{t(section.labelKey)}</span>
                 )}
               </Button>
             </Link>

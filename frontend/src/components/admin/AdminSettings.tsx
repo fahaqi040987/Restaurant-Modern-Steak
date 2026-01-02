@@ -167,7 +167,7 @@ export function AdminSettings() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h2>
         <p className="text-muted-foreground">
-          {t('common.loading', 'Configure your restaurant settings and POS system')}
+          {t('common.settingsDescription')}
         </p>
       </div>
 
@@ -176,11 +176,11 @@ export function AdminSettings() {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="system" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            {t('System Settings')}
+            {t('common.systemSettings')}
           </TabsTrigger>
           <TabsTrigger value="restaurant" className="flex items-center gap-2">
             <Store className="h-4 w-4" />
-            {t('Restaurant Info')}
+            {t('common.restaurantInfo')}
           </TabsTrigger>
         </TabsList>
 
@@ -211,7 +211,7 @@ export function AdminSettings() {
             {t('settings.language')}
           </CardTitle>
           <CardDescription>
-            Switch interface language instantly
+            {t('common.switchLanguage')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -232,7 +232,7 @@ export function AdminSettings() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            Current: {i18n.language === 'id-ID' ? 'Bahasa Indonesia' : 'English (US)'}
+            {t('common.currentLanguage')}: {i18n.language === 'id-ID' ? 'Bahasa Indonesia' : 'English (US)'}
           </p>
         </CardContent>
       </Card>
@@ -242,10 +242,10 @@ export function AdminSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Palette className="w-5 h-5" />
-            Appearance
+            {t('common.appearance')}
           </CardTitle>
           <CardDescription>
-            Customize the look and feel of the interface
+            {t('common.appearanceDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -255,25 +255,25 @@ export function AdminSettings() {
               onClick={() => setTheme('light')}
               className="flex-1"
             >
-              ☀️ Light
+              ☀️ {t('common.light')}
             </Button>
             <Button
               variant={theme === 'dark' ? 'default' : 'outline'}
               onClick={() => setTheme('dark')}
               className="flex-1"
             >
-              🌙 Dark
+              🌙 {t('common.dark')}
             </Button>
             <Button
               variant={theme === 'system' ? 'default' : 'outline'}
               onClick={() => setTheme('system')}
               className="flex-1"
             >
-              💻 System
+              💻 {t('common.system')}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            Current theme: {theme === 'system' ? 'System Default' : theme.charAt(0).toUpperCase() + theme.slice(1)}
+            {t('common.currentTheme')}: {theme === 'system' ? t('common.systemDefault') : theme === 'light' ? t('common.light') : t('common.dark')}
           </p>
         </CardContent>
       </Card>

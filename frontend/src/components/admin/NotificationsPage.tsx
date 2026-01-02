@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ interface Notification {
 }
 
 export function NotificationsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
@@ -58,10 +60,10 @@ export function NotificationsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      toastHelpers.success('Notification marked as read');
+      toastHelpers.success(t('notifications.markRead'));
     },
     onError: (error: Error) => {
-      toastHelpers.error(error.message || 'Failed to mark notification as read');
+      toastHelpers.error(error.message || t('errors.generic'));
     },
   });
 
@@ -76,10 +78,10 @@ export function NotificationsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      toastHelpers.success('Notification deleted');
+      toastHelpers.success(t('admin.deleteNotification'));
     },
     onError: (error: Error) => {
-      toastHelpers.error(error.message || 'Failed to delete notification');
+      toastHelpers.error(error.message || t('errors.generic'));
     },
   });
 
@@ -107,12 +109,22 @@ export function NotificationsPage() {
       system: 'bg-gray-100 text-gray-800 border-gray-200',
     };
 
+    // Translate notification types
+    const typeTranslations: Record<string, string> = {
+      error: t('common.error'),
+      alert: t('common.warning'),
+      warning: t('common.warning'),
+      success: t('common.success'),
+      info: t('common.info'),
+      system: t('common.system'),
+    };
+
     return (
-      <Badge 
-        variant="outline" 
+      <Badge
+        variant="outline"
         className={cn('capitalize', typeColors[type] || typeColors.info)}
       >
-        {type}
+        {typeTranslations[type] || type}
       </Badge>
     );
   };
@@ -122,12 +134,12 @@ export function NotificationsPage() {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    
-    return date.toLocaleDateString('en-US', {
+    if (diffInSeconds < 60) return t('notifications.justNow', 'Just now');
+    if (diffInSeconds < 3600) return t('notifications.minutesAgo', '{{count}}m ago', { count: Math.floor(diffInSeconds / 60) });
+    if (diffInSeconds < 86400) return t('notifications.hoursAgo', '{{count}}h ago', { count: Math.floor(diffInSeconds / 3600) });
+    if (diffInSeconds < 604800) return t('notifications.daysAgo', '{{count}}d ago', { count: Math.floor(diffInSeconds / 86400) });
+
+    return date.toLocaleDateString('id-ID', {
       month: 'short',
       day: 'numeric',
       year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
@@ -139,7 +151,7 @@ export function NotificationsPage() {
   if (error) {
     return (
       <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-        Failed to load notifications: {error.message}
+        {t('errors.generic')}: {error.message}
       </div>
     );
   }
@@ -147,9 +159,9 @@ export function NotificationsPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Notifications</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t('admin.notificationsTitle')}</h2>
         <p className="text-muted-foreground">
-          Stay updated with important alerts and messages
+          {t('admin.notificationsDesc')}
         </p>
       </div>
 
@@ -164,7 +176,7 @@ export function NotificationsPage() {
                 onClick={() => setFilter('all')}
               >
                 <Bell className="mr-2 h-4 w-4" />
-                All
+                {t('common.all')}
                 {notificationsData && (
                   <Badge variant="secondary" className="ml-2">
                     {notificationsData.length}
@@ -177,7 +189,7 @@ export function NotificationsPage() {
                 onClick={() => setFilter('unread')}
               >
                 <BellOff className="mr-2 h-4 w-4" />
-                Unread
+                {t('admin.unread')}
                 {unreadCount > 0 && (
                   <Badge variant="destructive" className="ml-2">
                     {unreadCount}
@@ -189,7 +201,7 @@ export function NotificationsPage() {
             <Button variant="ghost" size="sm" asChild>
               <a href="/admin/settings">
                 <SettingsIcon className="mr-2 h-4 w-4" />
-                Preferences
+                {t('notifications.preferences')}
               </a>
             </Button>
           </div>
@@ -199,14 +211,14 @@ export function NotificationsPage() {
       {/* Notifications List */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Notifications</CardTitle>
+          <CardTitle>{t('notifications.title')}</CardTitle>
           <CardDescription>
             {isLoading ? (
-              'Loading notifications...'
+              t('common.loading')
             ) : notificationsData && notificationsData.length > 0 ? (
-              `${notificationsData.length} notification${notificationsData.length !== 1 ? 's' : ''}`
+              t('notifications.notificationCount', '{{count}} notification(s)', { count: notificationsData.length })
             ) : (
-              'No notifications yet'
+              t('admin.noNotifications')
             )}
           </CardDescription>
         </CardHeader>
@@ -250,7 +262,7 @@ export function NotificationsPage() {
                         {notification.read_at && (
                           <>
                             <span>•</span>
-                            <span>Read {formatRelativeTime(notification.read_at)}</span>
+                            <span>{t('admin.read')} {formatRelativeTime(notification.read_at)}</span>
                           </>
                         )}
                       </div>
@@ -267,7 +279,7 @@ export function NotificationsPage() {
                           disabled={markReadMutation.isPending}
                         >
                           <Check className="h-4 w-4" />
-                          <span className="sr-only">Mark as read</span>
+                          <span className="sr-only">{t('admin.markAsRead')}</span>
                         </Button>
                       )}
                       <Button
@@ -278,7 +290,7 @@ export function NotificationsPage() {
                         disabled={deleteNotificationMutation.isPending}
                       >
                         <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
+                        <span className="sr-only">{t('common.delete')}</span>
                       </Button>
                     </div>
                   </div>
@@ -289,9 +301,9 @@ export function NotificationsPage() {
           ) : (
             <div className="text-center py-12">
               <Bell className="mx-auto h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mt-4 text-lg font-semibold">No notifications</h3>
+              <h3 className="mt-4 text-lg font-semibold">{t('admin.noNotifications')}</h3>
               <p className="text-sm text-muted-foreground mt-2">
-                You're all caught up! Check back later for updates.
+                {t('notifications.allCaughtUp', "You're all caught up! Check back later for updates.")}
               </p>
             </div>
           )}

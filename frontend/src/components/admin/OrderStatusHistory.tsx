@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import apiClient from '@/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Clock, ArrowRight, User } from 'lucide-react'
 import { format } from 'date-fns'
-import { id as localeId } from 'date-fns/locale'
+import { id as localeId, enUS } from 'date-fns/locale'
 
 interface OrderStatusHistoryRecord {
   id: string
@@ -36,22 +37,6 @@ const getStatusBadgeVariant = (status: string) => {
   }
 }
 
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'pending':
-      return 'Menunggu'
-    case 'preparing':
-      return 'Diproses'
-    case 'ready':
-      return 'Siap'
-    case 'completed':
-      return 'Selesai'
-    case 'cancelled':
-      return 'Dibatalkan'
-    default:
-      return status
-  }
-}
 
 const getStatusIcon = (status: string) => {
   // Different visual indicators for each status
@@ -66,6 +51,15 @@ const getStatusIcon = (status: string) => {
 }
 
 export function OrderStatusHistory({ orderId }: OrderStatusHistoryProps) {
+  const { t, i18n } = useTranslation()
+
+  const getStatusLabel = (status: string) => {
+    const statusKey = `orders.${status}` as const
+    return t(statusKey, status)
+  }
+
+  const dateLocale = i18n.language === 'id' || i18n.language === 'id-ID' ? localeId : enUS
+
   const { data: history = [], isLoading } = useQuery<OrderStatusHistoryRecord[]>({
     queryKey: ['orderStatusHistory', orderId],
     queryFn: async () => {
@@ -87,7 +81,7 @@ export function OrderStatusHistory({ orderId }: OrderStatusHistoryProps) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <Clock className="mx-auto mb-2 h-8 w-8 opacity-50" />
-        <p>Belum ada riwayat status</p>
+        <p>{t('orders.noStatusHistory')}</p>
       </div>
     )
   }
@@ -96,11 +90,11 @@ export function OrderStatusHistory({ orderId }: OrderStatusHistoryProps) {
     <div className="space-y-1">
       <h3 className="font-semibold mb-4 flex items-center gap-2">
         <Clock size={18} />
-        Riwayat Status Pesanan
+        {t('orders.statusHistory')}
       </h3>
       
       <div className="relative border-l-2 border-muted ml-4 pl-6 space-y-6">
-        {history.map((record, index) => (
+        {history.map((record) => (
           <div key={record.id} className="relative">
             {/* Timeline dot */}
             <div
@@ -135,7 +129,7 @@ export function OrderStatusHistory({ orderId }: OrderStatusHistoryProps) {
                   <Clock size={14} />
                   <span>
                     {format(new Date(record.created_at), 'dd MMM yyyy, HH:mm', {
-                      locale: localeId,
+                      locale: dateLocale,
                     })}
                   </span>
                 </div>

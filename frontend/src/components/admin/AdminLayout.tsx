@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { UserMenu } from '@/components/ui/user-menu'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useBadgeCounts } from '@/hooks/useBadgeCounts'
-// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card' // Removed - not used in simplified layout
-import { 
-  LayoutDashboard, 
-  Users, 
-  CreditCard, 
+import {
+  LayoutDashboard,
+  Users,
+  CreditCard,
   ChefHat,
   ShoppingCart,
   Settings,
@@ -45,89 +45,99 @@ interface AdminLayoutProps {
   user: UserType
 }
 
-const adminSections = [
+interface AdminSection {
+  id: string
+  labelKey: string
+  icon: React.ReactNode
+  descriptionKey: string
+  showBadge: boolean
+  badgeKey?: 'notifications' | 'newContacts'
+}
+
+const adminSections: AdminSection[] = [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    labelKey: 'admin.dashboard',
     icon: <LayoutDashboard className="w-5 h-5" />,
-    description: 'Overview and statistics',
+    descriptionKey: 'admin.dashboardDescription',
     showBadge: false
   },
   {
     id: 'notifications',
-    label: 'Notifications',
+    labelKey: 'admin.notifications',
     icon: <Bell className="w-5 h-5" />,
-    description: 'System notifications',
+    descriptionKey: 'notifications.title',
     showBadge: true,
     badgeKey: 'notifications' as const
   },
   {
     id: 'contacts',
-    label: 'Contact Messages',
+    labelKey: 'admin.contactMessages',
     icon: <Mail className="w-5 h-5" />,
-    description: 'Customer inquiries',
+    descriptionKey: 'admin.contactDescription',
     showBadge: true,
     badgeKey: 'newContacts' as const
   },
   {
     id: 'server',
-    label: 'Server Interface',
+    labelKey: 'admin.serverInterface',
     icon: <Users className="w-5 h-5" />,
-    description: 'Server order interface',
+    descriptionKey: 'admin.serverDescription',
     showBadge: false
   },
   {
     id: 'counter',
-    label: 'Counter/Checkout',
+    labelKey: 'admin.counterCheckout',
     icon: <CreditCard className="w-5 h-5" />,
-    description: 'Payment processing',
+    descriptionKey: 'admin.counterDescription',
     showBadge: false
   },
   {
     id: 'kitchen',
-    label: 'Kitchen Display',
+    labelKey: 'admin.kitchenDisplay',
     icon: <ChefHat className="w-5 h-5" />,
-    description: 'Kitchen order display',
+    descriptionKey: 'admin.kitchenDescription',
     showBadge: false
   },
   {
     id: 'settings',
-    label: 'Settings',
+    labelKey: 'admin.settings',
     icon: <Settings className="w-5 h-5" />,
-    description: 'System configuration',
+    descriptionKey: 'admin.settingsDescription',
     showBadge: false
   },
   {
     id: 'staff',
-    label: 'Manage Staff',
+    labelKey: 'admin.manageStaff',
     icon: <UserCog className="w-5 h-5" />,
-    description: 'User and role management',
+    descriptionKey: 'admin.staffDescription',
     showBadge: false
   },
   {
     id: 'menu',
-    label: 'Manage Menu',
+    labelKey: 'admin.manageMenu',
     icon: <Menu className="w-5 h-5" />,
-    description: 'Categories and products',
+    descriptionKey: 'admin.menuDescription',
     showBadge: false
   },
   {
     id: 'tables',
-    label: 'Manage Tables',
+    labelKey: 'admin.manageTables',
     icon: <LayoutGrid className="w-5 h-5" />,
-    description: 'Dining table setup',
+    descriptionKey: 'admin.tablesDescription',
     showBadge: false
   },
   {
     id: 'reports',
-    label: 'View Reports',
+    labelKey: 'admin.viewReports',
     icon: <BarChart3 className="w-5 h-5" />,
-    description: 'Sales and analytics',
+    descriptionKey: 'admin.reportsDescription',
     showBadge: false
   }
 ]
 
 export function AdminLayout({ user }: AdminLayoutProps) {
+  const { t } = useTranslation()
   const [currentSection, setCurrentSection] = useState('dashboard')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -222,10 +232,10 @@ export function AdminLayout({ user }: AdminLayoutProps) {
                 <div>
                   <span className={`font-bold ${
                     (isMobile || isTablet) ? 'text-2xl' : 'text-xl'
-                  }`}>POS Admin</span>
+                  }`}>{t('admin.panelTitle')}</span>
                   <p className={`text-muted-foreground ${
                     (isMobile || isTablet) ? 'text-sm' : 'text-xs'
-                  }`}>Restaurant Management</p>
+                  }`}>{t('admin.restaurantManagement')}</p>
                 </div>
               )}
             </div>
@@ -261,13 +271,13 @@ export function AdminLayout({ user }: AdminLayoutProps) {
                       setSidebarCollapsed(true)
                     }
                   }}
-                  title={sidebarCollapsed && !isMobile && !isTablet ? section.label : undefined}
+                  title={sidebarCollapsed && !isMobile && !isTablet ? t(section.labelKey) : undefined}
                 >
                   <span className={isTablet ? "w-6 h-6 flex items-center justify-center" : "w-5 h-5 flex items-center justify-center"}>
                     {section.icon}
                   </span>
                   {(!sidebarCollapsed || isMobile || isTablet) && (
-                    <span className={`${isTablet ? 'ml-4' : 'ml-3'} flex-1 text-left`}>{section.label}</span>
+                    <span className={`${isTablet ? 'ml-4' : 'ml-3'} flex-1 text-left`}>{t(section.labelKey)}</span>
                   )}
                   {/* Badge for notifications and contacts */}
                   {section.showBadge && section.badgeKey && (!sidebarCollapsed || isMobile || isTablet) && (
