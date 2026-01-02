@@ -1,6 +1,10 @@
+/**
+ * T072: Landing page route with i18n support
+ */
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { ChevronRight, Utensils } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -130,6 +134,7 @@ function FeaturedDishesSection({
   isLoading,
   formatPrice,
 }: FeaturedDishesSectionProps) {
+  const { t } = useTranslation()
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true,
@@ -152,16 +157,24 @@ function FeaturedDishesSection({
             className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Our Menu
+            {t('public.ourMenu')}
           </span>
           <h2
             className="text-3xl md:text-4xl font-bold text-[var(--public-text-primary)] mt-2 mb-4"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Featured <span className="text-[var(--public-accent)]">Dishes</span>
+            {t('public.featuredDishes').split(' ').map((word, i, arr) => (
+              <span key={i}>
+                {i === arr.length - 1 ? (
+                  <span className="text-[var(--public-accent)]">{word}</span>
+                ) : (
+                  word + ' '
+                )}
+              </span>
+            ))}
           </h2>
           <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto">
-            Discover our chef's selection of premium cuts and signature creations
+            {t('public.discoverOurChefs')}
           </p>
         </div>
 
@@ -191,7 +204,7 @@ function FeaturedDishesSection({
           </div>
         ) : (
           <p className="text-center text-[var(--public-text-secondary)]">
-            No featured dishes available
+            {t('public.noFeaturedDishes')}
           </p>
         )}
 
@@ -207,7 +220,7 @@ function FeaturedDishesSection({
             )}
           >
             <Link to="/site/menu">
-              View Full Menu
+              {t('public.viewFullMenu')}
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
@@ -231,6 +244,7 @@ interface MenuItemCardProps {
 }
 
 function MenuItemCard({ item, index, formatPrice }: MenuItemCardProps) {
+  const { t } = useTranslation()
   const { ref, isVisible } = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true,
@@ -286,7 +300,7 @@ function MenuItemCard({ item, index, formatPrice }: MenuItemCardProps) {
             size="sm"
             className="bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)] text-white"
           >
-            <Link to="/site/menu">View Details</Link>
+            <Link to="/site/menu">{t('public.viewDetails')}</Link>
           </Button>
         </div>
       </div>
@@ -314,6 +328,7 @@ interface AboutTeaserSectionProps {
 }
 
 function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
+  const { t } = useTranslation()
   const { ref, isVisible } = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true,
@@ -336,22 +351,27 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
               className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
               style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
             >
-              About Us
+              {t('public.aboutUs')}
             </span>
             <h2
               className="text-3xl md:text-4xl font-bold text-[var(--public-text-primary)] mt-2 mb-6"
               style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
             >
-              Our <span className="text-[var(--public-accent)]">Story</span>
+              {t('public.ourStory').split(' ').map((word, i, arr) => (
+                <span key={i}>
+                  {i === arr.length - 1 ? (
+                    <span className="text-[var(--public-accent)]">{word}</span>
+                  ) : (
+                    word + ' '
+                  )}
+                </span>
+              ))}
             </h2>
             <p className="text-[var(--public-text-secondary)] mb-6 leading-relaxed text-lg">
-              {description ||
-                'At Steak Kenangan, we believe in the perfect combination of premium ingredients, masterful cooking techniques, and warm hospitality. Every dish tells a story of our passion for exceptional cuisine.'}
+              {description || t('public.atSteakKenangan')}
             </p>
             <p className="text-[var(--public-text-secondary)] mb-8 leading-relaxed">
-              Since our establishment, we have been dedicated to providing an
-              unforgettable dining experience that celebrates the art of grilling
-              and the joy of sharing a great meal with loved ones.
+              {t('public.sinceOurEstablishment')}
             </p>
             <Button
               asChild
@@ -364,7 +384,7 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
               )}
             >
               <Link to="/site/about">
-                Learn More About Us
+                {t('public.learnMoreAboutUs')}
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>

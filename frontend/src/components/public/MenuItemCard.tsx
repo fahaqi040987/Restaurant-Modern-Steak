@@ -2,6 +2,7 @@
  * T026: MenuItemCard component
  * Displays individual menu item with image, name, description, price in IDR format
  */
+import { useTranslation } from 'react-i18next'
 import { Utensils } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -45,6 +46,8 @@ function getImageUrl(url: string | null | undefined): string | null {
 }
 
 export function MenuItemCard({ item, className }: MenuItemCardProps) {
+  const { t } = useTranslation()
+
   return (
     <Card
       data-testid="menu-item-card"
@@ -124,7 +127,7 @@ export function MenuItemCard({ item, className }: MenuItemCardProps) {
 
           {/* Optional: View details indicator */}
           <span className="text-xs text-[var(--public-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity">
-            View Details →
+            {t('public.viewDetails')}
           </span>
         </div>
       </CardContent>

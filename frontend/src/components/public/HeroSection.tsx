@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { BookOpenCheck, Calendar, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -33,6 +34,8 @@ export function HeroSection({
   heading = 'Steak Kenangan',
   tagline = 'Experience the finest premium steaks crafted with passion and served with elegance',
 }: HeroSectionProps) {
+  const { t } = useTranslation()
+
   const { ref: headingRef, isVisible: headingVisible } = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true,
@@ -129,7 +132,7 @@ export function HeroSection({
           >
             <Link to="/site/reservation">
               <Calendar className="h-5 w-5" aria-hidden="true" />
-              <span>Book a Table</span>
+              <span>{t('public.bookATable')}</span>
             </Link>
           </Button>
 
@@ -146,7 +149,7 @@ export function HeroSection({
           >
             <Link to="/site/menu">
               <BookOpenCheck className="h-5 w-5" aria-hidden="true" />
-              <span>View Menu</span>
+              <span>{t('public.viewMenu')}</span>
             </Link>
           </Button>
         </div>

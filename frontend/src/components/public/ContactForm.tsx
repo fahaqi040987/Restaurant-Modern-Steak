@@ -4,6 +4,7 @@
  */
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
@@ -36,10 +37,10 @@ const contactFormSchema = z.object({
 type ContactFormValues = z.infer<typeof contactFormSchema>
 
 const SUBJECTS = [
-  { value: 'reservation', label: 'Reservation' },
-  { value: 'feedback', label: 'Feedback' },
-  { value: 'catering', label: 'Catering' },
-  { value: 'general', label: 'General Inquiry' },
+  { value: 'reservation', labelKey: 'contact.subjectReservation' },
+  { value: 'feedback', labelKey: 'contact.subjectFeedback' },
+  { value: 'catering', labelKey: 'contact.subjectCatering' },
+  { value: 'general', labelKey: 'contact.subjectGeneral' },
 ]
 
 interface ContactFormProps {
@@ -73,6 +74,7 @@ export function ContactForm({
   defaultValues,
   disabled = false,
 }: ContactFormProps) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
@@ -105,15 +107,15 @@ export function ContactForm({
       setSubmitSuccess(true)
       reset()
       toast({
-        title: 'Message Sent!',
-        description: "Thank you for contacting us. We'll get back to you soon.",
+        title: t('contact.messageSentToast'),
+        description: t('contact.messageSentDesc'),
       })
       onSuccess?.()
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to send message. Please try again.',
+        title: t('contact.errorTitle'),
+        description: error.message || t('contact.errorDesc'),
         variant: 'destructive',
       })
       onError?.(error)
@@ -138,16 +140,16 @@ export function ContactForm({
           <CheckCircle className="h-16 w-16 mx-auto text-green-500" />
         </div>
         <h3 className="text-2xl font-semibold text-[var(--public-text-primary)] mb-4">
-          Thank You!
+          {t('contact.thankYou')}
         </h3>
         <p className="text-[var(--public-text-secondary)] mb-6">
-          Your message has been sent successfully. We'll get back to you soon.
+          {t('contact.messageSent')}
         </p>
         <Button
           onClick={() => setSubmitSuccess(false)}
           className="bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)] text-white"
         >
-          Send Another Message
+          {t('contact.sendAnother')}
         </Button>
       </div>
     )
@@ -166,7 +168,7 @@ export function ContactForm({
           className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"
         >
           <AlertCircle className="h-5 w-5 flex-shrink-0" />
-          <span>Failed to send message. Please try again.</span>
+          <span>{t('contact.submitFailed')}</span>
         </div>
       )}
 
@@ -177,13 +179,13 @@ export function ContactForm({
           className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
         >
           <User className="h-4 w-4 text-[var(--public-accent)]" />
-          Name <span className="text-red-500">*</span>
+          {t('contact.name')} <span className="text-red-500">*</span>
         </Label>
         <Input
           id="name"
           type="text"
           {...register('name')}
-          placeholder="Your name"
+          placeholder={t('contact.namePlaceholder')}
           className={cn(
             'public-input',
             errors.name && 'border-red-500 focus:ring-red-500'
@@ -211,13 +213,13 @@ export function ContactForm({
           className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
         >
           <Mail className="h-4 w-4 text-[var(--public-accent)]" />
-          Email <span className="text-red-500">*</span>
+          {t('contact.email')} <span className="text-red-500">*</span>
         </Label>
         <Input
           id="email"
           type="email"
           {...register('email')}
-          placeholder="your@email.com"
+          placeholder={t('contact.emailPlaceholder')}
           className={cn(
             'public-input',
             errors.email && 'border-red-500 focus:ring-red-500'
@@ -245,13 +247,13 @@ export function ContactForm({
           className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
         >
           <Phone className="h-4 w-4 text-[var(--public-accent)]" />
-          Phone (Optional)
+          {t('contact.phone')}
         </Label>
         <Input
           id="phone"
           type="tel"
           {...register('phone')}
-          placeholder="+62 812 3456 7890"
+          placeholder={t('contact.phonePlaceholder')}
           className="public-input"
           disabled={disabled || mutation.isPending}
         />
@@ -264,7 +266,7 @@ export function ContactForm({
           className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
         >
           <MessageSquare className="h-4 w-4 text-[var(--public-accent)]" />
-          Subject <span className="text-red-500">*</span>
+          {t('contact.subject')} <span className="text-red-500">*</span>
         </Label>
         <Select
           value={selectedSubject}
@@ -280,7 +282,7 @@ export function ContactForm({
             aria-invalid={!!errors.subject}
             aria-describedby={errors.subject ? 'error-subject' : undefined}
           >
-            <SelectValue placeholder="Select a subject" />
+            <SelectValue placeholder={t('contact.selectSubject')} />
           </SelectTrigger>
           <SelectContent className="bg-[var(--public-bg-elevated)] border-[var(--public-border)]">
             {SUBJECTS.map((subject) => (
@@ -289,7 +291,7 @@ export function ContactForm({
                 value={subject.value}
                 className="text-[var(--public-text-primary)]"
               >
-                {subject.label}
+                {t(subject.labelKey)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -313,12 +315,12 @@ export function ContactForm({
           className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
         >
           <MessageSquare className="h-4 w-4 text-[var(--public-accent)]" />
-          Message <span className="text-red-500">*</span>
+          {t('contact.message')} <span className="text-red-500">*</span>
         </Label>
         <Textarea
           id="message"
           {...register('message')}
-          placeholder="Your message..."
+          placeholder={t('contact.messagePlaceholder')}
           rows={5}
           maxLength={1000}
           className={cn(
@@ -356,12 +358,12 @@ export function ContactForm({
         {mutation.isPending ? (
           <>
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Sending...
+            {t('contact.sending')}
           </>
         ) : (
           <>
             <Send className="mr-2 h-5 w-5" />
-            Send Message
+            {t('contact.sendMessage')}
           </>
         )}
       </Button>

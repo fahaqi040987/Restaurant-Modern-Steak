@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
 import { Users, Utensils, Award, Calendar } from 'lucide-react'
@@ -7,7 +8,8 @@ interface StatItem {
   icon?: React.ElementType
   value: number
   suffix?: string
-  label: string
+  label?: string
+  labelKey?: string
 }
 
 interface CounterStatsProps {
@@ -26,25 +28,25 @@ const defaultStats: StatItem[] = [
     icon: Users,
     value: 50000,
     suffix: '+',
-    label: 'Happy Customers',
+    labelKey: 'public.happyCustomers',
   },
   {
     icon: Utensils,
     value: 100,
     suffix: '+',
-    label: 'Menu Items',
+    labelKey: 'public.menuItems',
   },
   {
     icon: Award,
     value: 15,
     suffix: '',
-    label: 'Awards Won',
+    labelKey: 'public.awardsWon',
   },
   {
     icon: Calendar,
     value: 9,
     suffix: '',
-    label: 'Years of Excellence',
+    labelKey: 'public.yearsOfExcellence',
   },
 ]
 
@@ -119,6 +121,7 @@ function StatItemComponent({
   isVisible,
   animationDuration,
 }: StatItemComponentProps) {
+  const { t } = useTranslation()
   const [count, setCount] = useState(0)
   const countRef = useRef<number>(0)
   const animationRef = useRef<number | null>(null)
@@ -214,7 +217,7 @@ function StatItemComponent({
         className="text-white/80 text-sm md:text-base"
         style={{ fontFamily: 'var(--font-body, Heebo, sans-serif)' }}
       >
-        {stat.label}
+        {stat.labelKey ? t(stat.labelKey) : stat.label}
       </p>
     </div>
   )
@@ -232,6 +235,7 @@ export function HorizontalStats({
   stats = defaultStats.slice(0, 3),
   className,
 }: HorizontalStatsProps) {
+  const { t } = useTranslation()
   const { ref, isVisible } = useScrollAnimation({
     threshold: 0.3,
     triggerOnce: true,
@@ -267,7 +271,7 @@ export function HorizontalStats({
                 {stat.suffix}
               </div>
               <p className="text-sm text-[var(--public-text-secondary)]">
-                {stat.label}
+                {stat.labelKey ? t(stat.labelKey) : stat.label}
               </p>
             </div>
           ))}

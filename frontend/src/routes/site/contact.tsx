@@ -4,6 +4,7 @@
  */
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PublicLayout } from '@/components/public/PublicLayout'
 import { ContactForm } from '@/components/public/ContactForm'
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/site/contact')({
 })
 
 function PublicContactPage() {
+  const { t } = useTranslation()
   const { data: restaurantInfo, isLoading, error } = useQuery({
     queryKey: ['restaurantInfo'],
     queryFn: () => apiClient.getRestaurantInfo(),
@@ -31,16 +33,24 @@ function PublicContactPage() {
             className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Get in Touch
+            {t('public.getInTouch')}
           </span>
           <h1
             className="text-4xl md:text-5xl font-bold text-[var(--public-text-primary)] mt-2 mb-4"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Contact <span className="text-[var(--public-accent)]">Us</span>
+            {t('contact.contactUs').split(' ').map((word, i, arr) => (
+              <span key={i}>
+                {i === arr.length - 1 ? (
+                  <span className="text-[var(--public-accent)]">{word}</span>
+                ) : (
+                  word + ' '
+                )}
+              </span>
+            ))}
           </h1>
           <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto">
-            We'd love to hear from you. Get in touch for reservations, inquiries, or feedback.
+            {t('contact.pageDescription')}
           </p>
         </div>
       </section>
@@ -63,7 +73,7 @@ function PublicContactPage() {
               <Card className="public-card">
                 <CardHeader>
                   <CardTitle className="text-[var(--public-text-primary)]">
-                    Send Us a Message
+                    {t('contact.sendUsMessage')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -82,11 +92,10 @@ function PublicContactPage() {
             className="text-2xl md:text-3xl font-bold text-[var(--public-text-primary)] mb-4"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Prefer to Call?
+            {t('contact.preferToCall')}
           </h2>
           <p className="text-[var(--public-text-secondary)] mb-6 max-w-xl mx-auto">
-            Our team is ready to assist you with reservations and inquiries.
-            Call us directly for immediate assistance.
+            {t('contact.teamReadyToAssist')}
           </p>
           {restaurantInfo?.phone && (
             <a

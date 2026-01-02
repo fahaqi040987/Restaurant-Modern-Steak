@@ -5,6 +5,7 @@
  */
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { Calendar, Clock, Mail, Phone, User, Users, MessageSquare, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
@@ -50,6 +51,7 @@ export function ReservationForm({
   defaultValues,
   disabled = false,
 }: ReservationFormProps) {
+  const { t } = useTranslation()
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
   const {
@@ -123,17 +125,17 @@ export function ReservationForm({
           <CheckCircle className="h-16 w-16 mx-auto text-green-500" aria-hidden="true" />
         </div>
         <h3 className="text-2xl font-semibold text-[var(--public-text-primary)] mb-4">
-          Reservation Request Received!
+          {t('reservation.requestReceived')}
         </h3>
         <p className="text-[var(--public-text-secondary)] mb-6">
-          Thank you for your reservation request. We will confirm your booking shortly via email.
+          {t('reservation.thankYouMessage')}
         </p>
         <Button
           onClick={() => setSubmitSuccess(false)}
           className="bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)] text-white"
-          aria-label="Make another reservation"
+          aria-label={t('reservation.makeAnother')}
         >
-          Make Another Reservation
+          {t('reservation.makeAnother')}
         </Button>
       </div>
     )
@@ -154,7 +156,7 @@ export function ReservationForm({
           className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"
         >
           <AlertCircle className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-          <span>Failed to submit reservation. Please try again.</span>
+          <span>{t('reservation.submitFailed')}</span>
         </div>
       )}
 
@@ -165,13 +167,13 @@ export function ReservationForm({
           className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
         >
           <User className="h-4 w-4 text-[var(--public-accent)]" />
-          Full Name *
+          {t('reservation.fullName')} *
         </Label>
         <Input
           id="customer_name"
           type="text"
           {...register('customer_name')}
-          placeholder="John Doe"
+          placeholder={t('reservation.namePlaceholder')}
           className={cn(
             'public-input',
             errors.customer_name && 'border-red-500 focus:ring-red-500'
@@ -199,13 +201,13 @@ export function ReservationForm({
           className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
         >
           <Mail className="h-4 w-4 text-[var(--public-accent)]" />
-          Email Address *
+          {t('reservation.emailAddress')} *
         </Label>
         <Input
           id="email"
           type="email"
           {...register('email')}
-          placeholder="john@example.com"
+          placeholder={t('reservation.emailPlaceholder')}
           className={cn(
             'public-input',
             errors.email && 'border-red-500 focus:ring-red-500'
@@ -233,13 +235,13 @@ export function ReservationForm({
           className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
         >
           <Phone className="h-4 w-4 text-[var(--public-accent)]" />
-          Phone Number *
+          {t('reservation.phoneNumber')} *
         </Label>
         <Input
           id="phone"
           type="tel"
           {...register('phone')}
-          placeholder="+62 812 3456 7890"
+          placeholder={t('reservation.phonePlaceholder')}
           className={cn(
             'public-input',
             errors.phone && 'border-red-500 focus:ring-red-500'
@@ -267,7 +269,7 @@ export function ReservationForm({
           className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
         >
           <Users className="h-4 w-4 text-[var(--public-accent)]" />
-          Number of Guests *
+          {t('reservation.numberOfGuests')} *
         </Label>
         <Input
           id="party_size"
@@ -275,7 +277,7 @@ export function ReservationForm({
           {...register('party_size', { valueAsNumber: true })}
           min={1}
           max={20}
-          placeholder="2"
+          placeholder={t('reservation.partySizePlaceholder')}
           className={cn(
             'public-input',
             errors.party_size && 'border-red-500 focus:ring-red-500'
@@ -305,7 +307,7 @@ export function ReservationForm({
             className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
           >
             <Calendar className="h-4 w-4 text-[var(--public-accent)]" />
-            Date *
+            {t('reservation.date')} *
           </Label>
           <Input
             id="reservation_date"
@@ -339,7 +341,7 @@ export function ReservationForm({
             className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
           >
             <Clock className="h-4 w-4 text-[var(--public-accent)]" />
-            Time *
+            {t('reservation.time')} *
           </Label>
           <Input
             id="reservation_time"
@@ -373,12 +375,12 @@ export function ReservationForm({
           className="text-[var(--public-text-primary)] font-medium flex items-center gap-2"
         >
           <MessageSquare className="h-4 w-4 text-[var(--public-accent)]" />
-          Special Requests (optional)
+          {t('reservation.specialRequests')}
         </Label>
         <Textarea
           id="special_requests"
           {...register('special_requests')}
-          placeholder="Any dietary requirements, occasion, or special requests..."
+          placeholder={t('reservation.specialRequestsPlaceholder')}
           rows={4}
           maxLength={500}
           className={cn(
@@ -416,20 +418,19 @@ export function ReservationForm({
         {mutation.isPending ? (
           <>
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Submitting...
+            {t('reservation.submitting')}
           </>
         ) : (
           <>
             <Calendar className="mr-2 h-5 w-5" />
-            Book Your Table
+            {t('reservation.bookYourTable')}
           </>
         )}
       </Button>
 
       {/* Terms notice */}
       <p className="text-sm text-[var(--public-text-muted)] text-center">
-        By submitting this form, you agree to our reservation policy.
-        We will contact you to confirm your booking.
+        {t('reservation.termsNotice')}
       </p>
     </form>
   )

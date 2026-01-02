@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Menu, X, User, Phone, Calendar } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Menu, X, User, Phone, Calendar, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -10,6 +11,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { apiClient } from '@/api/client'
 
@@ -43,12 +50,17 @@ function NavLink({ to, children, onClick, className, isScrolled }: NavLinkProps)
   )
 }
 
-const navLinks = [
-  { to: '/site', label: 'Home' },
-  { to: '/site/menu', label: 'Menu' },
-  { to: '/site/about', label: 'About' },
-  { to: '/site/reservation', label: 'Reservation' },
-  { to: '/site/contact', label: 'Contact' },
+const navLinkKeys = [
+  { to: '/site', labelKey: 'public.home' },
+  { to: '/site/menu', labelKey: 'public.menu' },
+  { to: '/site/about', labelKey: 'public.about' },
+  { to: '/site/reservation', labelKey: 'public.reservation' },
+  { to: '/site/contact', labelKey: 'public.contact' },
+]
+
+const languages = [
+  { code: 'en-US', label: 'English', flag: '🇺🇸' },
+  { code: 'id-ID', label: 'Indonesia', flag: '🇮🇩' },
 ]
 
 /**
@@ -63,6 +75,7 @@ const navLinks = [
  * ```
  */
 export function Header() {
+  const { t, i18n } = useTranslation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
 
@@ -72,6 +85,15 @@ export function Header() {
     queryFn: () => apiClient.getRestaurantInfo(),
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
+
+  // Get current language
+  const currentLang = languages.find(l => l.code === i18n.language) || languages[0]
+
+  // Handle language change
+  const changeLanguage = (langCode: string) => {
+    i18n.changeLanguage(langCode)
+    localStorage.setItem('i18nextLng', langCode)
+  }
 
   // Handle scroll behavior for header background
   useEffect(() => {
@@ -130,15 +152,50 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8">
-          {navLinks.map((link) => (
+          {navLinkKeys.map((link) => (
             <NavLink key={link.to} to={link.to} isScrolled={isScrolled}>
-              {link.label}
+              {t(link.labelKey)}
             </NavLink>
           ))}
         </div>
 
         {/* Desktop Actions */}
         <div className="hidden lg:flex items-center gap-4">
+          {/* Language Switcher */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                data-testid="language-switcher"
+                className={cn(
+                  'gap-2 transition-colors duration-300',
+                  isScrolled
+                    ? 'text-[var(--public-text-secondary)] hover:text-[var(--public-accent)]'
+                    : 'text-white/80 hover:text-white'
+                )}
+              >
+                <Globe className="h-4 w-4" aria-hidden="true" />
+                <span>{currentLang.flag}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-[var(--public-bg-elevated)] border-[var(--public-border)]">
+              {languages.map((lang) => (
+                <DropdownMenuItem
+                  key={lang.code}
+                  onClick={() => changeLanguage(lang.code)}
+                  className={cn(
+                    'cursor-pointer',
+                    i18n.language === lang.code && 'bg-[var(--public-accent)]/10'
+                  )}
+                >
+                  <span className="mr-2">{lang.flag}</span>
+                  {lang.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Staff Login Button */}
           <Button
             variant="ghost"
@@ -153,7 +210,7 @@ export function Header() {
           >
             <Link to="/login">
               <User className="h-4 w-4" aria-hidden="true" />
-              <span>Staff Login</span>
+              <span>{t('public.staffLogin')}</span>
             </Link>
           </Button>
 
@@ -168,7 +225,7 @@ export function Header() {
           >
             <Link to="/site/reservation">
               <Calendar className="h-4 w-4" aria-hidden="true" />
-              <span>Book a Table</span>
+              <span>{t('public.bookATable')}</span>
             </Link>
           </Button>
         </div>
@@ -226,7 +283,7 @@ export function Header() {
               className="mt-8 flex flex-col gap-1"
               aria-label="Mobile navigation"
             >
-              {navLinks.map((link) => (
+              {navLinkKeys.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
@@ -237,9 +294,35 @@ export function Header() {
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]'
                   )}
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                 </Link>
               ))}
+
+              {/* Mobile Language Switcher */}
+              <div className="mt-6 pt-6 border-t border-[var(--public-border)]">
+                <div className="flex items-center gap-2 px-4 py-2">
+                  <Globe className="h-4 w-4 text-[var(--public-text-secondary)]" />
+                  <span className="text-sm text-[var(--public-text-secondary)]">Language:</span>
+                </div>
+                <div className="flex gap-2 px-4">
+                  {languages.map((lang) => (
+                    <Button
+                      key={lang.code}
+                      variant={i18n.language === lang.code ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => changeLanguage(lang.code)}
+                      className={cn(
+                        i18n.language === lang.code
+                          ? 'bg-[var(--public-accent)] text-white'
+                          : 'border-[var(--public-border)] text-[var(--public-text-secondary)]'
+                      )}
+                    >
+                      <span className="mr-1">{lang.flag}</span>
+                      {lang.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
 
               {/* Mobile Staff Login */}
               <div className="mt-6 pt-6 border-t border-[var(--public-border)]">
@@ -253,7 +336,7 @@ export function Header() {
                   )}
                 >
                   <User className="h-5 w-5" aria-hidden="true" />
-                  <span>Staff Login</span>
+                  <span>{t('public.staffLogin')}</span>
                 </Link>
               </div>
 
@@ -270,7 +353,7 @@ export function Header() {
                 >
                   <Link to="/site/reservation">
                     <Calendar className="h-4 w-4" aria-hidden="true" />
-                    <span>Book a Table</span>
+                    <span>{t('public.bookATable')}</span>
                   </Link>
                 </Button>
               </div>

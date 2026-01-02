@@ -1,7 +1,9 @@
 /**
  * T041: ContactInfo component
  * Displays restaurant contact information (phone, email, address)
+ * T068: Added i18n support
  */
+import { useTranslation } from 'react-i18next'
 import { Phone, Mail, MapPin, Clock, Copy, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import type { RestaurantInfo, OperatingHours } from '@/types'
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
 
 interface ContactInfoProps {
   /** Restaurant information data */
@@ -48,6 +50,7 @@ export function ContactInfo({
   showMap = true,
   showHours = true,
 }: ContactInfoProps) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const today = new Date().getDay()
 
@@ -78,8 +81,8 @@ export function ContactInfo({
       const fullAddress = `${restaurantInfo.address}${restaurantInfo.city ? `, ${restaurantInfo.city}` : ''}${restaurantInfo.postal_code ? ` ${restaurantInfo.postal_code}` : ''}`
       await navigator.clipboard.writeText(fullAddress)
       toast({
-        title: 'Address Copied',
-        description: 'The address has been copied to your clipboard.',
+        title: t('public.addressCopied'),
+        description: t('public.addressCopiedDesc'),
       })
     }
   }
@@ -88,7 +91,7 @@ export function ContactInfo({
     return (
       <Card className={cn('public-card border-red-500', className)}>
         <CardContent className="py-4">
-          <p className="text-red-500">Error loading restaurant info: {error.message}</p>
+          <p className="text-red-500">{t('errors.generic')}</p>
         </CardContent>
       </Card>
     )
@@ -101,7 +104,7 @@ export function ContactInfo({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-[var(--public-text-primary)]">
             <MapPin className="h-5 w-5 text-[var(--public-accent)]" />
-            Our Location
+            {t('public.ourLocation')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -112,7 +115,7 @@ export function ContactInfo({
             </div>
           ) : (
             <p className="text-[var(--public-text-secondary)]">
-              {restaurantInfo?.address || 'Address not available'}
+              {restaurantInfo?.address || t('public.addressNotAvailable')}
               {restaurantInfo?.city && <>, {restaurantInfo.city}</>}
               {restaurantInfo?.postal_code && <> {restaurantInfo.postal_code}</>}
             </p>
@@ -126,7 +129,7 @@ export function ContactInfo({
               className="border-[var(--public-border)] text-[var(--public-text-secondary)] hover:bg-[var(--public-bg-hover)]"
             >
               <Copy className="h-4 w-4 mr-2" />
-              Copy Address
+              {t('public.copyAddress')}
             </Button>
             {restaurantInfo?.google_maps_url && (
               <Button
@@ -141,7 +144,7 @@ export function ContactInfo({
                   rel="noopener noreferrer"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Get Directions
+                  {t('public.getDirections')}
                 </a>
               </Button>
             )}
@@ -170,7 +173,7 @@ export function ContactInfo({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-[var(--public-text-primary)]">
             <Phone className="h-5 w-5 text-[var(--public-accent)]" />
-            Contact Details
+            {t('public.contactDetails')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -190,7 +193,7 @@ export function ContactInfo({
                   {restaurantInfo.phone}
                 </a>
               ) : (
-                <p className="text-[var(--public-text-muted)]">Phone not available</p>
+                <p className="text-[var(--public-text-muted)]">{t('public.phoneNotAvailable')}</p>
               )}
               {restaurantInfo?.email ? (
                 <a
@@ -201,7 +204,7 @@ export function ContactInfo({
                   {restaurantInfo.email}
                 </a>
               ) : (
-                <p className="text-[var(--public-text-muted)]">Email not available</p>
+                <p className="text-[var(--public-text-muted)]">{t('public.emailNotAvailable')}</p>
               )}
             </>
           )}
@@ -214,7 +217,7 @@ export function ContactInfo({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[var(--public-text-primary)]">
               <Clock className="h-5 w-5 text-[var(--public-accent)]" />
-              Operating Hours
+              {t('public.operatingHours')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -249,21 +252,21 @@ export function ContactInfo({
                             : 'text-[var(--public-text-primary)]'
                         )}
                       >
-                        {DAY_NAMES[hours.day_of_week]}
+                        {t(`public.${DAY_KEYS[hours.day_of_week]}`)}
                         {hours.day_of_week === today && (
-                          <span className="ml-2 text-xs">(Today)</span>
+                          <span className="ml-2 text-xs">{t('public.today')}</span>
                         )}
                       </span>
                       <span className="text-[var(--public-text-secondary)]">
                         {hours.is_closed
-                          ? 'Closed'
+                          ? t('public.closed')
                           : `${formatTime(hours.open_time)} - ${formatTime(hours.close_time)}`}
                       </span>
                     </div>
                   ))}
               </div>
             ) : (
-              <p className="text-[var(--public-text-muted)]">Operating hours not available</p>
+              <p className="text-[var(--public-text-muted)]">{t('public.operatingHoursNotAvailable')}</p>
             )}
           </CardContent>
         </Card>

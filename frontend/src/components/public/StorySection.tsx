@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
 
@@ -68,16 +69,19 @@ const defaultMilestones: TimelineMilestone[] = [
  * ```
  */
 export function StorySection({
-  title = 'Our Story',
+  title,
   story = defaultStory,
   milestones = defaultMilestones,
   backgroundImage,
   className,
 }: StorySectionProps) {
+  const { t } = useTranslation()
   const { ref: sectionRef, isVisible: sectionVisible } = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true,
   })
+
+  const displayTitle = title || t('public.ourStory')
 
   return (
     <section
@@ -100,15 +104,15 @@ export function StorySection({
               className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
               style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
             >
-              About Us
+              {t('public.aboutUs')}
             </span>
             <h2
               className="text-3xl md:text-4xl font-bold text-[var(--public-text-primary)] mt-2 mb-6"
               style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
             >
-              {title.split(' ').map((word, i) => (
+              {displayTitle.split(' ').map((word, i) => (
                 <span key={i}>
-                  {i === title.split(' ').length - 1 ? (
+                  {i === displayTitle.split(' ').length - 1 ? (
                     <span className="text-[var(--public-accent)]">{word}</span>
                   ) : (
                     word + ' '

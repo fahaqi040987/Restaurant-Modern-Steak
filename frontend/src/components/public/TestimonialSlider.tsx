@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 import { Quote, ChevronLeft, ChevronRight, Star } from 'lucide-react'
@@ -88,13 +89,17 @@ const defaultTestimonials: Testimonial[] = [
  */
 export function TestimonialSlider({
   testimonials = defaultTestimonials,
-  title = 'What Our Guests Say',
-  subtitle = 'Real experiences from our valued customers',
+  title,
+  subtitle,
   autoplay = true,
   autoplayDelay = 5000,
   className,
 }: TestimonialSliderProps) {
+  const { t } = useTranslation()
   const [selectedIndex, setSelectedIndex] = useState(0)
+
+  const displayTitle = title || t('public.whatOurGuestsSay')
+  const displaySubtitle = subtitle || t('public.realExperiences')
 
   const autoplayPlugin = autoplay
     ? Autoplay({ delay: autoplayDelay, stopOnInteraction: true })
@@ -153,7 +158,7 @@ export function TestimonialSlider({
       >
         <div className="public-container text-center">
           <p className="text-[var(--public-text-secondary)]">
-            No testimonials available
+            {t('public.noTestimonials')}
           </p>
         </div>
       </section>
@@ -181,15 +186,15 @@ export function TestimonialSlider({
             className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Testimonials
+            {t('public.testimonials')}
           </span>
           <h2
             className="text-3xl md:text-4xl font-bold text-[var(--public-text-primary)] mt-2 mb-4"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            {title.split(' ').map((word, i) => (
+            {displayTitle.split(' ').map((word, i) => (
               <span key={i}>
-                {i === title.split(' ').length - 1 ? (
+                {i === displayTitle.split(' ').length - 1 ? (
                   <span className="text-[var(--public-accent)]">{word}</span>
                 ) : (
                   word + ' '
@@ -198,7 +203,7 @@ export function TestimonialSlider({
             ))}
           </h2>
           <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto">
-            {subtitle}
+            {displaySubtitle}
           </p>
         </div>
 

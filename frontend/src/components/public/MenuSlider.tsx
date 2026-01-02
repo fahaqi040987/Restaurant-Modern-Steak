@@ -3,6 +3,7 @@
  * Interactive category slider for menu browsing with smooth navigation
  */
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight, Utensils } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,7 @@ export function MenuSlider({
   disabled = false,
   className,
 }: MenuSliderProps) {
+  const { t } = useTranslation()
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: 'start',
     containScroll: 'trimSnaps',
@@ -169,7 +171,7 @@ export function MenuSlider({
             )}
           >
             <Utensils className="h-4 w-4 mr-2" />
-            All Items
+            {t('public.allItems')}
           </Button>
 
           {/* Category buttons */}

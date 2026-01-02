@@ -4,6 +4,7 @@
  */
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Phone, MapPin, Clock, Calendar, Users, HelpCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PublicLayout } from '@/components/public/PublicLayout'
@@ -15,34 +16,43 @@ export const Route = createFileRoute('/site/reservation')({
   component: ReservationPage,
 })
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
-const FAQ_ITEMS = [
-  {
-    question: 'How far in advance should I book?',
-    answer: 'We recommend booking at least 2-3 days in advance, especially for weekends and special occasions.',
-  },
-  {
-    question: 'Can I modify my reservation?',
-    answer: 'Yes, you can modify your reservation by contacting us directly at least 24 hours before your scheduled time.',
-  },
-  {
-    question: 'What is your cancellation policy?',
-    answer: 'Please cancel at least 24 hours in advance. For large parties (6+), we require 48 hours notice.',
-  },
-  {
-    question: 'Do you accommodate dietary restrictions?',
-    answer: 'Absolutely! Please mention any dietary requirements in the special requests field when booking.',
-  },
-]
-
 function ReservationPage() {
+  const { t } = useTranslation()
   const { data: restaurantInfo, isLoading } = useQuery({
     queryKey: ['restaurantInfo'],
     queryFn: () => apiClient.getRestaurantInfo(),
     staleTime: 1000 * 60 * 5, // 5 minutes for faster updates
     refetchOnMount: true,
   })
+
+  const DAY_NAMES = [
+    t('reservation.sunday'),
+    t('reservation.monday'),
+    t('reservation.tuesday'),
+    t('reservation.wednesday'),
+    t('reservation.thursday'),
+    t('reservation.friday'),
+    t('reservation.saturday'),
+  ]
+
+  const FAQ_ITEMS = [
+    {
+      question: t('reservation.faqBookingAdvance'),
+      answer: t('reservation.faqBookingAdvanceAnswer'),
+    },
+    {
+      question: t('reservation.faqModifyReservation'),
+      answer: t('reservation.faqModifyReservationAnswer'),
+    },
+    {
+      question: t('reservation.faqCancellationPolicy'),
+      answer: t('reservation.faqCancellationPolicyAnswer'),
+    },
+    {
+      question: t('reservation.faqDietaryRestrictions'),
+      answer: t('reservation.faqDietaryRestrictionsAnswer'),
+    },
+  ]
 
   const formatTime = (time: string): string => {
     let hourStr: string
@@ -77,17 +87,19 @@ function ReservationPage() {
             className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Reservations
+            {t('reservation.reservations')}
           </span>
           <h1
             className="text-4xl md:text-5xl font-bold text-[var(--public-text-primary)] mt-2 mb-4"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Book Your <span className="text-[var(--public-accent)]">Table</span>
+            {t('reservation.bookYourTable').split(' ').slice(0, -1).join(' ')}{' '}
+            <span className="text-[var(--public-accent)]">
+              {t('reservation.bookYourTable').split(' ').slice(-1)[0]}
+            </span>
           </h1>
           <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto">
-            Reserve your spot for an unforgettable dining experience at Steak Kenangan.
-            We look forward to serving you our finest steaks and Indonesian-inspired dishes.
+            {t('reservation.pageDescription')}
           </p>
         </div>
       </section>
@@ -102,7 +114,7 @@ function ReservationPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-[var(--public-text-primary)]">
                     <Calendar className="h-5 w-5 text-[var(--public-accent)]" />
-                    Make a Reservation
+                    {t('reservation.makeAReservation')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -122,13 +134,12 @@ function ReservationPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-[var(--public-text-primary)] text-lg">
                     <Users className="h-5 w-5 text-[var(--public-accent)]" />
-                    Party Size
+                    {t('reservation.partySize')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-[var(--public-text-secondary)] text-sm">
-                    We accept reservations for parties of 1-20 guests. For larger groups,
-                    please contact us directly for special arrangements.
+                    {t('reservation.partySizeDescription')}
                   </p>
                 </CardContent>
               </Card>
@@ -138,12 +149,12 @@ function ReservationPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-[var(--public-text-primary)] text-lg">
                     <Phone className="h-5 w-5 text-[var(--public-accent)]" />
-                    Need Help?
+                    {t('reservation.needHelp')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {isLoading ? (
-                    <p className="text-[var(--public-text-secondary)] text-sm">Loading...</p>
+                    <p className="text-[var(--public-text-secondary)] text-sm">{t('common.loading')}</p>
                   ) : (
                     <>
                       {restaurantInfo?.phone && (
@@ -174,12 +185,12 @@ function ReservationPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-[var(--public-text-primary)] text-lg">
                     <Clock className="h-5 w-5 text-[var(--public-accent)]" />
-                    Operating Hours
+                    {t('reservation.operatingHours')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {isLoading ? (
-                    <p className="text-[var(--public-text-secondary)] text-sm">Loading...</p>
+                    <p className="text-[var(--public-text-secondary)] text-sm">{t('common.loading')}</p>
                   ) : restaurantInfo?.operating_hours && restaurantInfo.operating_hours.length > 0 ? (
                     <div className="space-y-1">
                       {restaurantInfo.operating_hours
@@ -204,19 +215,19 @@ function ReservationPage() {
                             >
                               {DAY_NAMES[hours.day_of_week].slice(0, 3)}
                               {hours.day_of_week === today && (
-                                <span className="ml-1 text-xs">(Today)</span>
+                                <span className="ml-1 text-xs">({t('reservation.today')})</span>
                               )}
                             </span>
                             <span className="text-[var(--public-text-secondary)]">
                               {hours.is_closed
-                                ? 'Closed'
+                                ? t('reservation.closed')
                                 : `${formatTime(hours.open_time)} - ${formatTime(hours.close_time)}`}
                             </span>
                           </div>
                         ))}
                     </div>
                   ) : (
-                    <p className="text-[var(--public-text-secondary)] text-sm">Hours not available</p>
+                    <p className="text-[var(--public-text-secondary)] text-sm">{t('reservation.hoursNotAvailable')}</p>
                   )}
                 </CardContent>
               </Card>
@@ -233,7 +244,10 @@ function ReservationPage() {
               className="text-2xl md:text-3xl font-bold text-[var(--public-text-primary)]"
               style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
             >
-              Frequently Asked <span className="text-[var(--public-accent)]">Questions</span>
+              {t('reservation.frequentlyAskedQuestions').split(' ').slice(0, -1).join(' ')}{' '}
+              <span className="text-[var(--public-accent)]">
+                {t('reservation.frequentlyAskedQuestions').split(' ').slice(-1)[0]}
+              </span>
             </h2>
           </div>
 
@@ -266,11 +280,10 @@ function ReservationPage() {
             className="text-2xl md:text-3xl font-bold text-[var(--public-text-primary)] mb-4"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Prefer to Call?
+            {t('reservation.preferToCall')}
           </h2>
           <p className="text-[var(--public-text-secondary)] mb-6 max-w-xl mx-auto">
-            Our team is ready to assist you with your reservation.
-            Call us directly for immediate booking or special requests.
+            {t('reservation.teamReadyToAssist')}
           </p>
           {restaurantInfo?.phone && (
             <a

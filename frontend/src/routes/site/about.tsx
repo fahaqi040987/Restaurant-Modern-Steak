@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ChevronRight, Calendar, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -51,6 +52,7 @@ interface HeroBannerProps {
 }
 
 function HeroBanner({ description }: HeroBannerProps) {
+  const { t } = useTranslation()
   const { ref, isVisible } = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true,
@@ -82,17 +84,16 @@ function HeroBanner({ description }: HeroBannerProps) {
           className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
           style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
         >
-          About Us
+          {t('public.aboutUs')}
         </span>
         <h1
           className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mt-4 mb-6"
           style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
         >
-          Our Story
+          {t('public.ourStory')}
         </h1>
         <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
-          {description ||
-            'Welcome to Steak Kenangan, where culinary excellence meets warm hospitality. Our journey began with a simple passion: to serve the finest steaks in an atmosphere that feels like home.'}
+          {description || t('public.aboutHeroDescription')}
         </p>
       </div>
 
@@ -106,6 +107,7 @@ function HeroBanner({ description }: HeroBannerProps) {
 }
 
 function ValuesSection() {
+  const { t } = useTranslation()
   const { ref, isVisible } = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true,
@@ -113,21 +115,18 @@ function ValuesSection() {
 
   const values = [
     {
-      title: 'Quality First',
-      description:
-        'We source only the finest ingredients, from premium aged beef to fresh seasonal vegetables. Quality is non-negotiable in everything we serve.',
+      title: t('public.qualityFirst'),
+      description: t('public.qualityFirstDesc'),
       icon: '🥩',
     },
     {
-      title: 'Craftsmanship',
-      description:
-        'Every dish is prepared with meticulous attention to detail. Our chefs are artisans who take pride in their craft and continuously refine their skills.',
+      title: t('public.craftsmanship'),
+      description: t('public.craftsmanshipDesc'),
       icon: '👨‍🍳',
     },
     {
-      title: 'Hospitality',
-      description:
-        'We believe dining should be an experience, not just a meal. Our team is dedicated to making every guest feel welcome and valued.',
+      title: t('public.hospitalityValue'),
+      description: t('public.hospitalityValueDesc'),
       icon: '🤝',
     },
   ]
@@ -149,16 +148,24 @@ function ValuesSection() {
             className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            What We Believe
+            {t('public.whatWeBelieve')}
           </span>
           <h2
             className="text-3xl md:text-4xl font-bold text-[var(--public-text-primary)] mt-2 mb-4"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Our <span className="text-[var(--public-accent)]">Values</span>
+            {t('public.ourValues').split(' ').map((word, i, arr) => (
+              <span key={i}>
+                {i === arr.length - 1 ? (
+                  <span className="text-[var(--public-accent)]">{word}</span>
+                ) : (
+                  word + ' '
+                )}
+              </span>
+            ))}
           </h2>
           <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto">
-            The principles that guide everything we do
+            {t('public.principlesGuide')}
           </p>
         </div>
 
@@ -166,7 +173,7 @@ function ValuesSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {values.map((value, idx) => (
             <ValueCard
-              key={value.title}
+              key={idx}
               value={value}
               index={idx}
               isVisible={isVisible}
@@ -228,6 +235,7 @@ function ValueCard({ value, index, isVisible }: ValueCardProps) {
 }
 
 function CTASection() {
+  const { t } = useTranslation()
   const { ref, isVisible } = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true,
@@ -247,18 +255,17 @@ function CTASection() {
             className="text-[var(--public-accent)] text-sm uppercase tracking-widest font-semibold"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Visit Us
+            {t('public.visitUs')}
           </span>
           <h2
             className="text-2xl md:text-4xl font-bold text-[var(--public-text-primary)] mt-2 mb-4"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Ready to Experience{' '}
+            {t('public.readyToExperience')}{' '}
             <span className="text-[var(--public-accent)]">Steak Kenangan</span>?
           </h2>
           <p className="text-[var(--public-text-secondary)] mb-8 text-lg">
-            We'd love to welcome you to our table. Reserve your spot for an
-            unforgettable dining experience.
+            {t('public.welcomeToTable')}
           </p>
 
           {/* CTA Buttons */}
@@ -276,7 +283,7 @@ function CTASection() {
             >
               <Link to="/site/reservation">
                 <Calendar className="h-5 w-5" aria-hidden="true" />
-                <span>Book a Table</span>
+                <span>{t('public.bookATable')}</span>
               </Link>
             </Button>
             <Button
@@ -292,7 +299,7 @@ function CTASection() {
             >
               <Link to="/site/contact">
                 <Phone className="h-5 w-5" aria-hidden="true" />
-                <span>Get in Touch</span>
+                <span>{t('public.getInTouch')}</span>
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>

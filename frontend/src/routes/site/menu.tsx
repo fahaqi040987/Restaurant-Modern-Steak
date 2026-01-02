@@ -1,10 +1,11 @@
 /**
- * T027: Menu page route with new Restoran-master design
- * Features: Category slider, menu item cards, search, responsive grid
+ * T027, T073: Menu page route with new Restoran-master design
+ * Features: Category slider, menu item cards, search, responsive grid, i18n
  */
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Search, X, Utensils } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,6 +33,7 @@ function useDebounceValue<T>(value: T, delay: number): T {
 }
 
 function PublicMenuPage() {
+  const { t } = useTranslation()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -90,10 +92,18 @@ function PublicMenuPage() {
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--public-text-primary)] mb-4"
             style={{ fontFamily: 'var(--public-font-heading)' }}
           >
-            Our <span className="text-[var(--public-accent)]">Menu</span>
+            {t('public.ourMenu').split(' ').map((word, i, arr) => (
+              <span key={i}>
+                {i === arr.length - 1 ? (
+                  <span className="text-[var(--public-accent)]">{word}</span>
+                ) : (
+                  word + ' '
+                )}
+              </span>
+            ))}
           </h1>
           <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto text-lg">
-            Explore our selection of premium cuts, signature dishes, and culinary creations
+            {t('public.exploreOurMenu')}
           </p>
         </div>
       </section>
@@ -106,7 +116,7 @@ function PublicMenuPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--public-text-muted)]" />
             <Input
               type="search"
-              placeholder="Search menu items..."
+              placeholder={t('public.searchMenuItems')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-[var(--public-bg-elevated)] border-[var(--public-border)] text-[var(--public-text-primary)] placeholder:text-[var(--public-text-muted)] focus:border-[var(--public-accent)] focus:ring-[var(--public-accent)] rounded-full"
@@ -135,7 +145,7 @@ function PublicMenuPage() {
           {hasActiveFilters && (
             <div className="mt-4 flex items-center gap-2">
               <span className="text-sm text-[var(--public-text-muted)]">
-                Showing filtered results
+                {t('public.showingFilteredResults')}
               </span>
               <Button
                 variant="ghost"
@@ -143,7 +153,7 @@ function PublicMenuPage() {
                 onClick={clearFilters}
                 className="text-[var(--public-accent)] hover:text-[var(--public-accent)]/80 p-0 h-auto"
               >
-                Clear all
+                {t('public.clearAll')}
               </Button>
             </div>
           )}
@@ -164,17 +174,17 @@ function PublicMenuPage() {
             <div className="text-center py-16">
               <Utensils className="h-16 w-16 text-red-500/50 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-[var(--public-text-primary)] mb-2">
-                Failed to load menu
+                {t('public.failedToLoadMenu')}
               </h3>
               <p className="text-[var(--public-text-secondary)] mb-4">
-                Please try again later.
+                {t('public.pleaseTryAgainLater')}
               </p>
               <Button
                 variant="outline"
                 onClick={() => window.location.reload()}
                 className="border-[var(--public-accent)] text-[var(--public-accent)] hover:bg-[var(--public-accent)] hover:text-white"
               >
-                Retry
+                {t('public.retry')}
               </Button>
             </div>
           ) : isLoadingMenu ? (
@@ -221,12 +231,12 @@ function PublicMenuPage() {
             <div className="text-center py-16">
               <Utensils className="h-16 w-16 text-[var(--public-text-muted)] mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-[var(--public-text-primary)] mb-2">
-                No items found
+                {t('public.noItemsFound')}
               </h3>
               <p className="text-[var(--public-text-secondary)] mb-4">
                 {hasActiveFilters
-                  ? 'Try adjusting your search or filter criteria'
-                  : 'Our menu is being updated. Please check back soon!'}
+                  ? t('public.tryAdjustingFilters')
+                  : t('public.menuBeingUpdated')}
               </p>
               {hasActiveFilters && (
                 <Button
@@ -234,7 +244,7 @@ function PublicMenuPage() {
                   onClick={clearFilters}
                   className="border-[var(--public-accent)] text-[var(--public-accent)] hover:bg-[var(--public-accent)] hover:text-white"
                 >
-                  Clear Filters
+                  {t('public.clearFilters')}
                 </Button>
               )}
             </div>
@@ -250,17 +260,17 @@ function PublicMenuPage() {
               className="text-2xl md:text-3xl font-bold text-[var(--public-text-primary)] mb-4"
               style={{ fontFamily: 'var(--public-font-heading)' }}
             >
-              Ready to Experience Our Menu?
+              {t('public.readyToExperienceMenu')}
             </h2>
             <p className="text-[var(--public-text-secondary)] mb-6 max-w-xl mx-auto">
-              Reserve your table now and enjoy our premium steaks and signature dishes
+              {t('public.reserveYourTable')}
             </p>
             <Button
               asChild
               size="lg"
               className="bg-[var(--public-accent)] hover:bg-[var(--public-accent)]/90 text-white rounded-full px-8"
             >
-              <a href="/site/reservation">Book a Table</a>
+              <a href="/site/reservation">{t('public.bookATable')}</a>
             </Button>
           </div>
         </section>

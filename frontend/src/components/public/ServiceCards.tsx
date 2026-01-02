@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   Clock,
   MapPin,
@@ -13,8 +14,8 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation'
 
 interface ServiceCard {
   icon: React.ElementType
-  title: string
-  description: string
+  titleKey: string
+  descriptionKey: string
   link?: string
 }
 
@@ -28,26 +29,26 @@ interface ServiceCardsProps {
 const defaultCards: ServiceCard[] = [
   {
     icon: ChefHat,
-    title: 'Master Chefs',
-    description: 'Experienced chefs with international expertise',
+    titleKey: 'public.masterChefs',
+    descriptionKey: 'public.masterChefsDesc',
     link: '/site/about',
   },
   {
     icon: Beef,
-    title: 'Premium Ingredients',
-    description: 'We source only the finest cuts and freshest ingredients',
+    titleKey: 'public.premiumIngredients',
+    descriptionKey: 'public.premiumIngredientsDesc',
     link: '/site/menu',
   },
   {
     icon: CalendarDays,
-    title: 'Easy Reservations',
-    description: 'Book your table online for a seamless dining experience',
+    titleKey: 'public.easyReservations',
+    descriptionKey: 'public.easyReservationsDesc',
     link: '/site/reservation',
   },
   {
     icon: Users,
-    title: 'Private Events',
-    description: 'Host memorable gatherings in our elegant private dining spaces',
+    titleKey: 'public.privateEvents',
+    descriptionKey: 'public.privateEventsDesc',
     link: '/site/contact',
   }
 ]
@@ -64,6 +65,8 @@ const defaultCards: ServiceCard[] = [
  * ```
  */
 export function ServiceCards({ className, cards = defaultCards }: ServiceCardsProps) {
+  const { t } = useTranslation()
+
   return (
     <section
       className={cn(
@@ -80,18 +83,17 @@ export function ServiceCards({ className, cards = defaultCards }: ServiceCardsPr
             className="text-3xl md:text-4xl font-bold text-[var(--public-text-primary)] mb-4"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            Why Choose{' '}
-            <span className="text-[var(--public-accent)]">Us</span>
+            {t('public.whyChooseUs')}
           </h2>
           <p className="text-[var(--public-text-secondary)] max-w-2xl mx-auto">
-            Discover what makes Steak Kenangan the premier destination for steak lovers
+            {t('public.discoverWhat')}
           </p>
         </div>
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {cards.map((card, index) => (
-            <ServiceCardItem key={card.title} card={card} index={index} />
+            <ServiceCardItem key={card.titleKey} card={card} index={index} />
           ))}
         </div>
       </div>
@@ -105,6 +107,7 @@ interface ServiceCardItemProps {
 }
 
 function ServiceCardItem({ card, index }: ServiceCardItemProps) {
+  const { t } = useTranslation()
   const { ref, isVisible } = useScrollAnimation({
     threshold: 0.1,
     triggerOnce: true,
@@ -143,12 +146,12 @@ function ServiceCardItem({ card, index }: ServiceCardItemProps) {
         )}
         style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
       >
-        {card.title}
+        {t(card.titleKey)}
       </h3>
 
       {/* Description */}
       <p className="text-[var(--public-text-secondary)] text-sm leading-relaxed group-hover:opacity-0 transition-opacity duration-300">
-        {card.description}
+        {t(card.descriptionKey)}
       </p>
 
       {/* Hover Overlay with Example Text */}
@@ -163,11 +166,11 @@ function ServiceCardItem({ card, index }: ServiceCardItemProps) {
         )}
       >
         <Icon className="h-12 w-12 mb-4" aria-hidden="true" />
-        <h4 className="text-xl font-bold mb-2">{card.title}</h4>
-        {/* <p className="text-sm mb-4">{card.description}</p> */}
+        <h4 className="text-xl font-bold mb-2">{t(card.titleKey)}</h4>
+        {/* <p className="text-sm mb-4">{t(card.descriptionKey)}</p> */}
         {card.link && (
           <span className="text-xs font-semibold uppercase tracking-wider border-b-2 border-white pb-1">
-            Learn More →
+            {t('public.learnMore')} →
           </span>
         )}
       </div>

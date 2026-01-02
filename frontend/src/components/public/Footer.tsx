@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   Phone,
   Mail,
@@ -29,12 +30,14 @@ interface FooterProps {
  * ```
  */
 export function Footer({ restaurantInfo, className }: FooterProps) {
+  const { t } = useTranslation()
+
   const formatOperatingHours = (hours: OperatingHours[]): string => {
-    if (!hours || hours.length === 0) return 'Hours not available'
+    if (!hours || hours.length === 0) return t('public.hoursNotAvailable')
 
     // Find typical weekday hours (Monday)
     const mondayHours = hours.find((h) => h.day_of_week === 1)
-    if (!mondayHours || mondayHours.is_closed) return 'Varies by day'
+    if (!mondayHours || mondayHours.is_closed) return t('public.variesByDay')
 
     const formatTime = (time: string): string => {
       // Handle HH:MM:SS or HH:MM format from database
@@ -62,11 +65,11 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
   }
 
   const quickLinks = [
-    { to: '/site', label: 'Home' },
-    { to: '/site/menu', label: 'Our Menu' },
-    { to: '/site/about', label: 'About Us' },
-    { to: '/site/reservation', label: 'Reservations' },
-    { to: '/site/contact', label: 'Contact' },
+    { to: '/site', labelKey: 'public.home' },
+    { to: '/site/menu', labelKey: 'public.ourMenu' },
+    { to: '/site/about', labelKey: 'public.aboutUs' },
+    { to: '/site/reservation', labelKey: 'public.reservations' },
+    { to: '/site/contact', labelKey: 'public.contact' },
   ]
 
   const operatingDays = [
@@ -108,10 +111,10 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                 className="font-accent text-2xl md:text-3xl text-white mb-2"
                 style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
               >
-                Reserve Your Table
+                {t('public.reserveYourTable')}
               </h3>
               <p className="text-white/80 text-sm md:text-base">
-                Experience premium dining at Steak Kenangan
+                {t('public.experiencePremiumDining')}
               </p>
             </div>
 
@@ -127,7 +130,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
             >
               <Link to="/site/reservation">
                 <Calendar className="h-5 w-5" aria-hidden="true" />
-                <span>Book Now</span>
+                <span>{t('public.bookNow')}</span>
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
@@ -250,7 +253,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
               className="text-sm font-semibold uppercase tracking-wider text-[var(--public-accent)]"
               style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
             >
-              Quick Links
+              {t('public.quickLinks')}
             </h4>
             <nav aria-label="Footer navigation">
               <ul className="space-y-3">
@@ -268,7 +271,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                         className="h-4 w-4 transition-transform group-hover:translate-x-1"
                         aria-hidden="true"
                       />
-                      {link.label}
+                      {t(link.labelKey)}
                     </Link>
                   </li>
                 ))}
@@ -282,7 +285,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
               className="text-sm font-semibold uppercase tracking-wider text-[var(--public-accent)]"
               style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
             >
-              Contact Us
+              {t('public.contactUs')}
             </h4>
             <ul className="space-y-4">
               <li>
@@ -334,7 +337,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
               className="text-sm font-semibold uppercase tracking-wider text-[var(--public-accent)]"
               style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
             >
-              Opening Hours
+              {t('public.openingHours')}
             </h4>
             <ul className="space-y-3">
               {restaurantInfo?.operating_hours ? (
@@ -365,7 +368,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                   'transition-colors'
                 )}
               >
-                <span>Staff Portal</span>
+                <span>{t('public.staffPortal')}</span>
                 <ChevronRight className="h-3 w-3" aria-hidden="true" />
               </Link>
             </div>
@@ -376,20 +379,20 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
         <div className="mt-12 pt-8 border-t border-[var(--public-border)]">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-xs text-[var(--public-text-muted)]">
-              © {new Date().getFullYear()} Steak Kenangan. All rights reserved.
+              © {new Date().getFullYear()} Steak Kenangan. {t('public.allRightsReserved')}
             </p>
             <div className="flex items-center gap-6 text-xs text-[var(--public-text-muted)]">
               <Link
                 to="/site"
                 className="hover:text-[var(--public-accent)] transition-colors"
               >
-                Privacy Policy
+                {t('public.privacyPolicy')}
               </Link>
               <Link
                 to="/site"
                 className="hover:text-[var(--public-accent)] transition-colors"
               >
-                Terms of Service
+                {t('public.termsOfService')}
               </Link>
             </div>
           </div>
