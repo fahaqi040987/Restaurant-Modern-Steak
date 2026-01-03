@@ -230,6 +230,33 @@ export function RestaurantInfoSettings() {
       }
     })
 
+    // T019: Frontend validation - reject 00:00 times for non-closed days
+    for (const hour of validatedHours) {
+      if (!hour.is_closed) {
+        if (hour.open_time === '00:00' || hour.close_time === '00:00') {
+          const day = DAYS_OF_WEEK.find((d) => d.value === hour.day_of_week)
+          toastHelpers.error(
+            t('admin.invalidZeroTime', {
+              day: day?.labelId || day?.label || `Day ${hour.day_of_week}`,
+              defaultValue: `00:00 is not a valid time for ${day?.labelId || day?.label || `Day ${hour.day_of_week}`}. Please set valid operating hours or mark the day as closed.`,
+            })
+          )
+          return
+        }
+        // Also validate that open time is before close time
+        if (hour.open_time >= hour.close_time) {
+          const day = DAYS_OF_WEEK.find((d) => d.value === hour.day_of_week)
+          toastHelpers.error(
+            t('admin.invalidTimeRange', {
+              day: day?.labelId || day?.label || `Day ${hour.day_of_week}`,
+              defaultValue: `Opening time must be before closing time for ${day?.labelId || day?.label || `Day ${hour.day_of_week}`}.`,
+            })
+          )
+          return
+        }
+      }
+    }
+
     console.log('Saving hours:', validatedHours) // Debug log
 
     // Update local state with validated values first

@@ -31,7 +31,7 @@ const defaultMilestones: TimelineMilestone[] = [
   {
     year: '2015',
     title: 'The Beginning',
-    description: 'Steak Kenangan membuka gerai pertama di Jakarta Selatan',
+    description: 'Steak Kenangan membuka gerai pertama di Bangka Belitung',
   },
   {
     year: '2017',

@@ -29,7 +29,13 @@
       "Bash(npm run test:run:*)",
       "Bash(curl:*)",
       "Bash(npx eslint:*)",
-      "Bash(npx playwright test:*)"
+      "Bash(npx playwright test:*)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
+      "Bash(echo:*)",
+      "Skill(speckit.tasks)",
+      "Skill(speckit.implement)",
+      "Bash(docker exec:*)",
+      "Bash(python3:*)"
     ]
   }
 }

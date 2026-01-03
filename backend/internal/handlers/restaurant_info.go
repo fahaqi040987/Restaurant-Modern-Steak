@@ -252,6 +252,17 @@ func (h *RestaurantInfoHandler) UpdateOperatingHours(c *gin.Context) {
 			return
 		}
 
+		// T017: Validate that 00:00 is not used for non-closed days
+		// 00:00 indicates a closed day and should only be allowed when is_closed is true
+		if hour.OpenTime == "00:00" || hour.CloseTime == "00:00" {
+			c.JSON(http.StatusBadRequest, models.APIResponse{
+				Success: false,
+				Message: "00:00 is not a valid time for an open day",
+				Error:   stringPtr("invalid_zero_time"),
+			})
+			return
+		}
+
 		// Validate open < close (unless closed)
 		if hour.OpenTime >= hour.CloseTime {
 			c.JSON(http.StatusBadRequest, models.APIResponse{

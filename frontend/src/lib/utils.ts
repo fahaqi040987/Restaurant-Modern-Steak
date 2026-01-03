@@ -106,10 +106,84 @@ export function debounce<T extends (...args: any[]) => any>(
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null
-  
+
   return (...args: Parameters<T>) => {
     if (timeout) clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
   }
+}
+
+/**
+ * Validates that an operating time string is valid (not 00:00 or empty)
+ * Handles ISO datetime format (0000-01-01T08:00:00Z) and HH:MM:SS format
+ *
+ * @param time - Time string in various formats
+ * @returns true if time is valid and not 00:00, false otherwise
+ */
+export function isValidOperatingTime(time: string | null | undefined): boolean {
+  if (!time || time === '') return false
+
+  const timeStr = String(time).trim()
+
+  // Extract time portion from ISO datetime format
+  let hours = '00'
+  let minutes = '00'
+
+  if (timeStr.includes('T')) {
+    // ISO datetime format: 0000-01-01T08:00:00Z
+    const match = timeStr.match(/T(\d{2}):(\d{2})/)
+    if (match) {
+      hours = match[1]
+      minutes = match[2]
+    }
+  } else if (timeStr.includes(':')) {
+    // HH:MM:SS or HH:MM format
+    const parts = timeStr.split(':')
+    hours = parts[0] || '00'
+    minutes = parts[1] || '00'
+  }
+
+  // Check if time is 00:00 (indicates closed day or invalid)
+  const hourNum = parseInt(hours, 10)
+  const minNum = parseInt(minutes, 10)
+
+  return !(hourNum === 0 && minNum === 0)
+}
+
+/**
+ * Formats operating time from various formats to display format (H:MM)
+ * Handles ISO datetime format (0000-01-01T08:00:00Z), HH:MM:SS, and HH:MM
+ *
+ * @param time - Time string in various formats
+ * @returns Formatted time string (e.g., "8:00", "11:30") or empty string if invalid
+ */
+export function formatOperatingTime(time: string | null | undefined): string {
+  if (!time || time === '') return ''
+
+  const timeStr = String(time).trim()
+
+  let hours = '00'
+  let minutes = '00'
+
+  if (timeStr.includes('T')) {
+    // ISO datetime format: 0000-01-01T08:00:00Z
+    const match = timeStr.match(/T(\d{2}):(\d{2})/)
+    if (match) {
+      hours = match[1]
+      minutes = match[2]
+    }
+  } else if (timeStr.includes(':')) {
+    // HH:MM:SS or HH:MM format
+    const parts = timeStr.split(':')
+    hours = parts[0] || '00'
+    minutes = parts[1] || '00'
+  } else {
+    return ''
+  }
+
+  // Convert to number to remove leading zeros from hours
+  const hourNum = parseInt(hours, 10)
+
+  return `${hourNum}:${minutes}`
 }
 
