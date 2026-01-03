@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProfilePage } from '../ProfilePage';
+import apiClient from '@/api/client';
+import { toastHelpers } from '@/lib/toast-helpers';
 
 // Mock i18n
 vi.mock('react-i18next', () => ({
@@ -67,9 +69,6 @@ vi.mock('@/lib/toast-helpers', () => ({
     error: vi.fn(),
   },
 }));
-
-import apiClient from '@/api/client';
-import { toastHelpers } from '@/lib/toast-helpers';
 
 const mockUser = {
   id: '1',
