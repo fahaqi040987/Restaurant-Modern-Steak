@@ -242,7 +242,10 @@ export function AdminDashboard() {
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+        <Card
+          className="hover:shadow-lg transition-shadow cursor-pointer"
+          onClick={() => navigate({ to: '/admin/menu' })}
+        >
           <CardHeader className="text-center">
             <Plus className="h-8 w-8 mx-auto text-blue-600" />
             <CardTitle className="text-lg">{t('admin.manageMenu')}</CardTitle>
@@ -250,7 +253,10 @@ export function AdminDashboard() {
           </CardHeader>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+        <Card
+          className="hover:shadow-lg transition-shadow cursor-pointer"
+          onClick={() => navigate({ to: '/admin/tables' })}
+        >
           <CardHeader className="text-center">
             <Table className="h-8 w-8 mx-auto text-green-600" />
             <CardTitle className="text-lg">{t('admin.manageTables')}</CardTitle>
@@ -258,7 +264,10 @@ export function AdminDashboard() {
           </CardHeader>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+        <Card
+          className="hover:shadow-lg transition-shadow cursor-pointer"
+          onClick={() => navigate({ to: '/admin/staff' })}
+        >
           <CardHeader className="text-center">
             <Users className="h-8 w-8 mx-auto text-purple-600" />
             <CardTitle className="text-lg">{t('admin.manageStaff')}</CardTitle>
@@ -266,7 +275,10 @@ export function AdminDashboard() {
           </CardHeader>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+        <Card
+          className="hover:shadow-lg transition-shadow cursor-pointer"
+          onClick={() => navigate({ to: '/admin/reports' })}
+        >
           <CardHeader className="text-center">
             <BarChart3 className="h-8 w-8 mx-auto text-orange-600" />
             <CardTitle className="text-lg">{t('admin.viewReports')}</CardTitle>
