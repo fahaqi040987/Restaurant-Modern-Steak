@@ -1,11 +1,16 @@
 package handlers
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
+	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"pos-public/internal/models"
@@ -13,6 +18,120 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
+// T102: Input length validation constants
+const (
+	maxCustomerNameLength          = 100
+	maxSpecialInstructionsLength   = 500
+	maxSurveyCommentsLength        = 1000
+	maxNotesLength                 = 500
+	maxContactNameLength           = 100
+	maxContactSubjectLength        = 200
+	maxContactMessageLength        = 2000
+)
+
+// T101: Rate limiting configuration
+type rateLimiter struct {
+	requests map[string][]time.Time
+	mu       sync.RWMutex
+}
+
+var customerRateLimiter = &rateLimiter{
+	requests: make(map[string][]time.Time),
+}
+
+// T101: Rate limit configuration per endpoint type
+const (
+	qrScanRateLimit       = 10 // per minute
+	orderCreationLimit    = 5  // per minute
+	surveySubmissionLimit = 3  // per order per minute
+)
+
+// checkRateLimit checks if the client has exceeded the rate limit
+func (rl *rateLimiter) checkRateLimit(clientKey string, limit int, window time.Duration) bool {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+
+	now := time.Now()
+	windowStart := now.Add(-window)
+
+	// Clean old entries
+	var validRequests []time.Time
+	for _, t := range rl.requests[clientKey] {
+		if t.After(windowStart) {
+			validRequests = append(validRequests, t)
+		}
+	}
+	rl.requests[clientKey] = validRequests
+
+	// Check limit
+	if len(validRequests) >= limit {
+		return false // Rate limit exceeded
+	}
+
+	// Add new request
+	rl.requests[clientKey] = append(rl.requests[clientKey], now)
+	return true
+}
+
+// T099: CSRF token generation and validation
+var csrfTokens = struct {
+	tokens map[string]time.Time
+	mu     sync.RWMutex
+}{
+	tokens: make(map[string]time.Time),
+}
+
+// generateCSRFToken creates a new CSRF token
+func generateCSRFToken() string {
+	bytes := make([]byte, 32)
+	rand.Read(bytes)
+	token := hex.EncodeToString(bytes)
+
+	csrfTokens.mu.Lock()
+	csrfTokens.tokens[token] = time.Now().Add(30 * time.Minute) // Token valid for 30 minutes
+	csrfTokens.mu.Unlock()
+
+	return token
+}
+
+// validateCSRFToken validates and consumes a CSRF token
+func validateCSRFToken(token string) bool {
+	csrfTokens.mu.Lock()
+	defer csrfTokens.mu.Unlock()
+
+	expiry, exists := csrfTokens.tokens[token]
+	if !exists {
+		return false
+	}
+
+	// Token expired
+	if time.Now().After(expiry) {
+		delete(csrfTokens.tokens, token)
+		return false
+	}
+
+	// Consume the token (one-time use)
+	delete(csrfTokens.tokens, token)
+	return true
+}
+
+// cleanExpiredCSRFTokens removes expired tokens periodically
+func init() {
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		for range ticker.C {
+			csrfTokens.mu.Lock()
+			now := time.Now()
+			for token, expiry := range csrfTokens.tokens {
+				if now.After(expiry) {
+					delete(csrfTokens.tokens, token)
+				}
+			}
+			csrfTokens.mu.Unlock()
+		}
+	}()
+}
 
 // PublicHandler handles public API endpoints (no authentication required)
 type PublicHandler struct {
@@ -462,9 +581,34 @@ func isValidEmail(email string) bool {
 	return emailRegex.MatchString(email)
 }
 
+// GetCSRFToken generates a CSRF token for customer order creation
+// T099: Endpoint: GET /api/v1/customer/csrf-token
+func (h *PublicHandler) GetCSRFToken(c *gin.Context) {
+	token := generateCSRFToken()
+	c.JSON(http.StatusOK, models.APIResponse{
+		Success: true,
+		Message: "CSRF token generated",
+		Data: map[string]string{
+			"csrf_token": token,
+		},
+	})
+}
+
 // GetTableByQRCode returns table info by QR code for customer self-ordering
 // Endpoint: GET /api/v1/customer/table/:qr_code
 func (h *PublicHandler) GetTableByQRCode(c *gin.Context) {
+	// T101: Rate limiting for QR scans
+	clientIP := c.ClientIP()
+	if !customerRateLimiter.checkRateLimit("qr:"+clientIP, qrScanRateLimit, time.Minute) {
+		log.Printf("RATE_LIMIT: QR scan limit exceeded for IP %s", clientIP)
+		c.JSON(http.StatusTooManyRequests, models.APIResponse{
+			Success: false,
+			Message: "Too many requests. Please wait a moment before scanning again.",
+			Error:   stringPtr("rate_limit_exceeded"),
+		})
+		return
+	}
+
 	qrCode := c.Param("qr_code")
 	if qrCode == "" {
 		c.JSON(http.StatusBadRequest, models.APIResponse{
@@ -522,6 +666,35 @@ func (h *PublicHandler) GetTableByQRCode(c *gin.Context) {
 // CreateCustomerOrder creates an order from customer self-ordering (no auth required)
 // Endpoint: POST /api/v1/customer/orders
 func (h *PublicHandler) CreateCustomerOrder(c *gin.Context) {
+	// T101: Rate limiting for order creation
+	clientIP := c.ClientIP()
+	if !customerRateLimiter.checkRateLimit("order:"+clientIP, orderCreationLimit, time.Minute) {
+		log.Printf("RATE_LIMIT: Order creation limit exceeded for IP %s", clientIP)
+		c.JSON(http.StatusTooManyRequests, models.APIResponse{
+			Success: false,
+			Message: "Too many order attempts. Please wait a moment before trying again.",
+			Error:   stringPtr("rate_limit_exceeded"),
+		})
+		return
+	}
+
+	// T099: CSRF validation - check Origin/Referer header for state-changing requests
+	// This is enforced via CSRFProtection middleware, but we add extra validation here
+	csrfToken := c.GetHeader("X-CSRF-Token")
+	csrfEnabled := os.Getenv("CSRF_ENABLED") != "false" // Default enabled
+
+	if csrfEnabled && csrfToken != "" {
+		if !validateCSRFToken(csrfToken) {
+			log.Printf("CSRF_ALERT: Invalid CSRF token from IP %s", clientIP)
+			c.JSON(http.StatusForbidden, models.APIResponse{
+				Success: false,
+				Message: "Invalid or expired security token. Please refresh and try again.",
+				Error:   stringPtr("invalid_csrf_token"),
+			})
+			return
+		}
+	}
+
 	var req struct {
 		TableID      string `json:"table_id" binding:"required"`
 		CustomerName string `json:"customer_name"`
@@ -540,6 +713,48 @@ func (h *PublicHandler) CreateCustomerOrder(c *gin.Context) {
 			Error:   stringPtr(err.Error()),
 		})
 		return
+	}
+
+	// T102: Input length validation
+	req.CustomerName = strings.TrimSpace(req.CustomerName)
+	if len(req.CustomerName) > maxCustomerNameLength {
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Success: false,
+			Message: "Customer name is too long (max 100 characters)",
+			Error:   stringPtr("customer_name_too_long"),
+		})
+		return
+	}
+
+	req.Notes = strings.TrimSpace(req.Notes)
+	if len(req.Notes) > maxNotesLength {
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Success: false,
+			Message: "Notes are too long (max 500 characters)",
+			Error:   stringPtr("notes_too_long"),
+		})
+		return
+	}
+
+	// T102: Validate special instructions length for each item
+	for i, item := range req.Items {
+		item.SpecialInstructions = strings.TrimSpace(item.SpecialInstructions)
+		if len(item.SpecialInstructions) > maxSpecialInstructionsLength {
+			c.JSON(http.StatusBadRequest, models.APIResponse{
+				Success: false,
+				Message: "Special instructions too long (max 500 characters)",
+				Error:   stringPtr("special_instructions_too_long"),
+			})
+			return
+		}
+		req.Items[i].SpecialInstructions = item.SpecialInstructions
+	}
+
+	// Sanitize text inputs (strip HTML tags)
+	req.CustomerName = stripHTMLTags(req.CustomerName)
+	req.Notes = stripHTMLTags(req.Notes)
+	for i := range req.Items {
+		req.Items[i].SpecialInstructions = stripHTMLTags(req.Items[i].SpecialInstructions)
 	}
 
 	// Verify table exists

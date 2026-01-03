@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,7 +15,6 @@ import {
   Trash2,
   Table,
   Grid3X3,
-  DollarSign,
   Clock,
   UtensilsCrossed
 } from 'lucide-react'
@@ -56,6 +56,7 @@ type DisplayMode = 'table' | 'cards'
 type ActiveTab = 'products' | 'categories'
 
 export function AdminMenuManagement() {
+  const { t } = useTranslation()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [displayMode, setDisplayMode] = useState<DisplayMode>('table')
   const [activeTab, setActiveTab] = useState<ActiveTab>('products')
@@ -111,31 +112,32 @@ export function AdminMenuManagement() {
   }, [categorySearch, debouncedCategorySearch])
 
   // Fetch products with pagination
-  const { data: productsData, isLoading: isLoadingProducts, isFetching: isFetchingProducts } = useQuery({
+  const { data: productsResponse, isLoading: isLoadingProducts, isFetching: isFetchingProducts } = useQuery({
     queryKey: ['admin-products', productsPagination.page, productsPagination.pageSize, debouncedSearch],
     queryFn: () => apiClient.getAdminProducts({
       page: productsPagination.page,
       per_page: productsPagination.pageSize,
       search: debouncedSearch || undefined
-    }).then((res: any) => res.data)
+    })
   })
 
   // Fetch categories with pagination
-  const { data: categoriesData, isLoading: isLoadingCategories, isFetching: isFetchingCategories } = useQuery({
+  const { data: categoriesResponse, isLoading: isLoadingCategories, isFetching: isFetchingCategories } = useQuery({
     queryKey: ['admin-categories', categoriesPagination.page, categoriesPagination.pageSize, debouncedCategorySearch],
     queryFn: () => apiClient.getAdminCategories({
       page: categoriesPagination.page,
       per_page: categoriesPagination.pageSize,
       search: debouncedCategorySearch || undefined
-    }).then((res: any) => res.data)
+    })
   })
 
-  // Extract data and pagination info
-  const products = Array.isArray(productsData) ? productsData : (productsData as any)?.data || []
-  const productsPaginationInfo = (productsData as any)?.pagination || { total: 0 }
+  // Extract data and pagination info from response
+  // Backend returns: { success, message, data: products[], meta: { currentPage, perPage, total, totalPages } }
+  const products = (productsResponse as any)?.data || []
+  const productsPaginationInfo = (productsResponse as any)?.meta || { total: 0, currentPage: 1, perPage: 10, totalPages: 1 }
 
-  const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.data || []
-  const categoriesPaginationInfo = (categoriesData as any)?.pagination || { total: 0 }
+  const categories = (categoriesResponse as any)?.data || []
+  const categoriesPaginationInfo = (categoriesResponse as any)?.meta || { total: 0, currentPage: 1, perPage: 10, totalPages: 1 }
 
   // Delete product mutation
   const deleteProductMutation = useMutation({
@@ -178,13 +180,13 @@ export function AdminMenuManagement() {
   }
 
   const handleDeleteProduct = (product: Product) => {
-    if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
+    if (confirm(t('admin.deleteProduct') + `: "${product.name}"?`)) {
       deleteProductMutation.mutate(product.id.toString())
     }
   }
 
   const handleDeleteCategory = (category: Category) => {
-    if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
+    if (confirm(t('admin.deleteCategory') + `: "${category.name}"?`)) {
       deleteCategoryMutation.mutate(category.id.toString())
     }
   }
@@ -221,9 +223,9 @@ export function AdminMenuManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Menu Management</h2>
+          <h2 className="text-3xl font-bold tracking-tight">{t('admin.menuManagement')}</h2>
           <p className="text-muted-foreground">
-            Manage your restaurant's products and categories
+            {t('admin.menuManagementDesc')}
           </p>
         </div>
         <div className="flex items-center space-x-4">
@@ -236,7 +238,7 @@ export function AdminMenuManagement() {
               className="px-3"
             >
               <Table className="h-4 w-4 mr-1" />
-              Table
+              {t('admin.tableView')}
             </Button>
             <Button
               variant={displayMode === 'cards' ? 'default' : 'ghost'}
@@ -245,7 +247,7 @@ export function AdminMenuManagement() {
               className="px-3"
             >
               <Grid3X3 className="h-4 w-4 mr-1" />
-              Cards
+              {t('admin.cardsView')}
             </Button>
           </div>
         </div>
@@ -257,11 +259,11 @@ export function AdminMenuManagement() {
           <TabsList className="grid w-[400px] grid-cols-2">
             <TabsTrigger value="products" className="gap-2">
               <Package className="h-4 w-4" />
-              Products ({products.length || 0})
+              {t('admin.products')} ({products.length || 0})
             </TabsTrigger>
             <TabsTrigger value="categories" className="gap-2">
               <Tag className="h-4 w-4" />
-              Categories ({categories.length || 0})
+              {t('admin.categories')} ({categories.length || 0})
             </TabsTrigger>
           </TabsList>
         </div>
@@ -275,7 +277,7 @@ export function AdminMenuManagement() {
                 <div className="relative flex-1">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search products by name, category, or description..."
+                    placeholder={t('common.search') + ' ' + t('admin.products').toLowerCase() + '...'}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-8"
@@ -288,7 +290,7 @@ export function AdminMenuManagement() {
                 </div>
                 <Button onClick={() => setShowCreateProductForm(true)} className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Add Product
+                  {t('admin.addProduct')}
                 </Button>
               </div>
             </CardContent>
@@ -311,20 +313,20 @@ export function AdminMenuManagement() {
                 <CardContent className="pt-6">
                   <EmptyState
                     icon={UtensilsCrossed}
-                    title={searchTerm ? 'Tidak ada produk ditemukan' : 'Belum ada produk'}
+                    title={searchTerm ? t('admin.noProductsFound') : t('admin.noProductsYet')}
                     description={
                       searchTerm
-                        ? 'Tidak ada produk yang cocok dengan pencarian. Coba kata kunci lain atau hapus filter.'
-                        : 'Mulai dengan menambahkan produk pertama ke menu restoran Anda.'
+                        ? t('admin.noProductsFoundDesc')
+                        : t('admin.noProductsYetDesc')
                     }
                     action={
                       searchTerm
                         ? {
-                            label: 'Hapus Pencarian',
+                            label: t('admin.clearSearch'),
                             onClick: () => setSearchTerm(''),
                           }
                         : {
-                            label: 'Tambah Produk',
+                            label: t('admin.addProduct'),
                             onClick: () => setShowCreateProductForm(true),
                           }
                     }
@@ -360,12 +362,11 @@ export function AdminMenuManagement() {
                           <div className="min-w-0 flex-1">
                             <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
                             <p className="text-sm text-gray-500 line-clamp-2">
-                              {product.description || "No description"}
+                              {product.description || t('admin.noDescription')}
                             </p>
                             <div className="flex items-center gap-2 mt-2">
                               <Badge variant="outline" className="text-green-600">
-                                <DollarSign className="w-3 h-3 mr-1" />
-                                {product.price}
+                                Rp {new Intl.NumberFormat('id-ID').format(product.price)}
                               </Badge>
                               <Badge variant="outline" className="text-blue-600">
                                 <Clock className="w-3 h-3 mr-1" />
@@ -404,7 +405,7 @@ export function AdminMenuManagement() {
               <div className="mt-6 space-y-4">
                 {isFetchingProducts && !isLoadingProducts && (
                   <div className="flex justify-center">
-                    <InlineLoading text="Updating products..." />
+                    <InlineLoading text={t('admin.updatingProducts')} />
                   </div>
                 )}
                 <PaginationControlsComponent
@@ -425,7 +426,7 @@ export function AdminMenuManagement() {
                 <div className="relative flex-1">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search categories by name or description..."
+                    placeholder={t('common.search') + ' ' + t('admin.categories').toLowerCase() + '...'}
                     value={categorySearch}
                     onChange={(e) => setCategorySearch(e.target.value)}
                     className="pl-8"
@@ -438,7 +439,7 @@ export function AdminMenuManagement() {
                 </div>
                 <Button onClick={() => setShowCreateCategoryForm(true)} className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Add Category
+                  {t('admin.addCategory')}
                 </Button>
               </div>
             </CardContent>
@@ -460,20 +461,20 @@ export function AdminMenuManagement() {
                 <CardContent className="pt-6">
                   <EmptyState
                     icon={Tag}
-                    title={categorySearch ? 'Tidak ada kategori ditemukan' : 'Belum ada kategori'}
+                    title={categorySearch ? t('admin.noCategoriesFound') : t('admin.noCategoriesYet')}
                     description={
                       categorySearch
-                        ? 'Tidak ada kategori yang cocok dengan pencarian. Coba kata kunci lain.'
-                        : 'Buat kategori untuk mengelompokkan produk menu Anda dengan lebih baik.'
+                        ? t('admin.noCategoriesFoundDesc')
+                        : t('admin.noCategoriesYetDesc')
                     }
                     action={
                       categorySearch
                         ? {
-                            label: 'Hapus Pencarian',
+                            label: t('admin.clearSearch'),
                             onClick: () => setCategorySearch(''),
                           }
                         : {
-                            label: 'Tambah Kategori',
+                            label: t('admin.addCategory'),
                             onClick: () => setShowCreateCategoryForm(true),
                           }
                     }
@@ -497,7 +498,7 @@ export function AdminMenuManagement() {
                         </div>
                         <h3 className="font-medium text-gray-900 mb-2">{category.name}</h3>
                         <p className="text-sm text-gray-500 mb-4 line-clamp-2">
-                          {category.description || "No description"}
+                          {category.description || t('admin.noDescription')}
                         </p>
                         <div className="flex justify-center space-x-2">
                           <Button
@@ -507,7 +508,7 @@ export function AdminMenuManagement() {
                             className="gap-1"
                           >
                             <Edit className="h-4 w-4" />
-                            Edit
+                            {t('common.edit')}
                           </Button>
                           <Button
                             size="sm"
@@ -516,7 +517,7 @@ export function AdminMenuManagement() {
                             className="gap-1 text-red-600 hover:text-red-700 hover:border-red-300"
                           >
                             <Trash2 className="h-4 w-4" />
-                            Delete
+                            {t('common.delete')}
                           </Button>
                         </div>
                       </div>
@@ -531,7 +532,7 @@ export function AdminMenuManagement() {
               <div className="mt-6 space-y-4">
                 {isFetchingCategories && !isLoadingCategories && (
                   <div className="flex justify-center">
-                    <InlineLoading text="Updating categories..." />
+                    <InlineLoading text={t('admin.updatingCategories')} />
                   </div>
                 )}
                 <PaginationControlsComponent

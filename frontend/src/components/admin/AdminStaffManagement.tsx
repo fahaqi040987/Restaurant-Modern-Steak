@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,7 @@ import type { User } from '@/types'
 type DisplayMode = 'table' | 'cards'
 
 export function AdminStaffManagement() {
+  const { t } = useTranslation()
   const [displayMode, setDisplayMode] = useState<DisplayMode>('table')
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -96,9 +98,9 @@ export function AdminStaffManagement() {
 
   const handleDeleteUser = (user: User) => {
     const displayName = `${user.first_name} ${user.last_name}`
-    if (confirm(`Are you sure you want to delete ${displayName}?`)) {
-      deleteUserMutation.mutate({ 
-        id: user.id.toString(), 
+    if (confirm(t('admin.confirmDeleteStaff', { name: displayName }))) {
+      deleteUserMutation.mutate({
+        id: user.id.toString(),
         username: displayName
       })
     }
@@ -160,9 +162,9 @@ export function AdminStaffManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Staff Management</h2>
+          <h2 className="text-3xl font-bold tracking-tight">{t('admin.staffManagement')}</h2>
           <p className="text-muted-foreground">
-            Manage your restaurant staff and their permissions
+            {t('admin.staffManagementDesc')}
           </p>
         </div>
         <div className="flex items-center space-x-4">
@@ -175,7 +177,7 @@ export function AdminStaffManagement() {
               className="px-3"
             >
               <Table className="h-4 w-4 mr-1" />
-              Table
+              {t('admin.tableView')}
             </Button>
             <Button
               variant={displayMode === 'cards' ? 'default' : 'ghost'}
@@ -184,12 +186,12 @@ export function AdminStaffManagement() {
               className="px-3"
             >
               <Users className="h-4 w-4 mr-1" />
-              Cards
+              {t('admin.cardsView')}
             </Button>
           </div>
           <Button onClick={() => setShowCreateForm(true)} className="gap-2">
             <UserPlus className="h-4 w-4" />
-            Add New Staff
+            {t('admin.addNewStaff')}
           </Button>
         </div>
       </div>
@@ -200,7 +202,7 @@ export function AdminStaffManagement() {
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search staff by name, email, or username..."
+              placeholder={t('admin.searchStaffPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"
@@ -228,20 +230,20 @@ export function AdminStaffManagement() {
             <CardContent className="pt-6">
               <EmptyState
                 icon={Users}
-                title={searchTerm ? 'Tidak ada staff ditemukan' : 'Belum ada staff'}
+                title={searchTerm ? t('admin.noStaffFound') : t('admin.noStaffYet')}
                 description={
                   searchTerm
-                    ? 'Tidak ada staff yang cocok dengan pencarian. Coba kata kunci lain.'
-                    : 'Mulai dengan menambahkan staff baru untuk mengelola restoran Anda.'
+                    ? t('admin.noStaffFoundDesc')
+                    : t('admin.noStaffYetDesc')
                 }
                 action={
                   searchTerm
                     ? {
-                        label: 'Hapus Pencarian',
+                        label: t('admin.clearSearch'),
                         onClick: () => setSearchTerm(''),
                       }
                     : {
-                        label: 'Tambah Staff Baru',
+                        label: t('admin.addNewStaff'),
                         onClick: () => setShowCreateForm(true),
                       }
                 }
@@ -279,7 +281,7 @@ export function AdminStaffManagement() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
-                            Joined {new Date(user.created_at).toLocaleDateString()}
+                            {t('admin.joined')} {new Date(user.created_at).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
@@ -292,7 +294,7 @@ export function AdminStaffManagement() {
                         className="gap-2"
                       >
                         <Edit className="h-4 w-4" />
-                        Edit
+                        {t('common.edit')}
                       </Button>
                       <Button
                         size="sm"
@@ -306,7 +308,7 @@ export function AdminStaffManagement() {
                         ) : (
                           <>
                             <Trash2 className="h-4 w-4" />
-                            Delete
+                            {t('common.delete')}
                           </>
                         )}
                       </Button>
@@ -324,7 +326,7 @@ export function AdminStaffManagement() {
         <div className="mt-6 space-y-4">
           {isFetching && !isLoading && (
             <div className="flex justify-center">
-              <InlineLoading text="Updating results..." />
+              <InlineLoading text={t('admin.updatingResults')} />
             </div>
           )}
           <PaginationControlsComponent

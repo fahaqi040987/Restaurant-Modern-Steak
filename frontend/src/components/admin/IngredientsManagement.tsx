@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '@/api/client'
 import {
@@ -76,6 +77,7 @@ interface HistoryRecord {
 }
 
 export default function IngredientsManagement() {
+  const { t } = useTranslation()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [restockDialogOpen, setRestockDialogOpen] = useState(false)
@@ -128,7 +130,7 @@ export default function IngredientsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredients'] })
-      showSuccessToast('Bahan baku berhasil ditambahkan')
+      showSuccessToast(t('admin.ingredientCreatedSuccess'))
       setCreateDialogOpen(false)
       setCreateForm({
         name: '',
@@ -142,7 +144,7 @@ export default function IngredientsManagement() {
       })
     },
     onError: () => {
-      showErrorToast('Gagal menambahkan bahan baku')
+      showErrorToast(t('admin.ingredientCreatedError'))
     },
   })
 
@@ -154,11 +156,11 @@ export default function IngredientsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredients'] })
-      showSuccessToast('Bahan baku berhasil diperbarui')
+      showSuccessToast(t('admin.ingredientUpdatedSuccess'))
       setEditDialogOpen(false)
     },
     onError: () => {
-      showErrorToast('Gagal memperbarui bahan baku')
+      showErrorToast(t('admin.ingredientUpdatedError'))
     },
   })
 
@@ -169,10 +171,10 @@ export default function IngredientsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredients'] })
-      showSuccessToast('Bahan baku berhasil dihapus')
+      showSuccessToast(t('admin.ingredientDeletedSuccess'))
     },
     onError: () => {
-      showErrorToast('Gagal menghapus bahan baku')
+      showErrorToast(t('admin.ingredientDeletedError'))
     },
   })
 
@@ -184,12 +186,12 @@ export default function IngredientsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredients'] })
-      showSuccessToast('Stok berhasil ditambahkan')
+      showSuccessToast(t('admin.restockSuccess'))
       setRestockDialogOpen(false)
       setRestockForm({ quantity: 0, notes: '' })
     },
     onError: () => {
-      showErrorToast('Gagal menambah stok')
+      showErrorToast(t('admin.restockError'))
     },
   })
 
@@ -198,21 +200,21 @@ export default function IngredientsManagement() {
       return (
         <Badge variant="destructive" className="gap-1">
           <XCircle size={14} />
-          Habis
+          {t('admin.stockOut')}
         </Badge>
       )
     } else if (status === 'low') {
       return (
         <Badge variant="secondary" className="gap-1">
           <AlertTriangle size={14} />
-          Stok Rendah
+          {t('admin.stockLow')}
         </Badge>
       )
     }
     return (
       <Badge variant="outline" className="gap-1">
         <CheckCircle size={14} />
-        Aman
+        {t('admin.stockOk')}
       </Badge>
     )
   }
@@ -247,7 +249,7 @@ export default function IngredientsManagement() {
   }
 
   const handleDelete = (ingredient: Ingredient) => {
-    if (confirm(`Yakin ingin menghapus ${ingredient.name}?`)) {
+    if (confirm(t('admin.confirmDeleteIngredient', { name: ingredient.name }))) {
       deleteMutation.mutate(ingredient.id)
     }
   }
@@ -256,12 +258,12 @@ export default function IngredientsManagement() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Bahan Baku</h2>
-          <p className="text-muted-foreground">Kelola stok bahan baku restoran</p>
+          <h2 className="text-2xl font-bold">{t('admin.ingredientsManagement')}</h2>
+          <p className="text-muted-foreground">{t('admin.ingredientsManagementDesc')}</p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="mr-2" size={16} />
-          Tambah Bahan Baku
+          {t('admin.addIngredient')}
         </Button>
       </div>
 
@@ -270,7 +272,7 @@ export default function IngredientsManagement() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Bahan Baku</p>
+              <p className="text-sm text-muted-foreground">{t('admin.totalIngredients')}</p>
               <p className="text-2xl font-bold">{ingredients.length}</p>
             </div>
             <Package className="text-muted-foreground" size={32} />
@@ -279,7 +281,7 @@ export default function IngredientsManagement() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Stok Rendah</p>
+              <p className="text-sm text-muted-foreground">{t('admin.stockLow')}</p>
               <p className="text-2xl font-bold text-yellow-600">
                 {ingredients.filter((i) => i.status === 'low').length}
               </p>
@@ -290,7 +292,7 @@ export default function IngredientsManagement() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Nilai Stok</p>
+              <p className="text-sm text-muted-foreground">{t('admin.totalStockValue')}</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(ingredients.reduce((sum, i) => sum + i.total_value, 0))}
               </p>
@@ -302,20 +304,20 @@ export default function IngredientsManagement() {
 
       {/* Ingredients Table */}
       {isLoading ? (
-        <div className="text-center py-8">Loading...</div>
+        <div className="text-center py-8">{t('common.loading')}</div>
       ) : (
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nama</TableHead>
-                <TableHead>Stok Saat Ini</TableHead>
-                <TableHead>Min / Max</TableHead>
-                <TableHead>Harga Satuan</TableHead>
-                <TableHead>Total Nilai</TableHead>
-                <TableHead>Supplier</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+                <TableHead>{t('common.name')}</TableHead>
+                <TableHead>{t('admin.currentStock')}</TableHead>
+                <TableHead>{t('admin.minMax')}</TableHead>
+                <TableHead>{t('admin.unitPrice')}</TableHead>
+                <TableHead>{t('admin.totalValue')}</TableHead>
+                <TableHead>{t('admin.supplier')}</TableHead>
+                <TableHead>{t('common.status')}</TableHead>
+                <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -324,8 +326,8 @@ export default function IngredientsManagement() {
                   <TableCell colSpan={8} className="h-[400px] p-0">
                     <EmptyState
                       icon={Package}
-                      title="Belum ada bahan baku"
-                      description="Mulai dengan menambahkan bahan baku pertama untuk tracking stok bahan mentah seperti kentang, tomat, saus, dll."
+                      title={t('admin.noIngredientsYet')}
+                      description={t('admin.noIngredientsDesc')}
                     />
                   </TableCell>
                 </TableRow>
@@ -407,46 +409,46 @@ export default function IngredientsManagement() {
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Tambah Bahan Baku</DialogTitle>
-            <DialogDescription>Tambah bahan baku baru ke inventori</DialogDescription>
+            <DialogTitle>{t('admin.addIngredient')}</DialogTitle>
+            <DialogDescription>{t('admin.addIngredientToInventory')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name">Nama Bahan Baku *</Label>
+              <Label htmlFor="name">{t('admin.ingredientName')} *</Label>
               <Input
                 id="name"
                 value={createForm.name}
                 onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                placeholder="Kentang, Tomat, dll"
+                placeholder={t('admin.ingredientNamePlaceholder')}
               />
             </div>
             <div>
-              <Label htmlFor="description">Deskripsi</Label>
+              <Label htmlFor="description">{t('common.description')}</Label>
               <Textarea
                 id="description"
                 value={createForm.description}
                 onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                placeholder="Keterangan tambahan"
+                placeholder={t('admin.additionalNotes')}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="unit">Satuan *</Label>
+                <Label htmlFor="unit">{t('admin.ingredientUnit')} *</Label>
                 <Select value={createForm.unit} onValueChange={(value) => setCreateForm({ ...createForm, unit: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="kg">Kilogram (kg)</SelectItem>
-                    <SelectItem value="liter">Liter</SelectItem>
-                    <SelectItem value="pcs">Pieces (pcs)</SelectItem>
-                    <SelectItem value="box">Box</SelectItem>
-                    <SelectItem value="dozen">Dozen</SelectItem>
+                    <SelectItem value="kg">{t('admin.unitKg')}</SelectItem>
+                    <SelectItem value="liter">{t('admin.unitLiter')}</SelectItem>
+                    <SelectItem value="pcs">{t('admin.unitPcs')}</SelectItem>
+                    <SelectItem value="box">{t('admin.unitBox')}</SelectItem>
+                    <SelectItem value="dozen">{t('admin.unitDozen')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="unit_cost">Harga Satuan (Rp)</Label>
+                <Label htmlFor="unit_cost">{t('admin.unitPriceRp')}</Label>
                 <Input
                   id="unit_cost"
                   type="number"
@@ -457,7 +459,7 @@ export default function IngredientsManagement() {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="current_stock">Stok Awal</Label>
+                <Label htmlFor="current_stock">{t('admin.initialStock')}</Label>
                 <Input
                   id="current_stock"
                   type="number"
@@ -466,7 +468,7 @@ export default function IngredientsManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="minimum_stock">Min</Label>
+                <Label htmlFor="minimum_stock">{t('admin.min')}</Label>
                 <Input
                   id="minimum_stock"
                   type="number"
@@ -475,7 +477,7 @@ export default function IngredientsManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="maximum_stock">Max</Label>
+                <Label htmlFor="maximum_stock">{t('admin.max')}</Label>
                 <Input
                   id="maximum_stock"
                   type="number"
@@ -485,21 +487,21 @@ export default function IngredientsManagement() {
               </div>
             </div>
             <div>
-              <Label htmlFor="supplier">Supplier</Label>
+              <Label htmlFor="supplier">{t('admin.supplier')}</Label>
               <Input
                 id="supplier"
                 value={createForm.supplier}
                 onChange={(e) => setCreateForm({ ...createForm, supplier: e.target.value })}
-                placeholder="Nama supplier"
+                placeholder={t('admin.supplierName')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-              Batal
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleCreateSubmit} disabled={!createForm.name || !createForm.unit}>
-              Simpan
+              {t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -509,13 +511,13 @@ export default function IngredientsManagement() {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Bahan Baku</DialogTitle>
-            <DialogDescription>Perbarui informasi bahan baku</DialogDescription>
+            <DialogTitle>{t('admin.editIngredient')}</DialogTitle>
+            <DialogDescription>{t('admin.updateIngredientInfo')}</DialogDescription>
           </DialogHeader>
           {selectedIngredient && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="edit_name">Nama Bahan Baku</Label>
+                <Label htmlFor="edit_name">{t('admin.ingredientName')}</Label>
                 <Input
                   id="edit_name"
                   value={selectedIngredient.name}
@@ -525,7 +527,7 @@ export default function IngredientsManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="edit_description">Deskripsi</Label>
+                <Label htmlFor="edit_description">{t('common.description')}</Label>
                 <Textarea
                   id="edit_description"
                   value={selectedIngredient.description}
@@ -536,7 +538,7 @@ export default function IngredientsManagement() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="edit_unit_cost">Harga Satuan</Label>
+                  <Label htmlFor="edit_unit_cost">{t('admin.unitPrice')}</Label>
                   <Input
                     id="edit_unit_cost"
                     type="number"
@@ -547,7 +549,7 @@ export default function IngredientsManagement() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="edit_supplier">Supplier</Label>
+                  <Label htmlFor="edit_supplier">{t('admin.supplier')}</Label>
                   <Input
                     id="edit_supplier"
                     value={selectedIngredient.supplier}
@@ -559,7 +561,7 @@ export default function IngredientsManagement() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="edit_minimum_stock">Stok Minimum</Label>
+                  <Label htmlFor="edit_minimum_stock">{t('inventory.minimumStock')}</Label>
                   <Input
                     id="edit_minimum_stock"
                     type="number"
@@ -570,7 +572,7 @@ export default function IngredientsManagement() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="edit_maximum_stock">Stok Maximum</Label>
+                  <Label htmlFor="edit_maximum_stock">{t('inventory.maximumStock')}</Label>
                   <Input
                     id="edit_maximum_stock"
                     type="number"
@@ -585,9 +587,9 @@ export default function IngredientsManagement() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Batal
+              {t('common.cancel')}
             </Button>
-            <Button onClick={handleEditSubmit}>Simpan</Button>
+            <Button onClick={handleEditSubmit}>{t('common.save')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -596,14 +598,14 @@ export default function IngredientsManagement() {
       <Dialog open={restockDialogOpen} onOpenChange={setRestockDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Tambah Stok</DialogTitle>
+            <DialogTitle>{t('inventory.addStock')}</DialogTitle>
             <DialogDescription>
-              Tambah stok untuk {selectedIngredient?.name}
+              {t('admin.addStockFor', { name: selectedIngredient?.name })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="quantity">Jumlah ({selectedIngredient?.unit})</Label>
+              <Label htmlFor="quantity">{t('inventory.quantity')} ({selectedIngredient?.unit})</Label>
               <Input
                 id="quantity"
                 type="number"
@@ -613,21 +615,21 @@ export default function IngredientsManagement() {
               />
             </div>
             <div>
-              <Label htmlFor="notes">Catatan (Opsional)</Label>
+              <Label htmlFor="notes">{t('admin.notesOptional')}</Label>
               <Textarea
                 id="notes"
                 value={restockForm.notes}
                 onChange={(e) => setRestockForm({ ...restockForm, notes: e.target.value })}
-                placeholder="Pembelian dari supplier..."
+                placeholder={t('admin.purchaseFromSupplier')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRestockDialogOpen(false)}>
-              Batal
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleRestockSubmit} disabled={restockForm.quantity <= 0}>
-              Tambah Stok
+              {t('inventory.addStock')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -637,11 +639,11 @@ export default function IngredientsManagement() {
       <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[600px] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Riwayat Stok</DialogTitle>
+            <DialogTitle>{t('inventory.stockHistory')}</DialogTitle>
             <DialogDescription>{selectedIngredient?.name}</DialogDescription>
           </DialogHeader>
           {history.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">Belum ada riwayat</div>
+            <div className="text-center py-8 text-muted-foreground">{t('admin.noHistory')}</div>
           ) : (
             <div className="space-y-4">
               {history.map((record) => (
@@ -649,7 +651,7 @@ export default function IngredientsManagement() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">
-                        {record.operation === 'restock' ? 'Restock' : record.operation} {record.quantity} {selectedIngredient?.unit}
+                        {record.operation === 'restock' ? t('admin.restock') : record.operation} {record.quantity} {selectedIngredient?.unit}
                       </span>
                       <Badge variant="outline" className="text-xs">
                         {record.reason}
@@ -674,7 +676,7 @@ export default function IngredientsManagement() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setHistoryDialogOpen(false)}>
-              Tutup
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

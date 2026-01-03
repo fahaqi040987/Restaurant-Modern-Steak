@@ -48,6 +48,23 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Restoran-master color palette
+        restoran: {
+          primary: "var(--public-accent)",
+          "primary-light": "var(--public-accent-light)",
+          secondary: "#6c757d",
+          bg: "var(--public-bg-light)",
+          "bg-dark": "#1a1a1a",
+          text: "#212529",
+          "text-light": "#343a40",
+          border: "#dee2e6",
+        },
+      },
+      fontFamily: {
+        // Restoran-master font families
+        heading: ["Nunito", "sans-serif"],
+        body: ["Heebo", "sans-serif"],
+        accent: ["Pacifico", "cursive"],
       },
       borderRadius: {
         lg: "var(--radius)",

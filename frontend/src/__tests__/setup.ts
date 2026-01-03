@@ -1,5 +1,41 @@
 import '@testing-library/jest-dom'
 
+// Mock IntersectionObserver for scroll animations
+global.IntersectionObserver = class IntersectionObserver {
+  root: Element | null = null
+  rootMargin: string = ''
+  thresholds: ReadonlyArray<number> = []
+
+  constructor(
+    callback: IntersectionObserverCallback,
+    _options?: IntersectionObserverInit
+  ) {
+    // Immediately trigger callback with isIntersecting: true
+    setTimeout(() => {
+      callback(
+        [
+          {
+            isIntersecting: true,
+            boundingClientRect: {} as DOMRectReadOnly,
+            intersectionRatio: 1,
+            intersectionRect: {} as DOMRectReadOnly,
+            rootBounds: null,
+            target: document.body,
+            time: 0,
+          },
+        ],
+        this
+      )
+    }, 0)
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return []
+  }
+}
+
 // Mock matchMedia for responsive tests
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

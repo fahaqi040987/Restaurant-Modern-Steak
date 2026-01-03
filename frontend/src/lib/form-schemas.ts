@@ -38,8 +38,14 @@ export const createProductSchema = z.object({
   name: requiredStringSchema.min(2, 'Product name must be at least 2 characters'),
   description: z.string().optional(),
   price: priceSchema,
-  category_id: z.string().or(z.number()).transform(val => Number(val)),
-  image_url: z.string().url().optional().or(z.literal('')),
+  category_id: z.string().min(1, 'Please select a category'),
+  image_url: z.string()
+    .refine(
+      (val) => val === '' || val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
+      'Image URL must be a valid URL or empty'
+    )
+    .optional()
+    .or(z.literal('')),
   status: productStatusSchema.default('active'),
   preparation_time: z.number().min(0).max(120).default(5), // minutes
 })
@@ -52,7 +58,13 @@ export const updateProductSchema = createProductSchema.partial().extend({
 export const createCategorySchema = z.object({
   name: requiredStringSchema.min(2, 'Category name must be at least 2 characters'),
   description: z.string().optional(),
-  image_url: z.string().url().optional().or(z.literal('')),
+  image_url: z.string()
+    .refine(
+      (val) => val === '' || val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
+      'Image URL must be a valid URL or empty'
+    )
+    .optional()
+    .or(z.literal('')),
   sort_order: z.number().min(0).default(0),
 })
 
@@ -115,6 +127,64 @@ export const loginSchema = z.object({
   password: requiredStringSchema,
 })
 
+// ============================================
+// Reservation Schemas (Feature: 004-restaurant-management)
+// Public website table booking form validation
+// ============================================
+
+export const reservationStatusValues = ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'] as const
+export const reservationStatusSchema = z.enum(reservationStatusValues)
+
+/**
+ * Zod schema for public reservation form validation
+ * Validates customer reservation submissions from the public website
+ */
+export const reservationSchema = z.object({
+  customer_name: z
+    .string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name must be less than 100 characters'),
+  email: z
+    .string()
+    .email('Please enter a valid email address'),
+  phone: z
+    .string()
+    .min(8, 'Phone number must be at least 8 characters')
+    .max(20, 'Phone number must be less than 20 characters')
+    .regex(/^[+\d\s()-]+$/, 'Please enter a valid phone number'),
+  party_size: z
+    .number({ required_error: 'Party size is required', invalid_type_error: 'Please enter a valid number' })
+    .int('Party size must be a whole number')
+    .min(1, 'Party size must be at least 1')
+    .max(20, 'Party size cannot exceed 20'),
+  reservation_date: z
+    .string()
+    .min(1, 'Please select a date')
+    .refine((date) => {
+      const selected = new Date(date)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      return selected >= today
+    }, 'Reservation date must be today or in the future'),
+  reservation_time: z
+    .string()
+    .min(1, 'Please select a time')
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Please enter a valid time (HH:MM)'),
+  special_requests: z
+    .string()
+    .max(500, 'Special requests must be less than 500 characters')
+    .optional()
+    .or(z.literal('')),
+})
+
+/**
+ * Schema for updating reservation status (admin)
+ */
+export const updateReservationStatusSchema = z.object({
+  status: reservationStatusSchema,
+  notes: z.string().max(500, 'Notes must be less than 500 characters').optional(),
+})
+
 // Export types
 export type CreateUserData = z.infer<typeof createUserSchema>
 export type UpdateUserData = z.infer<typeof updateUserSchema>
@@ -127,3 +197,7 @@ export type UpdateTableData = z.infer<typeof updateTableSchema>
 export type CreateOrderData = z.infer<typeof createOrderSchema>
 export type LoginData = z.infer<typeof loginSchema>
 export type POSSettingsData = z.infer<typeof posSettingsSchema>
+
+// Reservation types
+export type ReservationFormData = z.infer<typeof reservationSchema>
+export type UpdateReservationStatusData = z.infer<typeof updateReservationStatusSchema>

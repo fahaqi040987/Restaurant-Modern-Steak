@@ -113,11 +113,12 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	for rows.Next() {
 		var product models.Product
 		var categoryName, categoryColor sql.NullString
+		var preparationTime, sortOrder sql.NullInt32
 
 		err := rows.Scan(
 			&product.ID, &product.CategoryID, &product.Name, &product.Description,
 			&product.Price, &product.ImageURL, &product.Barcode, &product.SKU,
-			&product.IsAvailable, &product.PreparationTime, &product.SortOrder,
+			&product.IsAvailable, &preparationTime, &sortOrder,
 			&product.CreatedAt, &product.UpdatedAt,
 			&categoryName, &categoryColor,
 		)
@@ -128,6 +129,14 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 				Error:   stringPtr(err.Error()),
 			})
 			return
+		}
+
+		// Convert nullable ints
+		if preparationTime.Valid {
+			product.PreparationTime = int(preparationTime.Int32)
+		}
+		if sortOrder.Valid {
+			product.SortOrder = int(sortOrder.Int32)
 		}
 
 		// Add category info if available
@@ -171,9 +180,10 @@ func (h *ProductHandler) GetProduct(c *gin.Context) {
 
 	var product models.Product
 	var categoryName, categoryColor sql.NullString
+	var preparationTime, sortOrder sql.NullInt32
 
 	query := `
-		SELECT p.id, p.category_id, p.name, p.description, p.price, p.image_url, 
+		SELECT p.id, p.category_id, p.name, p.description, p.price, p.image_url,
 		       p.barcode, p.sku, p.is_available, p.preparation_time, p.sort_order,
 		       p.created_at, p.updated_at,
 		       c.name as category_name, c.color as category_color
@@ -185,7 +195,7 @@ func (h *ProductHandler) GetProduct(c *gin.Context) {
 	err = h.db.QueryRow(query, productID).Scan(
 		&product.ID, &product.CategoryID, &product.Name, &product.Description,
 		&product.Price, &product.ImageURL, &product.Barcode, &product.SKU,
-		&product.IsAvailable, &product.PreparationTime, &product.SortOrder,
+		&product.IsAvailable, &preparationTime, &sortOrder,
 		&product.CreatedAt, &product.UpdatedAt,
 		&categoryName, &categoryColor,
 	)
@@ -206,6 +216,14 @@ func (h *ProductHandler) GetProduct(c *gin.Context) {
 			Error:   stringPtr(err.Error()),
 		})
 		return
+	}
+
+	// Convert nullable ints
+	if preparationTime.Valid {
+		product.PreparationTime = int(preparationTime.Int32)
+	}
+	if sortOrder.Valid {
+		product.SortOrder = int(sortOrder.Int32)
 	}
 
 	// Add category info if available
@@ -322,11 +340,12 @@ func (h *ProductHandler) GetProductsByCategory(c *gin.Context) {
 	for rows.Next() {
 		var product models.Product
 		var categoryName, categoryColor sql.NullString
+		var preparationTime, sortOrder sql.NullInt32
 
 		err := rows.Scan(
 			&product.ID, &product.CategoryID, &product.Name, &product.Description,
 			&product.Price, &product.ImageURL, &product.Barcode, &product.SKU,
-			&product.IsAvailable, &product.PreparationTime, &product.SortOrder,
+			&product.IsAvailable, &preparationTime, &sortOrder,
 			&product.CreatedAt, &product.UpdatedAt,
 			&categoryName, &categoryColor,
 		)
@@ -337,6 +356,14 @@ func (h *ProductHandler) GetProductsByCategory(c *gin.Context) {
 				Error:   stringPtr(err.Error()),
 			})
 			return
+		}
+
+		// Convert nullable ints
+		if preparationTime.Valid {
+			product.PreparationTime = int(preparationTime.Int32)
+		}
+		if sortOrder.Valid {
+			product.SortOrder = int(sortOrder.Int32)
 		}
 
 		// Add category info
@@ -610,9 +637,10 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	// Fetch updated product
 	var product models.Product
 	var categoryName, categoryColor sql.NullString
+	var preparationTime, sortOrder sql.NullInt32
 
 	fetchQuery := `
-		SELECT p.id, p.category_id, p.name, p.description, p.price, p.image_url, 
+		SELECT p.id, p.category_id, p.name, p.description, p.price, p.image_url,
 		       p.barcode, p.sku, p.is_available, p.preparation_time, p.sort_order,
 		       p.created_at, p.updated_at,
 		       c.name as category_name, c.color as category_color
@@ -624,7 +652,7 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	err = h.db.QueryRow(fetchQuery, productID).Scan(
 		&product.ID, &product.CategoryID, &product.Name, &product.Description,
 		&product.Price, &product.ImageURL, &product.Barcode, &product.SKU,
-		&product.IsAvailable, &product.PreparationTime, &product.SortOrder,
+		&product.IsAvailable, &preparationTime, &sortOrder,
 		&product.CreatedAt, &product.UpdatedAt,
 		&categoryName, &categoryColor,
 	)
@@ -636,6 +664,14 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 			Error:   stringPtr(err.Error()),
 		})
 		return
+	}
+
+	// Convert nullable ints
+	if preparationTime.Valid {
+		product.PreparationTime = int(preparationTime.Int32)
+	}
+	if sortOrder.Valid {
+		product.SortOrder = int(sortOrder.Int32)
 	}
 
 	// Add category info

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { KitchenHeader } from './KitchenHeader'
 import { KitchenOrderCard } from './KitchenOrderCard'
@@ -11,6 +12,7 @@ interface KitchenLayoutProps {
 }
 
 export function KitchenLayout({ user }: KitchenLayoutProps) {
+  const { t } = useTranslation()
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [isTabletOptimized, setIsTabletOptimized] = useState(true) // Kitchen is primarily tablet-focused
   const [searchQuery, setSearchQuery] = useState('')
@@ -103,7 +105,7 @@ export function KitchenLayout({ user }: KitchenLayoutProps) {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-500">Loading kitchen orders...</p>
+              <p className="text-gray-500">{t('kitchen.loadingKitchenOrders')}</p>
             </div>
           </div>
         ) : filteredOrders.length === 0 ? (
@@ -114,9 +116,9 @@ export function KitchenLayout({ user }: KitchenLayoutProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Orders</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('kitchen.noOrders')}</h3>
               <p className="text-gray-500">
-                {searchQuery ? 'No orders match your search criteria.' : 'No active kitchen orders at the moment.'}
+                {searchQuery ? t('kitchen.noOrdersSearchDesc') : t('kitchen.noActiveKitchenOrders')}
               </p>
             </div>
           </div>
@@ -128,7 +130,7 @@ export function KitchenLayout({ user }: KitchenLayoutProps) {
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                   <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                  New Orders ({ordersByStatus.confirmed.length})
+                  {t('kitchen.newOrders')} ({ordersByStatus.confirmed.length})
                 </h2>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {ordersByStatus.confirmed.map((order: Order) => (
@@ -148,7 +150,7 @@ export function KitchenLayout({ user }: KitchenLayoutProps) {
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                   <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                  Preparing ({ordersByStatus.preparing.length})
+                  {t('kitchen.preparing')} ({ordersByStatus.preparing.length})
                 </h2>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {ordersByStatus.preparing.map((order: Order) => (
@@ -168,7 +170,7 @@ export function KitchenLayout({ user }: KitchenLayoutProps) {
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                  Ready for Service ({ordersByStatus.ready.length})
+                  {t('kitchen.readyForService')} ({ordersByStatus.ready.length})
                 </h2>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {ordersByStatus.ready.map((order: Order) => (

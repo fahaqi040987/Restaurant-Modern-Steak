@@ -1,14 +1,15 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CardSkeleton } from '@/components/ui/loading-skeletons';
-import { 
-  RefreshCw, 
-  Volume2, 
-  VolumeX, 
+import {
+  RefreshCw,
+  Volume2,
+  VolumeX,
   Clock,
   ChefHat,
   Package,
@@ -25,6 +26,7 @@ interface NewEnhancedKitchenLayoutProps {
 }
 
 export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps) {
+  const { t } = useTranslation();
   const [selectedTab, setSelectedTab] = useState('active-orders');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [showSoundSettings, setShowSoundSettings] = useState(false);
@@ -253,7 +255,7 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
             />
           </div>
           <div className="text-sm text-muted-foreground mt-2 font-medium">
-            {readyItems} ready • {servedItems} served • {totalItems - readyItems - servedItems} cooking ({Math.round(progress)}% complete)
+            {readyItems} {t('kitchen.ready')} • {servedItems} {t('kitchen.served')} • {totalItems - readyItems - servedItems} {t('kitchen.cooking')} ({Math.round(progress)}% {t('kitchen.completed')})
           </div>
         </CardHeader>
         
@@ -262,7 +264,7 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
           <div className="space-y-3">
             <h4 className="font-semibold text-gray-900 flex items-center">
               <Package className="w-4 h-4 mr-2" />
-              Food Items:
+              {t('kitchen.foodItems')}
             </h4>
             
             {displayItems.map((item, index) => {
@@ -307,15 +309,15 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
                   <div className="flex items-center justify-between mt-2">
                     <div className={cn(
                       "text-xs font-medium px-2 py-1 rounded-full",
-                      isServed 
+                      isServed
                         ? "bg-gray-100 text-gray-600"
-                        : isReady 
-                          ? "bg-green-100 text-green-800" 
+                        : isReady
+                          ? "bg-green-100 text-green-800"
                           : "bg-orange-100 text-orange-800"
                     )}>
-                      {isServed ? '🍽️ Served' : isReady ? '✅ Ready' : '🍳 Cooking'}
+                      {isServed ? `🍽️ ${t('kitchen.served')}` : isReady ? `✅ ${t('kitchen.ready')}` : `🍳 ${t('kitchen.cooking')}`}
                     </div>
-                    
+
                     {/* Individual Item Serve Button */}
                     {isReady && !isServed && (
                       <Button
@@ -327,7 +329,7 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
                           handleItemServe(order.id, item.id, item.product?.name || 'Item');
                         }}
                       >
-                        🍽️ Serve Now
+                        🍽️ {t('kitchen.serveNow')}
                       </Button>
                     )}
                   </div>
@@ -340,7 +342,7 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
           {/* Order Notes */}
           {order.notes && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <h5 className="font-semibold text-blue-900 mb-1">Order Notes:</h5>
+              <h5 className="font-semibold text-blue-900 mb-1">{t('kitchen.orderNotes')}</h5>
               <p className="text-blue-800 text-sm">{order.notes}</p>
             </div>
           )}
@@ -348,13 +350,13 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             {order.status === 'confirmed' && (
-              <Button 
+              <Button
                 onClick={() => handleOrderStatusUpdate(order.id, 'preparing')}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 h-12 text-lg"
                 size="lg"
               >
                 <ChefHat className="w-5 h-5 mr-2" />
-                Start Cooking
+                {t('kitchen.startCooking')}
               </Button>
             )}
             
@@ -399,17 +401,17 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
                 size="lg"
               >
                 <CheckCircle className="w-5 h-5 mr-2" />
-                Mark All Ready
+                {t('kitchen.markAllReady')}
               </Button>
             )}
-            
+
             {order.status === 'ready' && (
               <div className="flex-1 bg-green-100 border-2 border-green-500 rounded-lg p-3 text-center">
                 <div className="text-green-800 font-bold text-lg">
-                  🎉 Order Complete!
+                  🎉 {t('kitchen.orderComplete')}
                 </div>
                 <div className="text-green-600 text-sm">
-                  Ready for pickup/serving
+                  {t('kitchen.readyForPickupServing')}
                 </div>
               </div>
             )}
@@ -420,9 +422,9 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
   };
 
   // Takeaway Board Component
-  const TakeawayBoard = () => {
+  const TakeawayBoardInner = () => {
     // Only show takeaway orders that are ready but not yet served/completed
-    const takeawayOrders = kitchenRelevantOrders.filter(order => 
+    const takeawayOrders = kitchenRelevantOrders.filter(order =>
       order.order_type === 'takeout' && order.status === 'ready'
     );
 
@@ -430,7 +432,7 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
       return (
         <div className="text-center py-8">
           <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">No takeaway orders ready</p>
+          <p className="text-muted-foreground">{t('kitchen.noTakeawayReady')}</p>
         </div>
       );
     }
@@ -448,12 +450,12 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
                 </CardTitle>
                 <div className="text-lg font-semibold">{order.customer_name || 'Guest'}</div>
                 <Badge variant="outline" className="text-green-700 border-green-700">
-                  Ready for pickup
+                  {t('kitchen.readyForPickup', { count: 0 })}
                 </Badge>
               </CardHeader>
               <CardContent className="text-center">
                 <div className="text-sm text-muted-foreground">
-                  Ready for {waitTime} minutes
+                  {t('kitchen.readyFor', { minutes: waitTime })}
                 </div>
                 <div className="mt-2">
                   {order.items?.map((item) => (
@@ -476,12 +478,12 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Volume2 className="w-5 h-5" />
-          Sound Settings
+          {t('kitchen.soundSettings')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Enable Sounds</label>
+          <label className="text-sm font-medium">{t('kitchen.enableSounds')}</label>
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
             className={cn(
@@ -497,7 +499,7 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
         </div>
         
         <div className="space-y-2">
-          <label className="text-sm font-medium">Volume</label>
+          <label className="text-sm font-medium">{t('kitchen.volume')}</label>
           <input
             type="range"
             min="0"
@@ -510,51 +512,51 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
         </div>
         
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1"
             onClick={() => {
               // Play a simple beep sound for new order
               const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
               const oscillator = audioContext.createOscillator();
               const gainNode = audioContext.createGain();
-              
+
               oscillator.connect(gainNode);
               gainNode.connect(audioContext.destination);
-              
+
               oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
               gainNode.gain.setValueAtTime(volume * 0.3, audioContext.currentTime);
               gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-              
+
               oscillator.start(audioContext.currentTime);
               oscillator.stop(audioContext.currentTime + 0.5);
             }}
           >
-            Test New Order
+            {t('kitchen.testNewOrder')}
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1"
             onClick={() => {
               // Play a different beep sound for ready order
               const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
               const oscillator = audioContext.createOscillator();
               const gainNode = audioContext.createGain();
-              
+
               oscillator.connect(gainNode);
               gainNode.connect(audioContext.destination);
-              
+
               oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
               gainNode.gain.setValueAtTime(volume * 0.3, audioContext.currentTime);
               gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-              
+
               oscillator.start(audioContext.currentTime);
               oscillator.stop(audioContext.currentTime + 0.3);
             }}
           >
-            Test Ready
+            {t('kitchen.testReady')}
           </Button>
         </div>
       </CardContent>
@@ -573,9 +575,9 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
                 <ChefHat className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Kitchen Display</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{t('kitchen.title')}</h1>
                 <p className="text-sm text-gray-500">
-                  Chef {user.first_name} • {stats.total} active orders
+                  {t('kitchen.chef')} {user.first_name} • {t('kitchen.activeOrders', { count: stats.total })}
                 </p>
               </div>
             </div>
@@ -583,17 +585,17 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
             {/* Status badges */}
             <div className="flex items-center space-x-3">
               <Badge variant="secondary" className="text-sm">
-                {stats.newOrders} New
+                {stats.newOrders} {t('kitchen.new')}
               </Badge>
               <Badge variant="default" className="text-sm">
-                {stats.preparing} Preparing
+                {stats.preparing} {t('kitchen.preparing')}
               </Badge>
               <Badge variant="outline" className="text-sm">
-                {stats.ready} Ready
+                {stats.ready} {t('kitchen.ready')}
               </Badge>
               {stats.urgent > 0 && (
                 <Badge variant="destructive" className="text-sm">
-                  {stats.urgent} Urgent
+                  {stats.urgent} {t('kitchen.urgent')}
                 </Badge>
               )}
             </div>
@@ -608,7 +610,7 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
                 autoRefresh ? "bg-green-500 animate-pulse" : "bg-gray-300"
               )} />
               <span className="text-sm text-gray-600">
-                {autoRefresh ? 'Live updates' : 'Manual refresh'}
+                {autoRefresh ? t('kitchen.liveUpdates') : t('kitchen.manualRefresh')}
               </span>
             </div>
 
@@ -673,11 +675,11 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="active-orders" className="text-lg py-3">
               <ChefHat className="w-5 h-5 mr-2" />
-              Kitchen Orders ({stats.total})
+              {t('kitchen.kitchenOrders')} ({stats.total})
             </TabsTrigger>
             <TabsTrigger value="takeaway-ready" className="text-lg py-3">
               <Package className="w-5 h-5 mr-2" />
-              Takeaway Ready ({kitchenRelevantOrders.filter(o => o.order_type === 'takeout' && o.status === 'ready').length})
+              {t('kitchen.takeawayBoard')} ({kitchenRelevantOrders.filter(o => o.order_type === 'takeout' && o.status === 'ready').length})
             </TabsTrigger>
           </TabsList>
 
@@ -690,9 +692,9 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                   <AlertCircle className="w-8 h-8 mx-auto mb-4 text-red-600" />
-                  <p className="text-red-600">Failed to load orders</p>
+                  <p className="text-red-600">{t('kitchen.failedToLoad')}</p>
                   <Button onClick={() => refetch()} className="mt-2">
-                    Try Again
+                    {t('kitchen.tryAgain')}
                   </Button>
                 </div>
               </div>
@@ -700,8 +702,8 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                   <ChefHat className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Orders</h3>
-                  <p className="text-gray-500">Kitchen is all caught up! 🎉</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{t('kitchen.noOrders')}</h3>
+                  <p className="text-gray-500">{t('kitchen.kitchenCaughtUp')}</p>
                 </div>
               </div>
             ) : (
@@ -714,7 +716,7 @@ export function NewEnhancedKitchenLayout({ user }: NewEnhancedKitchenLayoutProps
           </TabsContent>
 
           <TabsContent value="takeaway-ready">
-            <TakeawayBoard />
+            <TakeawayBoardInner />
           </TabsContent>
         </Tabs>
       </div>

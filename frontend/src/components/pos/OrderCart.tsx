@@ -1,14 +1,15 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { 
-  ShoppingCart, 
-  Plus, 
-  Minus, 
-  X, 
-  Trash2, 
+import {
+  ShoppingCart,
+  Plus,
+  Minus,
+  X,
+  Trash2,
   CreditCard,
   Receipt,
   MapPin
@@ -42,22 +43,23 @@ export function OrderCart({
   onRemoveItem,
   onClearCart
 }: OrderCartProps) {
+  const { t } = useTranslation()
   const [notes, setNotes] = useState('')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   const handleProceedToPayment = () => {
     if (items.length === 0) {
-      alert('Please add items to the cart')
+      alert(t('pos.pleaseAddItems'))
       return
     }
 
     if (orderType === 'dine_in' && !selectedTable) {
-      alert('Please select a table for dine-in orders')
+      alert(t('pos.pleaseSelectTableForDineIn'))
       return
     }
 
     if (orderType !== 'dine_in' && !customerName.trim()) {
-      alert(`Please enter customer ${orderType === 'delivery' ? 'address' : 'name'}`)
+      alert(orderType === 'delivery' ? t('pos.pleaseEnterCustomerAddress') : t('pos.pleaseEnterCustomerName'))
       return
     }
 
@@ -82,7 +84,7 @@ export function OrderCart({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-5 h-5 text-gray-600" />
-            <h3 className="font-semibold text-gray-900">Current Order</h3>
+            <h3 className="font-semibold text-gray-900">{t('pos.currentOrder')}</h3>
           </div>
           {items.length > 0 && (
             <Button 
@@ -106,13 +108,13 @@ export function OrderCart({
               {selectedTable && (
                 <Badge variant="outline" className="flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
-                  Table {selectedTable.table_number}
+                  {t('pos.tableNumber', { number: selectedTable.table_number })}
                 </Badge>
               )}
             </div>
             {customerName && (
               <p className="text-sm text-gray-600">
-                {orderType === 'delivery' ? 'Address' : 'Customer'}: {customerName}
+                {orderType === 'delivery' ? t('pos.deliveryAddress') : t('pos.customer')}: {customerName}
               </p>
             )}
           </div>
@@ -125,9 +127,9 @@ export function OrderCart({
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="text-center">
               <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Cart is empty</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('pos.emptyCart')}</h3>
               <p className="text-gray-500">
-                Select products from the menu to start building an order.
+                {t('pos.emptyCartDesc')}
               </p>
             </div>
           </div>
@@ -142,7 +144,7 @@ export function OrderCart({
                         {item.product.name}
                       </h4>
                       <p className="text-xs text-gray-500 mt-1">
-                        {formatCurrency(item.product.price)} each
+                        {formatCurrency(item.product.price)} {t('pos.each')}
                       </p>
                     </div>
                     
@@ -194,10 +196,10 @@ export function OrderCart({
             {/* Order Notes */}
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Order Notes (Optional)
+                {t('pos.orderNotes')}
               </label>
               <Input
-                placeholder="Special instructions..."
+                placeholder={t('pos.specialInstructionsPlaceholder')}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="text-sm"
@@ -213,22 +215,22 @@ export function OrderCart({
           {/* Order Totals */}
           <div className="space-y-2 mb-4">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Subtotal</span>
+              <span className="text-gray-600">{t('pos.subtotal')}</span>
               <span className="font-medium">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Tax (10%)</span>
+              <span className="text-gray-600">{t('pos.taxPercent', { percent: 10 })}</span>
               <span className="font-medium">{formatCurrency(taxAmount)}</span>
             </div>
             <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">
-              <span>Total</span>
+              <span>{t('pos.total')}</span>
               <span>{formatCurrency(totalAmount)}</span>
             </div>
           </div>
 
           {/* Item Count */}
           <p className="text-sm text-gray-500 mb-4">
-            {items.reduce((sum, item) => sum + item.quantity, 0)} items in cart
+            {t('pos.itemsInCart', { count: items.reduce((sum, item) => sum + item.quantity, 0) })}
           </p>
 
           {/* Payment Button */}
@@ -239,13 +241,13 @@ export function OrderCart({
             size="lg"
           >
             <CreditCard className="w-4 h-4 mr-2" />
-            Proceed to Payment
+            {t('pos.proceedToPayment')}
           </Button>
 
           {!canProceedToPayment && items.length > 0 && (
             <p className="text-xs text-red-600 mt-2 text-center">
-              {orderType === 'dine_in' && !selectedTable && 'Please select a table'}
-              {orderType !== 'dine_in' && !customerName.trim() && `Please enter customer ${orderType === 'delivery' ? 'address' : 'name'}`}
+              {orderType === 'dine_in' && !selectedTable && t('pos.pleaseSelectTable')}
+              {orderType !== 'dine_in' && !customerName.trim() && (orderType === 'delivery' ? t('pos.pleaseEnterCustomerAddress') : t('pos.pleaseEnterCustomerName'))}
             </p>
           )}
         </div>

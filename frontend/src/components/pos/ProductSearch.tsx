@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { 
-  Search, 
-  X, 
-  ShoppingCart, 
+import {
+  Search,
+  X,
+  ShoppingCart,
   DollarSign,
   Package,
   Zap,
@@ -23,13 +24,14 @@ interface ProductSearchProps {
   className?: string
 }
 
-export function ProductSearch({ 
-  products, 
-  categories, 
-  onProductSelect, 
-  onClose, 
-  className 
+export function ProductSearch({
+  products,
+  categories,
+  onProductSelect,
+  onClose,
+  className
 }: ProductSearchProps) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [showResults, setShowResults] = useState(false)
@@ -117,8 +119,8 @@ export function ProductSearch({
   }
 
   const getCategoryName = (categoryId: string | undefined) => {
-    if (!categoryId) return 'Unknown'
-    return categories.find(cat => cat.id === categoryId)?.name || 'Unknown'
+    if (!categoryId) return t('common.unknown')
+    return categories.find(cat => cat.id === categoryId)?.name || t('common.unknown')
   }
 
   const getStockStatus = (product: Product) => {
@@ -137,7 +139,7 @@ export function ProductSearch({
         <Input
           ref={inputRef}
           type="text"
-          placeholder="Search products by name, description, or category... (Press ESC to close)"
+          placeholder={t('pos.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10 pr-10 h-12 text-base border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
@@ -161,8 +163,8 @@ export function ProductSearch({
             {filteredProducts.length > 0 ? (
               <div ref={resultsRef} className="max-h-96 overflow-auto">
                 <div className="p-3 bg-gray-50 border-b text-sm text-gray-600 flex items-center justify-between">
-                  <span>Found {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}</span>
-                  <span className="text-xs">Use ↑↓ arrows, Enter to select</span>
+                  <span>{t('pos.foundProducts', { count: filteredProducts.length })}</span>
+                  <span className="text-xs">{t('pos.searchNavHint')}</span>
                 </div>
                 {filteredProducts.map((product, index) => {
                   const stock = getStockStatus(product)
@@ -188,7 +190,7 @@ export function ProductSearch({
                               {getCategoryName(product.category_id)}
                             </Badge>
                             <Badge className={`text-xs ${stock.color}`}>
-                              {stock.count} left
+                              {t('pos.stockLeft', { count: stock.count })}
                             </Badge>
                           </div>
                           {product.description && (
@@ -204,7 +206,7 @@ export function ProductSearch({
                             {product.is_available && (
                               <Badge variant="outline" className="text-xs">
                                 <Package className="h-3 w-3 mr-1" />
-                                Available
+                                {t('pos.available')}
                               </Badge>
                             )}
                           </div>
@@ -219,7 +221,7 @@ export function ProductSearch({
                             }}
                           >
                             <ShoppingCart className="h-4 w-4" />
-                            Add
+                            {t('pos.add')}
                           </Button>
                         </div>
                       </div>
@@ -230,8 +232,8 @@ export function ProductSearch({
             ) : (
               <div className="p-8 text-center text-gray-500">
                 <Package className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-                <p className="font-medium">No products found</p>
-                <p className="text-sm">Try searching with different keywords</p>
+                <p className="font-medium">{t('pos.noProductsSearchResult')}</p>
+                <p className="text-sm">{t('pos.tryDifferentKeywords')}</p>
               </div>
             )}
           </CardContent>
@@ -241,7 +243,7 @@ export function ProductSearch({
       {/* Quick Help */}
       {!showResults && (
         <div className="mt-2 text-xs text-gray-500 text-center">
-          <span>💡 Pro tip: Use keyboard shortcuts - ↑↓ to navigate, Enter to select, ESC to close</span>
+          <span>💡 {t('pos.searchProTip')}</span>
         </div>
       )}
     </div>

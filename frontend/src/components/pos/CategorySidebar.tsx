@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -11,19 +12,21 @@ interface CategorySidebarProps {
   isLoading: boolean
 }
 
-export function CategorySidebar({ 
-  categories, 
-  selectedCategory, 
-  onCategorySelect, 
-  isLoading 
+export function CategorySidebar({
+  categories,
+  selectedCategory,
+  onCategorySelect,
+  isLoading
 }: CategorySidebarProps) {
+  const { t } = useTranslation()
+
   if (isLoading) {
     return (
       <div className="h-full flex flex-col">
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-2">
             <Grid3x3 className="w-5 h-5 text-gray-600" />
-            <h3 className="font-semibold text-gray-900">Categories</h3>
+            <h3 className="font-semibold text-gray-900">{t('pos.categories')}</h3>
           </div>
         </div>
         <div className="p-4 space-y-2">
@@ -45,7 +48,7 @@ export function CategorySidebar({
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center gap-2">
           <Grid3x3 className="w-5 h-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-900">Categories</h3>
+          <h3 className="font-semibold text-gray-900">{t('pos.categories')}</h3>
         </div>
       </div>
 
@@ -65,10 +68,10 @@ export function CategorySidebar({
               <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
                 <Grid3x3 className="w-4 h-4 text-gray-600" />
               </div>
-              <span className="font-medium">All Categories</span>
+              <span className="font-medium">{t('pos.allCategories')}</span>
             </div>
             <Badge variant="outline" className="text-xs">
-              All
+              {t('pos.all')}
             </Badge>
           </button>
 
@@ -111,7 +114,7 @@ export function CategorySidebar({
         {categories.length === 0 && (
           <div className="text-center py-8">
             <Grid3x3 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-sm">No categories available</p>
+            <p className="text-gray-500 text-sm">{t('pos.noCategoriesAvailable')}</p>
           </div>
         )}
       </div>
@@ -120,7 +123,7 @@ export function CategorySidebar({
       <div className="p-4 border-t border-gray-200 bg-gray-50">
         <div className="text-center">
           <p className="text-xs text-gray-500">
-            {categories.length} categories available
+            {t('pos.categoriesAvailable', { count: categories.length })}
           </p>
         </div>
       </div>

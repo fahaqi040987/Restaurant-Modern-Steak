@@ -1,12 +1,13 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { 
-  X, 
-  MapPin, 
-  Users, 
+import {
+  X,
+  MapPin,
+  Users,
   Search,
   CheckCircle,
   Clock
@@ -20,17 +21,18 @@ interface TableSelectionModalProps {
   onClose: () => void
 }
 
-export function TableSelectionModal({ 
-  tables, 
-  selectedTable, 
-  onTableSelect, 
-  onClose 
+export function TableSelectionModal({
+  tables,
+  selectedTable,
+  onTableSelect,
+  onClose
 }: TableSelectionModalProps) {
+  const { t } = useTranslation()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLocation, setSelectedLocation] = useState<string>('')
 
   // Get unique locations
-  const locations = [...new Set(tables.map(t => t.location || 'General'))]
+  const locations = [...new Set(tables.map(table => table.location || 'General'))]
 
   // Filter tables based on search and location
   const filteredTables = tables.filter(table => {
@@ -65,7 +67,7 @@ export function TableSelectionModal({
   }
 
   const getTableStatusText = (table: DiningTable) => {
-    return table.is_occupied ? 'Occupied' : 'Available'
+    return table.is_occupied ? t('pos.occupied') : t('pos.available')
   }
 
   return (
@@ -74,9 +76,9 @@ export function TableSelectionModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Select Table</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('pos.selectTableTitle')}</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Choose an available table for dine-in service
+              {t('pos.selectTableDesc')}
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose}>
@@ -91,7 +93,7 @@ export function TableSelectionModal({
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="Search tables..."
+                placeholder={t('pos.searchTables')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -106,7 +108,7 @@ export function TableSelectionModal({
               size="sm"
               onClick={() => setSelectedLocation('')}
             >
-              All Locations
+              {t('pos.allLocations')}
             </Button>
             {locations.map(location => (
               <Button
@@ -126,8 +128,8 @@ export function TableSelectionModal({
           {Object.keys(tablesByLocation).length === 0 ? (
             <div className="text-center py-12">
               <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No tables found</h3>
-              <p className="text-gray-500">Try adjusting your search criteria.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('pos.noTablesFound')}</h3>
+              <p className="text-gray-500">{t('pos.noTablesFoundDesc')}</p>
             </div>
           ) : (
             <div className="space-y-8">
@@ -137,7 +139,7 @@ export function TableSelectionModal({
                     <MapPin className="w-4 h-4 text-gray-500" />
                     <h3 className="font-medium text-gray-900">{location}</h3>
                     <Badge variant="outline" className="text-xs">
-                      {locationTables.length} tables
+                      {t('pos.tablesCount', { count: locationTables.length })}
                     </Badge>
                   </div>
 
@@ -169,7 +171,7 @@ export function TableSelectionModal({
                             <div className="space-y-2">
                               <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
                                 <Users className="w-4 h-4" />
-                                <span>{table.seating_capacity} seats</span>
+                                <span>{t('pos.seatsCount', { count: table.seating_capacity })}</span>
                               </div>
 
                               {/* Status Badge */}
@@ -206,23 +208,26 @@ export function TableSelectionModal({
             <div className="text-sm text-gray-600">
               {selectedTable ? (
                 <span>
-                  Selected: Table {selectedTable.table_number} 
-                  ({selectedTable.seating_capacity} seats, {selectedTable.location || 'General'})
+                  {t('pos.selectedTableInfo', {
+                    number: selectedTable.table_number,
+                    seats: selectedTable.seating_capacity,
+                    location: selectedTable.location || 'General'
+                  })}
                 </span>
               ) : (
-                <span>No table selected</span>
+                <span>{t('pos.noTableSelected')}</span>
               )}
             </div>
-            
+
             <div className="flex gap-3">
               <Button variant="outline" onClick={onClose}>
-                Cancel
+                {t('pos.cancel')}
               </Button>
-              <Button 
-                onClick={onClose} 
+              <Button
+                onClick={onClose}
                 disabled={!selectedTable}
               >
-                Confirm Selection
+                {t('pos.confirmSelection')}
               </Button>
             </div>
           </div>

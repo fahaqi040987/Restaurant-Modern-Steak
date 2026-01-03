@@ -127,12 +127,12 @@ export default function InventoryManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] })
       queryClient.invalidateQueries({ queryKey: ['lowStock'] })
-      showSuccessToast('Stok berhasil disesuaikan')
+      showSuccessToast(t('inventory.stockAdjusted', 'Stock adjusted successfully'))
       setAdjustDialogOpen(false)
       resetAdjustForm()
     },
     onError: () => {
-      showErrorToast('Gagal menyesuaikan stok')
+      showErrorToast(t('inventory.stockAdjustFailed', 'Failed to adjust stock'))
     },
   })
 
@@ -170,21 +170,21 @@ export default function InventoryManagement() {
         return (
           <Badge variant="destructive" className="flex items-center gap-1">
             <XCircle size={14} />
-            Habis ({currentStock})
+            {t('inventory.statusOutOfStock', 'Out of Stock')} ({currentStock})
           </Badge>
         )
       case 'low':
         return (
           <Badge variant="secondary" className="flex items-center gap-1 bg-yellow-100 text-yellow-800">
             <AlertTriangle size={14} />
-            Menipis ({currentStock})
+            {t('inventory.statusLow', 'Low')} ({currentStock})
           </Badge>
         )
       case 'ok':
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-green-700 border-green-700">
             <CheckCircle size={14} />
-            Normal ({currentStock})
+            {t('inventory.statusNormal', 'Normal')} ({currentStock})
           </Badge>
         )
       default:
@@ -202,7 +202,16 @@ export default function InventoryManagement() {
   }
 
   const exportToCSV = () => {
-    const headers = ['Produk', 'Kategori', 'Stok Saat Ini', 'Stok Minimum', 'Stok Maksimum', 'Unit', 'Status', 'Harga']
+    const headers = [
+      t('inventory.product'),
+      t('admin.categories'),
+      t('inventory.currentStock'),
+      t('inventory.minimumStock'),
+      t('inventory.maximumStock'),
+      t('common.unit', 'Unit'),
+      t('common.status'),
+      t('common.price')
+    ]
     const rows = inventory.map(item => [
       item.product_name,
       item.category_name,
@@ -210,7 +219,7 @@ export default function InventoryManagement() {
       item.min_stock,
       item.max_stock,
       item.unit,
-      item.status === 'ok' ? 'Normal' : item.status === 'low' ? 'Menipis' : 'Habis',
+      item.status === 'ok' ? t('inventory.statusNormal') : item.status === 'low' ? t('inventory.statusLow') : t('inventory.statusOutOfStock'),
       item.price,
     ])
 
@@ -253,25 +262,25 @@ export default function InventoryManagement() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="border rounded-lg p-4">
-          <div className="text-sm text-muted-foreground">Total Produk</div>
+          <div className="text-sm text-muted-foreground">{t('admin.products')}</div>
           <div className="text-2xl font-bold">{inventory.length}</div>
         </div>
         <div className="border rounded-lg p-4 bg-red-50">
           <div className="text-sm text-red-600 flex items-center gap-2">
             <XCircle size={16} />
-            Stok Habis
+            {t('inventory.outOfStock')}
           </div>
           <div className="text-2xl font-bold text-red-600">{outOfStockCount}</div>
         </div>
         <div className="border rounded-lg p-4 bg-yellow-50">
           <div className="text-sm text-yellow-700 flex items-center gap-2">
             <AlertTriangle size={16} />
-            Stok Menipis
+            {t('inventory.lowStock')}
           </div>
           <div className="text-2xl font-bold text-yellow-700">{lowStockCount}</div>
         </div>
         <div className="border rounded-lg p-4 bg-green-50">
-          <div className="text-sm text-green-700">Nilai Total Stok</div>
+          <div className="text-sm text-green-700">{t('inventory.totalStockValue', 'Total Stock Value')}</div>
           <div className="text-2xl font-bold text-green-700">{formatCurrency(totalValue)}</div>
         </div>
       </div>
@@ -281,20 +290,20 @@ export default function InventoryManagement() {
         <TableSkeleton columns={7} rows={8} showHeader={true} />
       ) : inventory.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          Tidak ada data inventaris
+          {t('inventory.noData', 'No inventory data')}
         </div>
       ) : (
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Produk</TableHead>
-                <TableHead>Kategori</TableHead>
-                <TableHead className="text-center">Stok</TableHead>
-                <TableHead className="text-center">Min/Max</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Terakhir Diisi</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+                <TableHead>{t('inventory.product')}</TableHead>
+                <TableHead>{t('admin.categories')}</TableHead>
+                <TableHead className="text-center">{t('inventory.currentStock')}</TableHead>
+                <TableHead className="text-center">{t('inventory.minimumStock')}/{t('inventory.maximumStock')}</TableHead>
+                <TableHead>{t('common.status')}</TableHead>
+                <TableHead>{t('inventory.lastRestocked', 'Last Restocked')}</TableHead>
+                <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -330,7 +339,7 @@ export default function InventoryManagement() {
                       onClick={() => handleAdjustClick(item)}
                     >
                       <Package size={14} className="mr-1" />
-                      Sesuaikan
+                      {t('inventory.adjustStock')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -352,15 +361,15 @@ export default function InventoryManagement() {
       <Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sesuaikan Stok</DialogTitle>
+            <DialogTitle>{t('inventory.adjustStock')}</DialogTitle>
             <DialogDescription>
-              {selectedProduct?.product_name} - Stok saat ini: <strong>{selectedProduct?.current_stock}</strong> {selectedProduct?.unit}
+              {selectedProduct?.product_name} - {t('inventory.currentStock')}: <strong>{selectedProduct?.current_stock}</strong> {selectedProduct?.unit}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Operasi</Label>
+              <Label>{t('inventory.operation')}</Label>
               <Select
                 value={adjustForm.operation}
                 onValueChange={(value) => setAdjustForm({ ...adjustForm, operation: value })}
@@ -372,13 +381,13 @@ export default function InventoryManagement() {
                   <SelectItem value="add">
                     <div className="flex items-center gap-2">
                       <TrendingUp size={16} className="text-green-600" />
-                      Tambah Stok
+                      {t('inventory.addStock')}
                     </div>
                   </SelectItem>
                   <SelectItem value="remove">
                     <div className="flex items-center gap-2">
                       <TrendingDown size={16} className="text-red-600" />
-                      Kurangi Stok
+                      {t('inventory.removeStock')}
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -386,7 +395,7 @@ export default function InventoryManagement() {
             </div>
 
             <div className="space-y-2">
-              <Label>Jumlah</Label>
+              <Label>{t('inventory.quantity')}</Label>
               <Input
                 type="number"
                 min="1"
@@ -396,7 +405,7 @@ export default function InventoryManagement() {
             </div>
 
             <div className="space-y-2">
-              <Label>Alasan</Label>
+              <Label>{t('inventory.reason')}</Label>
               <Select
                 value={adjustForm.reason}
                 onValueChange={(value) => setAdjustForm({ ...adjustForm, reason: value })}
@@ -405,32 +414,32 @@ export default function InventoryManagement() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="purchase">Pembelian</SelectItem>
-                  <SelectItem value="sale">Penjualan</SelectItem>
-                  <SelectItem value="spoilage">Pembusukan</SelectItem>
-                  <SelectItem value="manual_adjustment">Penyesuaian Manual</SelectItem>
-                  <SelectItem value="inventory_count">Perhitungan Inventaris</SelectItem>
-                  <SelectItem value="return">Retur</SelectItem>
-                  <SelectItem value="damage">Kerusakan</SelectItem>
-                  <SelectItem value="theft">Pencurian</SelectItem>
-                  <SelectItem value="expired">Kadaluarsa</SelectItem>
+                  <SelectItem value="purchase">{t('inventory.purchase')}</SelectItem>
+                  <SelectItem value="sale">{t('inventory.sale')}</SelectItem>
+                  <SelectItem value="spoilage">{t('inventory.spoilage')}</SelectItem>
+                  <SelectItem value="manual_adjustment">{t('inventory.adjustment')}</SelectItem>
+                  <SelectItem value="inventory_count">{t('inventory.count')}</SelectItem>
+                  <SelectItem value="return">{t('inventory.return')}</SelectItem>
+                  <SelectItem value="damage">{t('inventory.damage')}</SelectItem>
+                  <SelectItem value="theft">{t('inventory.theft')}</SelectItem>
+                  <SelectItem value="expired">{t('inventory.expired')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Catatan (Opsional)</Label>
+              <Label>{t('common.notes')} ({t('common.optional', 'Optional')})</Label>
               <Textarea
                 value={adjustForm.notes}
                 onChange={(e) => setAdjustForm({ ...adjustForm, notes: e.target.value })}
-                placeholder="Tambahkan catatan..."
+                placeholder={t('inventory.addNotes', 'Add notes...')}
                 rows={3}
               />
             </div>
 
             {selectedProduct && (
               <div className="p-3 bg-muted rounded-md text-sm">
-                <strong>Stok baru akan menjadi:</strong>{' '}
+                <strong>{t('inventory.newStockWillBe', 'New stock will be')}:</strong>{' '}
                 {adjustForm.operation === 'add'
                   ? selectedProduct.current_stock + adjustForm.quantity
                   : selectedProduct.current_stock - adjustForm.quantity}{' '}
@@ -441,11 +450,11 @@ export default function InventoryManagement() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setAdjustDialogOpen(false)}>
-              Batal
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleAdjustStock} disabled={adjustStockMutation.isPending}>
               {adjustStockMutation.isPending && <ButtonLoadingSpinner />}
-              Simpan
+              {t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -455,7 +464,7 @@ export default function InventoryManagement() {
       <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Riwayat Pergerakan Stok</DialogTitle>
+            <DialogTitle>{t('inventory.stockMovementHistory', 'Stock Movement History')}</DialogTitle>
             <DialogDescription>
               {selectedProduct?.product_name}
             </DialogDescription>
@@ -463,7 +472,7 @@ export default function InventoryManagement() {
 
           {history.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Belum ada riwayat pergerakan
+              {t('inventory.noHistory', 'No movement history yet')}
             </div>
           ) : (
             <div className="space-y-2">
@@ -478,14 +487,14 @@ export default function InventoryManagement() {
                           <Minus size={16} className="text-red-600" />
                         )}
                         <span className="font-medium">
-                          {record.operation === 'add' ? 'Tambah' : 'Kurangi'} {record.quantity} unit
+                          {record.operation === 'add' ? t('inventory.added', 'Added') : t('inventory.removed', 'Removed')} {record.quantity} {t('common.units', 'units')}
                         </span>
                         <Badge variant="outline" className="text-xs">
                           {record.reason.replace(/_/g, ' ')}
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {record.previous_stock} → {record.new_stock} unit
+                        {record.previous_stock} → {record.new_stock} {t('common.units', 'units')}
                       </div>
                       {record.notes && (
                         <div className="text-sm italic text-muted-foreground">
@@ -505,7 +514,7 @@ export default function InventoryManagement() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setHistoryDialogOpen(false)}>
-              Tutup
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

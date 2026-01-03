@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Zap, 
-  Clock, 
-  Star, 
-  TrendingUp, 
+import {
+  Zap,
+  Clock,
+  Star,
+  TrendingUp,
   ShoppingCart,
   RotateCcw,
   Plus
@@ -21,12 +22,13 @@ interface QuickAccessPanelProps {
   className?: string
 }
 
-export function QuickAccessPanel({ 
-  products, 
+export function QuickAccessPanel({
+  products,
   recentOrders = [],
-  onProductSelect, 
-  className 
+  onProductSelect,
+  className
 }: QuickAccessPanelProps) {
+  const { t } = useTranslation()
   const [recentItems, setRecentItems] = useState<Product[]>([])
   const [popularItems, setPopularItems] = useState<Product[]>([])
 
@@ -47,7 +49,7 @@ export function QuickAccessPanel({
   const quickActions = [
     {
       id: 'popular',
-      title: 'Popular Items',
+      titleKey: 'pos.popularItems',
       icon: TrendingUp,
       items: popularItems,
       color: 'text-orange-600',
@@ -55,7 +57,7 @@ export function QuickAccessPanel({
     },
     {
       id: 'recent',
-      title: 'Recently Ordered',
+      titleKey: 'pos.recentlyOrdered',
       icon: Clock,
       items: recentItems,
       color: 'text-blue-600',
@@ -70,7 +72,7 @@ export function QuickAccessPanel({
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Zap className="h-4 w-4 text-yellow-500" />
-            Quick Access
+            {t('pos.quickAccess')}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -87,7 +89,7 @@ export function QuickAccessPanel({
               }}
             >
               <Star className="h-4 w-4 text-yellow-500" />
-              <span>Most Popular</span>
+              <span>{t('pos.mostPopular')}</span>
             </Button>
             <Button
               variant="outline"
@@ -101,7 +103,7 @@ export function QuickAccessPanel({
               }}
             >
               <RotateCcw className="h-4 w-4 text-blue-500" />
-              <span>Last Order</span>
+              <span>{t('pos.lastOrder')}</span>
             </Button>
           </div>
         </CardContent>
@@ -116,7 +118,7 @@ export function QuickAccessPanel({
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Icon className={`h-4 w-4 ${section.color}`} />
-                {section.title}
+                {t(section.titleKey)}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0 space-y-2">
@@ -137,7 +139,7 @@ export function QuickAccessPanel({
                         </span>
                         {product.is_available && (
                           <Badge variant="outline" className="text-xs py-0">
-                            Available
+                            {t('pos.available')}
                           </Badge>
                         )}
                       </div>
@@ -157,7 +159,7 @@ export function QuickAccessPanel({
                 ))
               ) : (
                 <div className="text-center py-4 text-gray-500">
-                  <p className="text-sm">No {section.title.toLowerCase()} yet</p>
+                  <p className="text-sm">{t('pos.noItemsAvailable')}</p>
                 </div>
               )}
             </CardContent>
@@ -169,7 +171,7 @@ export function QuickAccessPanel({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-700">
-            Quick Quantities
+            {t('pos.quickQuantities')}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -190,7 +192,7 @@ export function QuickAccessPanel({
             ))}
           </div>
           <p className="text-xs text-gray-500 mt-2 text-center">
-            Select a product first, then use quantity shortcuts
+            {t('pos.quickQuantitiesHint')}
           </p>
         </CardContent>
       </Card>
@@ -201,12 +203,12 @@ export function QuickAccessPanel({
           <div className="text-center">
             <Zap className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
             <p className="text-xs font-medium text-gray-700 mb-1">
-              Power User Tips
+              {t('pos.powerUserTips')}
             </p>
             <p className="text-xs text-gray-600 leading-relaxed">
-              • Use search (Ctrl+F) for instant product lookup<br/>
-              • Click recent items for quick re-orders<br/>
-              • Popular items update based on sales data
+              • {t('pos.tipSearch')}<br/>
+              • {t('pos.tipRecent')}<br/>
+              • {t('pos.tipPopular')}
             </p>
           </div>
         </CardContent>

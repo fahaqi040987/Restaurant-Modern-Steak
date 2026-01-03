@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"pos-public/internal/api"
 	"pos-public/internal/database"
@@ -15,6 +16,18 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
+
+func init() {
+	// T069: Set server timezone to Asia/Jakarta (UTC+7) for Indonesian localization
+	location, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		log.Printf("Warning: Failed to set Asia/Jakarta timezone: %v", err)
+		log.Printf("Server will use system timezone")
+	} else {
+		time.Local = location
+		log.Printf("Server timezone set to: %s (UTC%s)", location, time.Now().In(location).Format("-07:00"))
+	}
+}
 
 func main() {
 	// Load environment variables

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -51,7 +52,7 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
         name: product.name,
         description: product.description || '',
         price: product.price,
-        category_id: Number(product.category_id) || Number(categories[0]?.id) || 1,
+        category_id: product.category_id?.toString() || categories[0]?.id?.toString() || '',
         image_url: product.image_url || '',
         status: product.is_available ? 'active' as const : 'inactive' as const,
         preparation_time: product.preparation_time || 5,
@@ -60,7 +61,7 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
         name: '',
         description: '',
         price: 0,
-        category_id: Number(categories[0]?.id) || 1,
+        category_id: categories[0]?.id?.toString() || '',
         image_url: '',
         status: 'active' as const,
         preparation_time: 5,
@@ -71,13 +72,25 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
     defaultValues,
   })
 
+  // Set default category when categories load (for new products)
+  useEffect(() => {
+    if (!isEditing && categories.length > 0 && !form.getValues('category_id')) {
+      form.setValue('category_id', categories[0].id.toString())
+    }
+  }, [categories, isEditing, form])
+
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (data: CreateProductData) => {
-      // Convert category_id to string for API
+      // Convert status to is_available for backend
       const apiData = {
-        ...data,
-        category_id: data.category_id.toString(),
+        category_id: data.category_id,
+        name: data.name,
+        description: data.description || undefined,
+        price: data.price,
+        image_url: data.image_url || undefined,
+        is_available: data.status === 'active',
+        preparation_time: data.preparation_time,
       };
       return apiClient.createProduct(apiData);
     },
@@ -94,13 +107,18 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
     },
   })
 
-  // Update mutation  
+  // Update mutation
   const updateMutation = useMutation({
     mutationFn: (data: UpdateProductData) => {
-      // Convert category_id to string for API
+      // Convert status to is_available for backend
       const apiData = {
-        ...data,
-        category_id: data.category_id ? data.category_id.toString() : undefined,
+        category_id: data.category_id,
+        name: data.name,
+        description: data.description || undefined,
+        price: data.price,
+        image_url: data.image_url || undefined,
+        is_available: data.status === 'active',
+        preparation_time: data.preparation_time,
       };
       return apiClient.updateProduct(data.id.toString(), apiData);
     },
@@ -210,9 +228,9 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
               <PriceInputField
                 control={form.control}
                 name="price"
-                label="Price"
-                currency="$"
-                description="Product selling price"
+                label="Harga"
+                currency="Rp"
+                description="Harga jual produk"
               />
               
               <NumberInputField

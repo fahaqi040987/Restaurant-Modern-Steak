@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -14,18 +15,19 @@ interface OrderFiltersProps {
   }
 }
 
-export function OrderFilters({ 
-  selectedStatus, 
-  onStatusChange, 
-  searchQuery, 
+export function OrderFilters({
+  selectedStatus,
+  onStatusChange,
+  searchQuery,
   onSearchChange,
-  orderCounts 
+  orderCounts
 }: OrderFiltersProps) {
+  const { t } = useTranslation()
   const filterButtons = [
-    { key: 'all', label: 'All Orders', count: orderCounts.all, color: 'bg-gray-500' },
-    { key: 'confirmed', label: 'New', count: orderCounts.confirmed, color: 'bg-yellow-500' },
-    { key: 'preparing', label: 'Preparing', count: orderCounts.preparing, color: 'bg-blue-500' },
-    { key: 'ready', label: 'Ready', count: orderCounts.ready, color: 'bg-green-500' },
+    { key: 'all', labelKey: 'kitchen.allOrders', count: orderCounts.all, color: 'bg-gray-500' },
+    { key: 'confirmed', labelKey: 'kitchen.new', count: orderCounts.confirmed, color: 'bg-yellow-500' },
+    { key: 'preparing', labelKey: 'kitchen.preparing', count: orderCounts.preparing, color: 'bg-blue-500' },
+    { key: 'ready', labelKey: 'kitchen.ready', count: orderCounts.ready, color: 'bg-green-500' },
   ]
 
   return (
@@ -41,7 +43,7 @@ export function OrderFilters({
             className="relative flex items-center space-x-2 h-9"
           >
             <div className={`w-2 h-2 rounded-full ${filter.color}`}></div>
-            <span>{filter.label}</span>
+            <span>{t(filter.labelKey)}</span>
             {filter.count > 0 && (
               <span className={`
                 px-2 py-0.5 text-xs rounded-full min-w-[20px] text-center
@@ -70,7 +72,7 @@ export function OrderFilters({
           </svg>
           <Input
             type="text"
-            placeholder="Search orders by number, customer, or table..."
+            placeholder={t('kitchen.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-10"
@@ -89,7 +91,7 @@ export function OrderFilters({
 
         {/* Quick actions */}
         <div className="flex items-center space-x-2 text-sm text-gray-500">
-          <span>Total: {orderCounts.all} orders</span>
+          <span>{t('kitchen.totalOrders', { count: orderCounts.all })}</span>
         </div>
       </div>
     </div>

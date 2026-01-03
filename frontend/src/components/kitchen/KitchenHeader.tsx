@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import type { User } from '@/types'
 
@@ -9,13 +10,14 @@ interface KitchenHeaderProps {
   isLoading: boolean
 }
 
-export function KitchenHeader({ 
-  user, 
-  autoRefresh, 
-  onToggleAutoRefresh, 
+export function KitchenHeader({
+  user,
+  autoRefresh,
+  onToggleAutoRefresh,
   onRefresh,
-  isLoading 
+  isLoading
 }: KitchenHeaderProps) {
+  const { t } = useTranslation()
   const handleLogout = () => {
     localStorage.removeItem('pos_user')
     localStorage.removeItem('pos_token')
@@ -34,8 +36,8 @@ export function KitchenHeader({
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Kitchen Display</h1>
-              <p className="text-sm text-gray-500">Live order management</p>
+              <h1 className="text-xl font-bold text-gray-900">{t('kitchen.title')}</h1>
+              <p className="text-sm text-gray-500">{t('kitchen.liveOrderManagement')}</p>
             </div>
           </div>
 
@@ -43,7 +45,7 @@ export function KitchenHeader({
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 rounded-full ${autoRefresh ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
             <span className="text-sm text-gray-600">
-              {autoRefresh ? 'Live updates' : 'Manual refresh'}
+              {autoRefresh ? t('kitchen.liveUpdates') : t('kitchen.manualRefresh')}
             </span>
           </div>
         </div>
@@ -67,7 +69,7 @@ export function KitchenHeader({
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>Refresh</span>
+              <span>{t('kitchen.refresh')}</span>
             </Button>
 
             <Button
@@ -79,7 +81,7 @@ export function KitchenHeader({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>{autoRefresh ? 'Auto ON' : 'Auto OFF'}</span>
+              <span>{autoRefresh ? t('kitchen.autoOn') : t('kitchen.autoOff')}</span>
             </Button>
           </div>
 
@@ -95,7 +97,7 @@ export function KitchenHeader({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6" />
               </svg>
-              <span>POS</span>
+              <span>{t('kitchen.pos')}</span>
             </Button>
           </div>
 

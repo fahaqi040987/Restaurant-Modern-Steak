@@ -301,3 +301,156 @@ type UpdateNotificationPreferencesRequest struct {
 	QuietHoursEnd     *string `json:"quiet_hours_end"`
 	NotificationEmail *string `json:"notification_email"`
 }
+
+// ============================================
+// Reservation Models (Feature: 004-restaurant-management)
+// Public website table booking functionality
+// ============================================
+
+// ReservationStatus represents the possible states of a reservation
+type ReservationStatus string
+
+const (
+	ReservationStatusPending   ReservationStatus = "pending"
+	ReservationStatusConfirmed ReservationStatus = "confirmed"
+	ReservationStatusCancelled ReservationStatus = "cancelled"
+	ReservationStatusCompleted ReservationStatus = "completed"
+	ReservationStatusNoShow    ReservationStatus = "no_show"
+)
+
+// Reservation represents a customer table booking
+type Reservation struct {
+	ID              uuid.UUID  `json:"id" db:"id"`
+	CustomerName    string     `json:"customer_name" db:"customer_name"`
+	Email           string     `json:"email" db:"email"`
+	Phone           string     `json:"phone" db:"phone"`
+	PartySize       int        `json:"party_size" db:"party_size"`
+	ReservationDate string     `json:"reservation_date" db:"reservation_date"` // YYYY-MM-DD
+	ReservationTime string     `json:"reservation_time" db:"reservation_time"` // HH:MM
+	SpecialRequests *string    `json:"special_requests,omitempty" db:"special_requests"`
+	Status          string     `json:"status" db:"status"`
+	Notes           *string    `json:"notes,omitempty" db:"notes"`
+	ConfirmedBy     *uuid.UUID `json:"confirmed_by,omitempty" db:"confirmed_by"`
+	ConfirmedAt     *time.Time `json:"confirmed_at,omitempty" db:"confirmed_at"`
+	CreatedAt       time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at" db:"updated_at"`
+	ConfirmedByUser *User      `json:"confirmed_by_user,omitempty"` // Populated via JOIN
+}
+
+// CreateReservationRequest is the DTO for public reservation submission
+type CreateReservationRequest struct {
+	CustomerName    string  `json:"customer_name" binding:"required,max=100"`
+	Email           string  `json:"email" binding:"required,email"`
+	Phone           string  `json:"phone" binding:"required,max=20"`
+	PartySize       int     `json:"party_size" binding:"required,min=1,max=20"`
+	ReservationDate string  `json:"reservation_date" binding:"required"` // YYYY-MM-DD
+	ReservationTime string  `json:"reservation_time" binding:"required"` // HH:MM
+	SpecialRequests *string `json:"special_requests,omitempty"`
+}
+
+// ReservationResponse is the DTO for public API responses (limited fields)
+type ReservationResponse struct {
+	ID              string `json:"id"`
+	Status          string `json:"status"`
+	ReservationDate string `json:"reservation_date"`
+	ReservationTime string `json:"reservation_time"`
+	PartySize       int    `json:"party_size"`
+}
+
+// UpdateReservationStatusRequest is for staff status updates
+type UpdateReservationStatusRequest struct {
+	Status string  `json:"status" binding:"required,oneof=confirmed cancelled completed no_show"`
+	Notes  *string `json:"notes,omitempty"`
+}
+
+// ReservationListQuery represents query parameters for listing reservations
+type ReservationListQuery struct {
+	Status string `form:"status"`
+	Date   string `form:"date"`
+	Page   int    `form:"page,default=1"`
+	Limit  int    `form:"limit,default=20"`
+}
+
+// ReservationListResponse is the paginated response for reservation list
+type ReservationListResponse struct {
+	Success    bool          `json:"success"`
+	Message    string        `json:"message"`
+	Data       []Reservation `json:"data"`
+	Pagination *Pagination   `json:"pagination,omitempty"`
+}
+
+// Pagination represents pagination metadata
+type Pagination struct {
+	Page       int `json:"page"`
+	Limit      int `json:"limit"`
+	Total      int `json:"total"`
+	TotalPages int `json:"total_pages"`
+}
+
+// SatisfactionSurvey represents customer feedback after order completion
+// T074: Added for QR-based ordering satisfaction survey feature
+type SatisfactionSurvey struct {
+	ID             uuid.UUID `json:"id" db:"id"`
+	OrderID        uuid.UUID `json:"order_id" db:"order_id"`
+	OverallRating  int       `json:"overall_rating" db:"overall_rating"`
+	FoodQuality    *int      `json:"food_quality,omitempty" db:"food_quality"`
+	ServiceQuality *int      `json:"service_quality,omitempty" db:"service_quality"`
+	Ambiance       *int      `json:"ambiance,omitempty" db:"ambiance"`
+	ValueForMoney  *int      `json:"value_for_money,omitempty" db:"value_for_money"`
+	Comments       *string   `json:"comments,omitempty" db:"comments"`
+	WouldRecommend *bool     `json:"would_recommend,omitempty" db:"would_recommend"`
+	CustomerName   *string   `json:"customer_name,omitempty" db:"customer_name"`
+	CustomerEmail  *string   `json:"customer_email,omitempty" db:"customer_email"`
+	SubmittedAt    time.Time `json:"submitted_at" db:"submitted_at"`
+	CreatedAt      time.Time `json:"created_at" db:"created_at"`
+}
+
+// CreateSurveyRequest is the DTO for survey submission
+type CreateSurveyRequest struct {
+	OverallRating  int     `json:"overall_rating" binding:"required,min=1,max=5"`
+	FoodQuality    *int    `json:"food_quality,omitempty" binding:"omitempty,min=1,max=5"`
+	ServiceQuality *int    `json:"service_quality,omitempty" binding:"omitempty,min=1,max=5"`
+	Ambiance       *int    `json:"ambiance,omitempty" binding:"omitempty,min=1,max=5"`
+	ValueForMoney  *int    `json:"value_for_money,omitempty" binding:"omitempty,min=1,max=5"`
+	Comments       *string `json:"comments,omitempty"`
+	WouldRecommend *bool   `json:"would_recommend,omitempty"`
+	CustomerName   *string `json:"customer_name,omitempty" binding:"omitempty,max=100"`
+	CustomerEmail  *string `json:"customer_email,omitempty" binding:"omitempty,email"`
+}
+
+// SurveyStatsResponse is the DTO for survey analytics
+type SurveyStatsResponse struct {
+	TotalSurveys          int         `json:"total_surveys"`
+	AverageRating         float64     `json:"average_rating"`
+	AverageFoodQuality    float64     `json:"average_food_quality"`
+	AverageServiceQuality float64     `json:"average_service_quality"`
+	AverageAmbiance       float64     `json:"average_ambiance"`
+	AverageValueForMoney  float64     `json:"average_value_for_money"`
+	RecommendationRate    float64     `json:"recommendation_rate"` // Percentage
+	RatingDistribution    map[int]int `json:"rating_distribution"` // Count per rating
+}
+
+// CreatePaymentRequest is the DTO for customer payment submission
+// T072: Added for QR-based ordering payment feature
+type CreatePaymentRequest struct {
+	PaymentMethod   string  `json:"payment_method" binding:"required,oneof=cash credit_card debit_card digital_wallet qris"`
+	Amount          float64 `json:"amount" binding:"required,gt=0"`
+	ReferenceNumber *string `json:"reference_number,omitempty"` // For digital payments
+}
+
+// OrderNotification represents a customer notification for order status changes
+// T077: Order notification for QR-based ordering
+type OrderNotification struct {
+	ID        uuid.UUID `json:"id"`
+	OrderID   uuid.UUID `json:"order_id"`
+	Status    string    `json:"status"`  // Order status at notification time
+	Message   string    `json:"message"` // Customer-facing message
+	IsRead    bool      `json:"is_read"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// GetNotificationsResponse is the DTO for fetching customer notifications
+type GetNotificationsResponse struct {
+	Notifications []OrderNotification `json:"notifications"`
+	UnreadCount   int                 `json:"unread_count"`
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +12,7 @@ interface KitchenOrderCardProps {
 }
 
 export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: KitchenOrderCardProps) {
+  const { t } = useTranslation()
   const [isExpanded, setIsExpanded] = useState(false)
 
   // Calculate time since order was created
@@ -18,12 +20,12 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
     const createdAt = new Date(order.created_at)
     const now = new Date()
     const diff = Math.floor((now.getTime() - createdAt.getTime()) / 1000 / 60) // minutes
-    
-    if (diff < 1) return 'Just now'
-    if (diff < 60) return `${diff}m ago`
+
+    if (diff < 1) return t('kitchen.justNow')
+    if (diff < 60) return t('kitchen.minutesAgo', { minutes: diff })
     const hours = Math.floor(diff / 60)
     const minutes = diff % 60
-    return `${hours}h ${minutes}m ago`
+    return t('kitchen.hoursMinutesAgo', { hours, minutes })
   }
 
   // Get status color and next actions
@@ -34,7 +36,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
           color: 'bg-yellow-500',
           textColor: 'text-yellow-700',
           bgColor: 'bg-yellow-50',
-          nextAction: 'Start Preparing',
+          nextAction: t('kitchen.startPreparing'),
           nextStatus: 'preparing'
         }
       case 'preparing':
@@ -42,7 +44,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
           color: 'bg-blue-500',
           textColor: 'text-blue-700',
           bgColor: 'bg-blue-50',
-          nextAction: 'Mark Ready',
+          nextAction: t('kitchen.markReady'),
           nextStatus: 'ready'
         }
       case 'ready':
@@ -50,7 +52,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
           color: 'bg-green-500',
           textColor: 'text-green-700',
           bgColor: 'bg-green-50',
-          nextAction: 'Mark Served',
+          nextAction: t('kitchen.markServed'),
           nextStatus: 'served'
         }
       default:
@@ -58,7 +60,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
           color: 'bg-gray-500',
           textColor: 'text-gray-700',
           bgColor: 'bg-gray-50',
-          nextAction: 'Update',
+          nextAction: t('common.update'),
           nextStatus: 'confirmed'
         }
     }
@@ -105,7 +107,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H7m2 0v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0V9a2 2 0 012-2h2a2 2 0 012 2v7.5" />
                   </svg>
-                  Table {order.table.table_number}
+                  {t('kitchen.table')} {order.table.table_number}
                 </span>
               )}
               
@@ -121,7 +123,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
 
             {estimatedTime && (
               <div className="text-sm text-gray-500 mt-1">
-                Est. {estimatedTime} prep time
+                {t('kitchen.estPrepTime', { time: estimatedTime })}
               </div>
             )}
           </div>
@@ -144,7 +146,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
         {/* Order Items Preview */}
         <div className="mb-4">
           <div className="text-sm text-gray-600 mb-1">
-            {order.items?.length || 0} items
+            {t('kitchen.itemsCount', { count: order.items?.length || 0 })}
           </div>
           
           {/* Quick preview of items */}
@@ -163,12 +165,12 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
                     variant={item.status === 'ready' ? 'default' : 'secondary'}
                     className="text-xs cursor-pointer"
                     onClick={() => onItemStatusUpdate(
-                      order.id, 
-                      item.id, 
+                      order.id,
+                      item.id,
                       item.status === 'ready' ? 'pending' : 'ready'
                     )}
                   >
-                    {item.status === 'ready' ? '✓ Ready' : 'Preparing'}
+                    {item.status === 'ready' ? `✓ ${t('kitchen.ready')}` : t('kitchen.preparing')}
                   </Badge>
                 )}
               </div>
@@ -176,7 +178,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
             
             {!isExpanded && (order.items?.length || 0) > 3 && (
               <div className="text-xs text-gray-500 text-center">
-                +{(order.items?.length || 0) - 3} more items
+                {t('kitchen.moreItems', { count: (order.items?.length || 0) - 3 })}
               </div>
             )}
           </div>
@@ -188,14 +190,14 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
             {/* Special instructions */}
             {order.notes && (
               <div>
-                <h4 className="text-sm font-medium text-gray-900 mb-1">Special Instructions:</h4>
+                <h4 className="text-sm font-medium text-gray-900 mb-1">{t('kitchen.specialInstructions')}</h4>
                 <p className="text-sm text-gray-600 bg-white p-2 rounded border">{order.notes}</p>
               </div>
             )}
 
             {/* Item details */}
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Order Details:</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">{t('kitchen.orderDetails')}</h4>
               <div className="space-y-2">
                 {(order.items || []).map((item: OrderItem) => (
                   <div key={item.id} className="bg-white p-3 rounded border">
@@ -205,11 +207,11 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
                     </div>
                     
                     {item.special_instructions && (
-                      <p className="text-xs text-gray-600 italic">Note: {item.special_instructions}</p>
+                      <p className="text-xs text-gray-600 italic">{t('kitchen.note')} {item.special_instructions}</p>
                     )}
-                    
+
                     {item.product?.preparation_time && (
-                      <p className="text-xs text-gray-500">Prep time: {item.product.preparation_time} min</p>
+                      <p className="text-xs text-gray-500">{t('kitchen.prepTime', { time: item.product.preparation_time })}</p>
                     )}
                   </div>
                 ))}
@@ -234,7 +236,7 @@ export function KitchenOrderCard({ order, onStatusUpdate, onItemStatusUpdate }: 
               onClick={() => onStatusUpdate(order.id, 'confirmed')}
               size="sm"
             >
-              Reset
+              {t('kitchen.reset')}
             </Button>
           )}
         </div>

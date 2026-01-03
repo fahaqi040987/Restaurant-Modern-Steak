@@ -1,5 +1,6 @@
 import { createFileRoute, Navigate, Outlet } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import apiClient from '@/api/client'
 import type { User } from '@/types'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
@@ -9,6 +10,7 @@ export const Route = createFileRoute('/admin')({
 })
 
 function AdminLayout() {
+  const { t } = useTranslation()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -35,7 +37,7 @@ function AdminLayout() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading Admin Panel...</p>
+          <p className="text-muted-foreground">{t('admin.loadingAdminPanel')}</p>
         </div>
       </div>
     )
@@ -51,8 +53,8 @@ function AdminLayout() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-destructive mb-2">Access Denied</h1>
-          <p className="text-muted-foreground mb-4">You don't have admin privileges.</p>
+          <h1 className="text-2xl font-bold text-destructive mb-2">{t('admin.accessDenied')}</h1>
+          <p className="text-muted-foreground mb-4">{t('admin.noAdminPrivileges')}</p>
           <Navigate to="/" />
         </div>
       </div>

@@ -7,6 +7,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -24,10 +25,10 @@ import {
   Edit,
   Trash2,
   Package,
-  DollarSign,
   Clock,
   Image,
-  Tag
+  Tag,
+  Banknote
 } from "lucide-react"
 import type { Product, Category } from "@/types"
 
@@ -66,12 +67,13 @@ export function AdminMenuTable({
   onDelete,
   isLoading = false
 }: AdminMenuTableProps) {
+  const { t } = useTranslation()
   const [sorting, setSorting] = useState<SortingState>([])
 
   const getCategoryName = (categoryId: string | null) => {
-    if (!categoryId) return "No Category"
+    if (!categoryId) return t('admin.noCategory')
     const category = categories.find(cat => cat.id === categoryId)
-    return category?.name || "Unknown Category"
+    return category?.name || t('admin.unknownCategory')
   }
 
   const getCategoryColor = (categoryId: string | null) => {
@@ -101,7 +103,7 @@ export function AdminMenuTable({
             className="h-8 px-2 lg:px-3"
           >
             <Package className="mr-2 h-4 w-4" />
-            Product
+            {t('admin.productName')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -141,7 +143,7 @@ export function AdminMenuTable({
                 {product.name}
               </div>
               <div className="text-sm text-gray-500 line-clamp-1">
-                {product.description || "No description"}
+                {product.description || t('admin.noDescription')}
               </div>
             </div>
           </div>
@@ -159,7 +161,7 @@ export function AdminMenuTable({
             className="h-8 px-2 lg:px-3"
           >
             <Tag className="mr-2 h-4 w-4" />
-            Category
+            {t('admin.productCategory')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -191,8 +193,8 @@ export function AdminMenuTable({
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="h-8 px-2 lg:px-3"
           >
-            <DollarSign className="mr-2 h-4 w-4" />
-            Price
+            <Banknote className="mr-2 h-4 w-4" />
+            {t('admin.productPrice')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -223,7 +225,7 @@ export function AdminMenuTable({
             className="h-8 px-2 lg:px-3"
           >
             <Clock className="mr-2 h-4 w-4" />
-            Prep Time
+            {t('admin.prepTime')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -245,13 +247,13 @@ export function AdminMenuTable({
     },
     {
       accessorKey: "is_available",
-      header: "Availability",
+      header: t('admin.availability'),
       cell: ({ getValue }) => {
         const isAvailable = getValue() as boolean
         return (
           <Badge variant={isAvailable ? "default" : "secondary"}>
             <div className={`w-2 h-2 rounded-full mr-2 ${isAvailable ? 'bg-green-400' : 'bg-red-400'}`} />
-            {isAvailable ? "Available" : "Out of Stock"}
+            {isAvailable ? t('admin.availableStatus') : t('admin.outOfStockStatus')}
           </Badge>
         )
       },
@@ -266,7 +268,7 @@ export function AdminMenuTable({
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="h-8 px-2 lg:px-3"
           >
-            Order
+            {t('admin.sortOrder')}
             {isSorted === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : isSorted === "desc" ? (
@@ -288,7 +290,7 @@ export function AdminMenuTable({
     },
     {
       id: "actions",
-      header: "Actions",
+      header: t('common.actions'),
       cell: ({ row }) => {
         const product = row.original
         return (
@@ -300,7 +302,7 @@ export function AdminMenuTable({
               className="h-8 px-2 lg:px-3"
             >
               <Edit className="h-4 w-4" />
-              <span className="sr-only lg:not-sr-only lg:ml-2">Edit</span>
+              <span className="sr-only lg:not-sr-only lg:ml-2">{t('common.edit')}</span>
             </Button>
             <Button
               size="sm"
@@ -309,7 +311,7 @@ export function AdminMenuTable({
               className="h-8 px-2 lg:px-3 text-red-600 hover:text-red-700 hover:border-red-300"
             >
               <Trash2 className="h-4 w-4" />
-              <span className="sr-only lg:not-sr-only lg:ml-2">Delete</span>
+              <span className="sr-only lg:not-sr-only lg:ml-2">{t('common.delete')}</span>
             </Button>
           </div>
         )
@@ -382,8 +384,8 @@ export function AdminMenuTable({
                     <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                       <Package className="w-6 h-6 text-gray-400" />
                     </div>
-                    <p className="text-gray-500">No products found</p>
-                    <p className="text-sm text-gray-400">Try adjusting your search or add a new product</p>
+                    <p className="text-gray-500">{t('admin.noProductsFound')}</p>
+                    <p className="text-sm text-gray-400">{t('admin.noProductsFoundDesc')}</p>
                   </div>
                 </TableCell>
               </TableRow>

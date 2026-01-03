@@ -1,5 +1,6 @@
 import QRCode from 'react-qr-code'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -42,6 +43,7 @@ import type { DiningTable } from '@/types'
 type ViewMode = 'list' | 'table-form'
 
 export function AdminTableManagement() {
+  const { t } = useTranslation()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -141,13 +143,13 @@ export function AdminTableManagement() {
     const tableStatus = (table as any).status
     if (tableStatus === 'occupied') {
       toastHelpers.warning(
-        'Cannot Delete Table',
-        `Table ${table.table_number} is currently occupied. Please clear the table first.`
+        t('admin.cannotDeleteTable'),
+        t('admin.cannotDeleteTableDesc', { tableNumber: table.table_number })
       )
       return
     }
 
-    if (confirm(`Are you sure you want to delete Table ${table.table_number}? This action cannot be undone.`)) {
+    if (confirm(t('admin.confirmDeleteTable', { tableNumber: table.table_number }))) {
       deleteTableMutation.mutate({
         id: table.id.toString(),
         tableNumber: table.table_number
@@ -284,9 +286,9 @@ export function AdminTableManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Table Management</h2>
+          <h2 className="text-3xl font-bold tracking-tight">{t('admin.tableManagement')}</h2>
           <p className="text-muted-foreground">
-            Manage your restaurant's dining tables and seating arrangements
+            {t('admin.tableManagementDesc')}
           </p>
         </div>
         <Button
@@ -297,7 +299,7 @@ export function AdminTableManagement() {
           className="gap-2"
         >
           <Plus className="h-4 w-4" />
-          Add Table
+          {t('admin.addTable')}
         </Button>
       </div>
 
@@ -317,7 +319,7 @@ export function AdminTableManagement() {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-                  <p className="text-xs text-muted-foreground">Total Tables</p>
+                  <p className="text-xs text-muted-foreground">{t('admin.totalTables')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -325,7 +327,7 @@ export function AdminTableManagement() {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">{stats.available}</div>
-                  <p className="text-xs text-muted-foreground">Available</p>
+                  <p className="text-xs text-muted-foreground">{t('admin.available')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -333,7 +335,7 @@ export function AdminTableManagement() {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">{stats.occupied}</div>
-                  <p className="text-xs text-muted-foreground">Occupied</p>
+                  <p className="text-xs text-muted-foreground">{t('admin.occupied')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -341,7 +343,7 @@ export function AdminTableManagement() {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-600">{stats.reserved}</div>
-                  <p className="text-xs text-muted-foreground">Reserved</p>
+                  <p className="text-xs text-muted-foreground">{t('admin.reserved')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -349,7 +351,7 @@ export function AdminTableManagement() {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-red-600">{stats.maintenance}</div>
-                  <p className="text-xs text-muted-foreground">Maintenance</p>
+                  <p className="text-xs text-muted-foreground">{t('admin.maintenance')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -362,7 +364,7 @@ export function AdminTableManagement() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search tables by number or location..."
+            placeholder={t('admin.searchTablesPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
@@ -384,35 +386,35 @@ export function AdminTableManagement() {
             size="sm"
             onClick={() => setFilterStatus('all')}
           >
-            All ({stats.total})
+            {t('common.all')} ({stats.total})
           </Button>
           <Button
             variant={filterStatus === 'available' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilterStatus('available')}
           >
-            Available ({stats.available})
+            {t('admin.available')} ({stats.available})
           </Button>
           <Button
             variant={filterStatus === 'occupied' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilterStatus('occupied')}
           >
-            Occupied ({stats.occupied})
+            {t('admin.occupied')} ({stats.occupied})
           </Button>
           <Button
             variant={filterStatus === 'reserved' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilterStatus('reserved')}
           >
-            Reserved ({stats.reserved})
+            {t('admin.reserved')} ({stats.reserved})
           </Button>
           <Button
             variant={filterStatus === 'maintenance' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilterStatus('maintenance')}
           >
-            Maintenance ({stats.maintenance})
+            {t('admin.maintenance')} ({stats.maintenance})
           </Button>
         </div>
       </div>
@@ -427,23 +429,23 @@ export function AdminTableManagement() {
           <CardContent className="pt-6">
             <EmptyState
               icon={TableIcon}
-              title={searchTerm || filterStatus !== 'all' ? 'Tidak ada meja ditemukan' : 'Belum ada meja'}
+              title={searchTerm || filterStatus !== 'all' ? t('admin.noTablesFound') : t('admin.noTablesYet')}
               description={
                 searchTerm || filterStatus !== 'all'
-                  ? 'Tidak ada meja yang cocok dengan filter. Coba ubah kriteria pencarian atau filter status.'
-                  : 'Mulai dengan menambahkan meja pertama untuk restoran Anda.'
+                  ? t('admin.noTablesFoundDesc')
+                  : t('admin.noTablesYetDesc')
               }
               action={
                 searchTerm || filterStatus !== 'all'
                   ? {
-                    label: 'Hapus Filter',
+                    label: t('common.clearFilters'),
                     onClick: () => {
                       setSearchTerm('')
                       setFilterStatus('all')
                     },
                   }
                   : {
-                    label: 'Tambah Meja',
+                    label: t('admin.addTable'),
                     onClick: () => setViewMode('table-form'),
                   }
               }
@@ -454,23 +456,33 @@ export function AdminTableManagement() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredTables.map((table: any) => {
             const statusBadge = getStatusBadge(table.status)
+            // Translate status for display
+            const getStatusLabel = (status: string) => {
+              switch (status) {
+                case 'available': return t('admin.available')
+                case 'occupied': return t('admin.occupied')
+                case 'reserved': return t('admin.reserved')
+                case 'maintenance': return t('admin.maintenance')
+                default: return status
+              }
+            }
             return (
               <Card key={table.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg">Table {table.table_number}</CardTitle>
+                      <CardTitle className="text-lg">{t('admin.table')} {table.table_number}</CardTitle>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge className={`gap-1 ${statusBadge.className}`}>
                           {statusBadge.icon}
-                          {table.status}
+                          {getStatusLabel(table.status)}
                         </Badge>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        {table.seating_capacity} seats
+                        {table.seating_capacity} {t('admin.seats')}
                       </div>
                     </div>
                   </div>
@@ -489,7 +501,7 @@ export function AdminTableManagement() {
                         variant="ghost"
                         onClick={() => setShowQrTable(table)}
                         className="h-8 w-8 p-0"
-                        title="View QR Code"
+                        title={t('admin.viewQrCode')}
                       >
                         <QrCodeIcon className="h-4 w-4" />
                       </Button>
@@ -505,7 +517,7 @@ export function AdminTableManagement() {
                         className="gap-2 h-8"
                       >
                         <Edit className="h-3 w-3" />
-                        Edit
+                        {t('common.edit')}
                       </Button>
                       <Button
                         size="sm"
@@ -515,7 +527,7 @@ export function AdminTableManagement() {
                         className="gap-2 h-8 text-red-600 hover:text-red-700 hover:border-red-300"
                       >
                         <Trash2 className="h-3 w-3" />
-                        Delete
+                        {t('common.delete')}
                       </Button>
                     </div>
                   </div>
@@ -531,7 +543,7 @@ export function AdminTableManagement() {
         <div className="mt-6 space-y-4">
           {isFetching && !isLoading && (
             <div className="flex justify-center">
-              <InlineLoading text="Updating tables..." />
+              <InlineLoading text={t('admin.updatingTables')} />
             </div>
           )}
           <PaginationControlsComponent
@@ -546,9 +558,9 @@ export function AdminTableManagement() {
       <Dialog open={!!showQrTable} onOpenChange={(open) => !open && setShowQrTable(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>QR Code - Table {showQrTable?.table_number}</DialogTitle>
+            <DialogTitle>{t('admin.qrCode')} - {t('admin.table')} {showQrTable?.table_number}</DialogTitle>
             <DialogDescription>
-              Scan this QR code to open the ordering menu for this table.
+              {t('admin.qrCodeDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center space-y-4 py-4">
@@ -574,7 +586,7 @@ export function AdminTableManagement() {
                   className="gap-2"
                 >
                   <Copy className="h-4 w-4" />
-                  Copy URL
+                  {t('admin.copyUrl')}
                 </Button>
                 <Button
                   size="sm"
@@ -583,7 +595,7 @@ export function AdminTableManagement() {
                   className="gap-2"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Open
+                  {t('admin.open')}
                 </Button>
                 <Button
                   size="sm"
@@ -591,7 +603,7 @@ export function AdminTableManagement() {
                   className="gap-2"
                 >
                   <Printer className="h-4 w-4" />
-                  Print QR
+                  {t('admin.printQr')}
                 </Button>
               </div>
             </div>

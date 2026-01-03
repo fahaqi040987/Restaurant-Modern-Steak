@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,6 +14,8 @@ interface ProductGridProps {
 }
 
 export function ProductGrid({ products, onProductSelect, isLoading }: ProductGridProps) {
+  const { t } = useTranslation()
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -26,9 +29,9 @@ export function ProductGrid({ products, onProductSelect, isLoading }: ProductGri
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center">
           <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('pos.noProductsFound')}</h3>
           <p className="text-gray-500">
-            No products are available in this category or they may be out of stock.
+            {t('pos.noProductsFoundDesc')}
           </p>
         </div>
       </div>
@@ -71,7 +74,7 @@ export function ProductGrid({ products, onProductSelect, isLoading }: ProductGri
                 {/* Unavailable Overlay */}
                 {!product.is_available && (
                   <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">Out of Stock</span>
+                    <span className="text-white text-sm font-medium">{t('pos.outOfStock')}</span>
                   </div>
                 )}
               </div>
@@ -110,7 +113,7 @@ export function ProductGrid({ products, onProductSelect, isLoading }: ProductGri
                   size="sm"
                 >
                   <Plus className="w-4 h-4 mr-1" />
-                  Add to Cart
+                  {t('pos.addToCart')}
                 </Button>
               </div>
 
@@ -118,7 +121,7 @@ export function ProductGrid({ products, onProductSelect, isLoading }: ProductGri
               <div className="mt-3 pt-3 border-t border-gray-100">
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   {product.sku && (
-                    <span>SKU: {product.sku}</span>
+                    <span>{t('pos.sku')}: {product.sku}</span>
                   )}
                   {product.category && (
                     <Badge 

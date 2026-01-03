@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Store, 
-  User as UserIcon, 
-  LogOut, 
+import {
+  Store,
+  User as UserIcon,
+  LogOut,
   Settings,
   UtensilsCrossed,
   ShoppingBag,
@@ -27,15 +28,16 @@ interface POSHeaderProps {
   onCustomerNameChange: (name: string) => void
 }
 
-export function POSHeader({ 
-  user, 
-  selectedTable, 
-  orderType, 
-  onOrderTypeChange, 
+export function POSHeader({
+  user,
+  selectedTable,
+  orderType,
+  onOrderTypeChange,
   onTableSelect,
   customerName,
   onCustomerNameChange
 }: POSHeaderProps) {
+  const { t } = useTranslation()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showPaymentHistory, setShowPaymentHistory] = useState(false)
 
@@ -61,9 +63,9 @@ export function POSHeader({
   }
 
   const orderTypeConfigs = [
-    { type: 'dine_in' as const, label: 'Dine In', icon: UtensilsCrossed, color: 'bg-blue-100 text-blue-700' },
-    { type: 'takeout' as const, label: 'Takeout', icon: ShoppingBag, color: 'bg-green-100 text-green-700' },
-    { type: 'delivery' as const, label: 'Delivery', icon: Truck, color: 'bg-purple-100 text-purple-700' },
+    { type: 'dine_in' as const, labelKey: 'pos.dineIn', icon: UtensilsCrossed, color: 'bg-blue-100 text-blue-700' },
+    { type: 'takeout' as const, labelKey: 'pos.takeout', icon: ShoppingBag, color: 'bg-green-100 text-green-700' },
+    { type: 'delivery' as const, labelKey: 'pos.delivery', icon: Truck, color: 'bg-purple-100 text-purple-700' },
   ]
 
   return (
@@ -76,8 +78,8 @@ export function POSHeader({
               <Store className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">POS System</h1>
-              <p className="text-sm text-gray-500">Point of Sale</p>
+              <h1 className="text-xl font-bold text-gray-900">{t('pos.systemTitle')}</h1>
+              <p className="text-sm text-gray-500">{t('pos.title')}</p>
             </div>
           </div>
         </div>
@@ -99,7 +101,7 @@ export function POSHeader({
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  {config.label}
+                  {t(config.labelKey)}
                 </button>
               )
             })}
@@ -113,7 +115,7 @@ export function POSHeader({
               className="flex items-center gap-2"
             >
               <MapPin className="w-4 h-4" />
-              {selectedTable ? `Table ${selectedTable.table_number}` : 'Select Table'}
+              {selectedTable ? t('pos.tableNumber', { number: selectedTable.table_number }) : t('pos.selectTable')}
             </Button>
           )}
 
@@ -121,11 +123,11 @@ export function POSHeader({
           {orderType !== 'dine_in' && (
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                Customer:
+                {t('pos.customerLabel')}
               </label>
               <Input
                 type="text"
-                placeholder={orderType === 'takeout' ? 'Customer name' : 'Delivery address'}
+                placeholder={orderType === 'takeout' ? t('pos.customerPlaceholder') : t('pos.deliveryPlaceholder')}
                 value={customerName}
                 onChange={(e) => onCustomerNameChange(e.target.value)}
                 className="w-48"
@@ -153,29 +155,29 @@ export function POSHeader({
           <div className="flex items-center gap-2">
             {/* Payment History Access */}
             {(user.role === 'admin' || user.role === 'cashier') && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowPaymentHistory(true)}
                 className="flex items-center gap-2 text-green-600 hover:text-green-700 hover:bg-green-50"
-                title="Payment History"
+                title={t('pos.paymentHistory')}
               >
                 <History className="w-4 h-4" />
-                <span className="text-sm font-medium">Payments</span>
+                <span className="text-sm font-medium">{t('pos.payments')}</span>
               </Button>
             )}
 
             {/* Kitchen Display Access */}
             {(user.role === 'kitchen' || user.role === 'admin' || user.role === 'manager') && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => window.location.href = '/kitchen'}
                 className="flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                title="Kitchen Display"
+                title={t('kitchen.title')}
               >
                 <ChefHat className="w-4 h-4" />
-                <span className="text-sm font-medium">Kitchen</span>
+                <span className="text-sm font-medium">{t('pos.kitchen')}</span>
               </Button>
             )}
             
@@ -199,13 +201,13 @@ export function POSHeader({
       {showPaymentHistory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg">
-            <h2 className="text-lg font-semibold mb-4">Payment History</h2>
-            <p className="text-gray-600 mb-4">Payment history feature is available in the next update!</p>
-            <button 
+            <h2 className="text-lg font-semibold mb-4">{t('pos.paymentHistory')}</h2>
+            <p className="text-gray-600 mb-4">{t('pos.paymentHistoryFeature')}</p>
+            <button
               onClick={() => setShowPaymentHistory(false)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              Close
+              {t('pos.close')}
             </button>
           </div>
         </div>

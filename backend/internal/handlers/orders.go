@@ -551,6 +551,28 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 		return
 	}
 
+	// T077: Create customer notification for order status changes
+	// Notify customer when order is ready for pickup or being prepared
+	if req.Status == "ready" {
+		message := "Your order is ready for pickup! Please proceed to the counter."
+		if err := CreateOrderNotification(h.db, orderID, req.Status, message); err != nil {
+			// Log error but don't fail the request
+			fmt.Printf("Warning: Failed to create order notification: %v\n", err)
+		}
+	} else if req.Status == "preparing" {
+		message := "Your order is now being prepared in the kitchen."
+		if err := CreateOrderNotification(h.db, orderID, req.Status, message); err != nil {
+			// Log error but don't fail the request
+			fmt.Printf("Warning: Failed to create order notification: %v\n", err)
+		}
+	} else if req.Status == "completed" {
+		message := "Your order has been completed. Thank you for dining with us!"
+		if err := CreateOrderNotification(h.db, orderID, req.Status, message); err != nil {
+			// Log error but don't fail the request
+			fmt.Printf("Warning: Failed to create order notification: %v\n", err)
+		}
+	}
+
 	// Fetch and return the updated order
 	order, err := h.getOrderByID(orderID)
 	if err != nil {
