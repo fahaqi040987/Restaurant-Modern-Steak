@@ -50,7 +50,9 @@
       "Bash(__NEW_LINE__ echo \"=== Test 5: Verify quantity updated ===\")",
       "Bash(__NEW_LINE__ echo \"=== Test 6: Delete ingredient from product ===\")",
       "Bash(__NEW_LINE__ echo \"=== Test 7: Verify ingredient deleted ===\")",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(du:*)",
+      "Bash(xargs -I {} sh -c 'cat \"\"{}\"\" 2>/dev/null | wc -c')"
     ]
   }
 }
