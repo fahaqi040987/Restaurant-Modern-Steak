@@ -130,6 +130,9 @@ docker compose -f docker-compose.prod.yml ps
 
 # Check backend health
 curl http://localhost:8080/health
+
+# If backend is not accessible directly, check via docker:
+docker compose -f docker-compose.prod.yml --env-file .env.production exec backend wget -q -O- http://localhost:8080/health
 ```
 
 ### Step 6: Access Application
