@@ -299,7 +299,7 @@ describe('KitchenDisplay (EnhancedKitchenLayout)', () => {
     });
 
     it('should get sound settings', () => {
-      vi.mocked(kitchenSoundService.getSettings).mockReturnValue({ enabled: true });
+      vi.mocked(kitchenSoundService.getSettings).mockReturnValue({ enabled: true, volume: 0.7, newOrderEnabled: true, orderReadyEnabled: true, takeawayReadyEnabled: true });
       const settings = kitchenSoundService.getSettings();
 
       expect(settings).toBeDefined();
