@@ -166,6 +166,7 @@ const setupDefaultMocks = () => {
     success: true,
     message: 'Success',
     data: products,
+    meta: { current_page: 1, per_page: 50, total: products.length, total_pages: 1 },
   });
 
   vi.mocked(apiClient.getProductsByCategory).mockResolvedValue({
@@ -184,12 +185,24 @@ const setupDefaultMocks = () => {
     success: true,
     message: 'Success',
     data: activeOrders,
+    meta: { current_page: 1, per_page: 50, total: activeOrders.length, total_pages: 1 },
   });
 
   vi.mocked(apiClient.createServerOrder).mockResolvedValue({
     success: true,
     message: 'Order created',
-    data: { order_number: 'ORD-20251227-0002' },
+    data: { 
+      id: 'order-2',
+      order_number: 'ORD-20251227-0002',
+      order_type: 'dine_in' as const,
+      status: 'pending' as const,
+      subtotal: 0,
+      tax_amount: 0,
+      discount_amount: 0,
+      total_amount: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
   });
 
   return { categories, products, tables, activeOrders };
@@ -499,7 +512,7 @@ describe('ServerInterface (Server Station)', () => {
 
       // Add product once
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
 
       fireEvent.click(addButton);
 
@@ -528,7 +541,7 @@ describe('ServerInterface (Server Station)', () => {
 
       // Add Rendang Wagyu (185,000)
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       // Check total shows in the cart section (using getAllBy for multiple matches)
@@ -550,7 +563,7 @@ describe('ServerInterface (Server Station)', () => {
 
       // Add item to cart without selecting table
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -577,7 +590,7 @@ describe('ServerInterface (Server Station)', () => {
 
       // Add item
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -674,7 +687,7 @@ describe('ServerInterface (Server Station)', () => {
 
       // Add item
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       // Submit order
@@ -712,7 +725,7 @@ describe('ServerInterface (Server Station)', () => {
       if (tableButton) fireEvent.click(tableButton);
 
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       // Submit order
@@ -746,7 +759,7 @@ describe('ServerInterface (Server Station)', () => {
       if (tableButton) fireEvent.click(tableButton);
 
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -812,6 +825,7 @@ describe('ServerInterface (Server Station)', () => {
         success: true,
         message: 'Success',
         data: [createMockProduct({ is_available: false })],
+        meta: { current_page: 1, per_page: 50, total: 1, total_pages: 1 },
       });
 
       vi.mocked(apiClient.getTables).mockResolvedValue({
@@ -824,6 +838,7 @@ describe('ServerInterface (Server Station)', () => {
         success: true,
         message: 'Success',
         data: [],
+        meta: { current_page: 1, per_page: 50, total: 0, total_pages: 0 },
       });
 
       renderWithProviders(<ServerInterface />);
@@ -844,7 +859,7 @@ describe('ServerInterface (Server Station)', () => {
 
       // Add item
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -853,7 +868,7 @@ describe('ServerInterface (Server Station)', () => {
 
       // The product grid should now show +/- buttons instead of Add button
       // Find and click minus button in the product grid to decrease quantity
-      const minusButton = within(productCard!).getAllByRole('button').find(btn =>
+      const minusButton = within(productCard as HTMLElement).getAllByRole('button').find(btn =>
         btn.querySelector('svg[class*="lucide-minus"]')
       );
 

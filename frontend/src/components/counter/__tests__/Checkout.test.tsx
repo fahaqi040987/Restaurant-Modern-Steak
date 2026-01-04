@@ -191,6 +191,7 @@ const setupDefaultMocks = () => {
     success: true,
     message: 'Success',
     data: products,
+    meta: { current_page: 1, per_page: 50, total: products.length, total_pages: 1 },
   });
 
   vi.mocked(apiClient.getProductsByCategory).mockResolvedValue({
@@ -209,18 +210,38 @@ const setupDefaultMocks = () => {
     success: true,
     message: 'Success',
     data: pendingOrders,
+    meta: { current_page: 1, per_page: 50, total: pendingOrders.length, total_pages: 1 },
   });
 
   vi.mocked(apiClient.createCounterOrder).mockResolvedValue({
     success: true,
     message: 'Order created',
-    data: { order_number: 'ORD-20251227-0003' },
+    data: { 
+      id: 'order-3',
+      order_number: 'ORD-20251227-0003',
+      order_type: 'dine_in' as const,
+      status: 'pending' as const,
+      subtotal: 0,
+      tax_amount: 0,
+      discount_amount: 0,
+      total_amount: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
   });
 
   vi.mocked(apiClient.processCounterPayment).mockResolvedValue({
     success: true,
     message: 'Payment processed',
-    data: { reference_number: 'PAY-123' },
+    data: { 
+      id: 'pay-123',
+      order_id: 'order-3',
+      payment_method: 'cash' as const,
+      amount: 0,
+      reference_number: 'PAY-123',
+      status: 'completed' as const,
+      created_at: new Date().toISOString(),
+    },
   });
 
   return { categories, products, tables, pendingOrders };
@@ -294,7 +315,7 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add item
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -315,7 +336,7 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add item
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -323,7 +344,7 @@ describe('CounterInterface (Checkout)', () => {
       });
 
       // Find plus button in product grid to add more
-      const plusButtons = within(productCard!).getAllByRole('button');
+      const plusButtons = within(productCard as HTMLElement).getAllByRole('button');
       const plusButton = plusButtons.find(btn => btn.querySelector('svg[class*="lucide-plus"]'));
 
       if (plusButton) {
@@ -349,7 +370,7 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add item
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -386,7 +407,7 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add Rendang Wagyu (185,000)
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -408,11 +429,11 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add Rendang Wagyu (185,000)
       const rendangCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      fireEvent.click(within(rendangCard!).getByRole('button', { name: /Add/i }));
+      fireEvent.click(within(rendangCard as HTMLElement).getByRole('button', { name: /Add/i }));
 
       // Add Sate Wagyu (145,000)
       const sateCard = screen.getByText('Sate Wagyu').closest('.hover\\:shadow-md');
-      fireEvent.click(within(sateCard!).getByRole('button', { name: /Add/i }));
+      fireEvent.click(within(sateCard as HTMLElement).getByRole('button', { name: /Add/i }));
 
       await waitFor(() => {
         // Total should be 330,000
@@ -431,7 +452,7 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add item twice
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
       fireEvent.click(addButton);
 
@@ -452,7 +473,7 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add item
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -682,9 +703,9 @@ describe('CounterInterface (Checkout)', () => {
 
     it('should show empty state when no orders ready for payment', async () => {
       vi.mocked(apiClient.getCategories).mockResolvedValue({ success: true, message: 'Success', data: [] });
-      vi.mocked(apiClient.getProducts).mockResolvedValue({ success: true, message: 'Success', data: [] });
+      vi.mocked(apiClient.getProducts).mockResolvedValue({ success: true, message: 'Success', data: [], meta: { current_page: 1, per_page: 50, total: 0, total_pages: 0 } });
       vi.mocked(apiClient.getTables).mockResolvedValue({ success: true, message: 'Success', data: [] });
-      vi.mocked(apiClient.getOrders).mockResolvedValue({ success: true, message: 'Success', data: [] });
+      vi.mocked(apiClient.getOrders).mockResolvedValue({ success: true, message: 'Success', data: [], meta: { current_page: 1, per_page: 50, total: 0, total_pages: 0 } });
 
       renderWithProviders(<CounterInterface />);
 
@@ -805,7 +826,7 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add item to show notes field
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -828,7 +849,7 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add item
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       // Add notes
@@ -1005,7 +1026,7 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add item without selecting table
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {
@@ -1032,7 +1053,7 @@ describe('CounterInterface (Checkout)', () => {
 
       // Add item
       const productCard = screen.getByText('Rendang Wagyu').closest('.hover\\:shadow-md');
-      const addButton = within(productCard!).getByRole('button', { name: /Add/i });
+      const addButton = within(productCard as HTMLElement).getByRole('button', { name: /Add/i });
       fireEvent.click(addButton);
 
       await waitFor(() => {

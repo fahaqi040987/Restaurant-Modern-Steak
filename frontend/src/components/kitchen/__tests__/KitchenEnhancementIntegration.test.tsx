@@ -267,8 +267,8 @@ describe('Kitchen Enhancement Integration', () => {
       const orderWithProgress = {
         ...mockOrder,
         items: [
-          { ...mockOrderItems[0], status: 'ready' },
-          { ...mockOrderItems[1], status: 'pending' },
+          { ...mockOrderItems[0], status: 'ready' as const },
+          { ...mockOrderItems[1], status: 'pending' as const },
         ],
       };
 
@@ -296,8 +296,8 @@ describe('Kitchen Enhancement Integration', () => {
       const orderWithAllItemsReady = {
         ...mockOrder,
         items: [
-          { ...mockOrderItems[0], status: 'ready' },
-          { ...mockOrderItems[1], status: 'ready' },
+          { ...mockOrderItems[0], status: 'ready' as const },
+          { ...mockOrderItems[1], status: 'ready' as const },
         ],
       };
 
@@ -377,7 +377,7 @@ describe('Kitchen Enhancement Integration', () => {
       const onItemStatusUpdate = vi.fn();
 
       // Start with confirmed order
-      const confirmedOrder = { ...mockOrder, status: 'confirmed' };
+      const confirmedOrder = { ...mockOrder, status: 'confirmed' as const };
 
       const { rerender } = renderWithProviders(
         <EnhancedKitchenOrderCard
@@ -397,7 +397,7 @@ describe('Kitchen Enhancement Integration', () => {
       });
 
       // Step 2: Update to preparing state and check items
-      const preparingOrder = { ...mockOrder, status: 'preparing' };
+      const preparingOrder = { ...mockOrder, status: 'preparing' as const };
       rerender(
         <EnhancedKitchenOrderCard
           order={preparingOrder}
@@ -443,8 +443,8 @@ describe('Kitchen Enhancement Integration', () => {
       const orderWithAllItemsReady = {
         ...mockOrder,
         items: [
-          { ...mockOrderItems[0], status: 'ready' },
-          { ...mockOrderItems[1], status: 'ready' },
+          { ...mockOrderItems[0], status: 'ready' as const },
+          { ...mockOrderItems[1], status: 'ready' as const },
         ],
       };
 
