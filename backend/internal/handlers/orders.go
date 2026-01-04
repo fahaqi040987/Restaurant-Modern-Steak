@@ -246,6 +246,38 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
+	// T008: Validate table_id is required for dine-in orders
+	if req.OrderType == "dine_in" && req.TableID == nil {
+		c.JSON(http.StatusBadRequest, models.APIResponse{
+			Success: false,
+			Message: "Table selection is required for dine-in orders",
+			Error:   stringPtr("table_required_for_dine_in"),
+		})
+		return
+	}
+
+	// T007: Validate table exists if provided
+	if req.TableID != nil {
+		var tableExists bool
+		err := h.db.QueryRow("SELECT EXISTS(SELECT 1 FROM dining_tables WHERE id = $1)", *req.TableID).Scan(&tableExists)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.APIResponse{
+				Success: false,
+				Message: "Failed to validate table",
+				Error:   stringPtr(err.Error()),
+			})
+			return
+		}
+		if !tableExists {
+			c.JSON(http.StatusBadRequest, models.APIResponse{
+				Success: false,
+				Message: "Selected table does not exist",
+				Error:   stringPtr("table_not_found"),
+			})
+			return
+		}
+	}
+
 	// Start transaction
 	tx, err := h.db.Begin()
 	if err != nil {
@@ -264,13 +296,15 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	// Calculate totals
 	var subtotal float64
 	for _, item := range req.Items {
-		// Get product price
+		// Get product price and name for better error messages
 		var price float64
-		err := tx.QueryRow("SELECT price FROM products WHERE id = $1 AND is_available = true", item.ProductID).Scan(&price)
+		var productName string
+		var isAvailable bool
+		err := tx.QueryRow("SELECT name, price, is_available FROM products WHERE id = $1", item.ProductID).Scan(&productName, &price, &isAvailable)
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusBadRequest, models.APIResponse{
 				Success: false,
-				Message: "Product not found or not available",
+				Message: fmt.Sprintf("Product with ID '%s' not found", item.ProductID),
 				Error:   stringPtr("product_not_found"),
 			})
 			return
@@ -278,8 +312,17 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.APIResponse{
 				Success: false,
-				Message: "Failed to fetch product price",
+				Message: "Failed to fetch product details",
 				Error:   stringPtr(err.Error()),
+			})
+			return
+		}
+		// T009: Check availability separately for clearer error message
+		if !isAvailable {
+			c.JSON(http.StatusBadRequest, models.APIResponse{
+				Success: false,
+				Message: fmt.Sprintf("Product '%s' is currently not available", productName),
+				Error:   stringPtr("product_not_available"),
 			})
 			return
 		}

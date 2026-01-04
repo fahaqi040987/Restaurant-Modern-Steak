@@ -1,0 +1,63 @@
+# Git
+.git/
+.gitignore
+
+# Environment files
+.env*
+!.env.example
+
+# Dependencies (will be installed in container)
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+.cache/
+
+# Testing
+coverage/
+test-results/
+playwright-report/
+*.lcov
+e2e/
+
+# Development files
+.vscode/
+.idea/
+.cursor/
+.claude/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Config files (local only)
+.prettierrc*
+.eslintrc*
+eslint.config.js
+tsconfig.json
+vite.config.ts
+vitest.config.ts
+playwright.config.ts
+
+# Backup files
+*.backup
+*.bak
+*.tar.gz

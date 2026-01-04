@@ -185,6 +185,16 @@ export const updateReservationStatusSchema = z.object({
   notes: z.string().max(500, 'Notes must be less than 500 characters').optional(),
 })
 
+// Recipe/Ingredient related schemas
+export const recipeIngredientSchema = z.object({
+  ingredient_id: requiredStringSchema.uuid('Please select a valid ingredient'),
+  quantity_required: z.number().min(0.01, 'Quantity must be greater than 0'),
+})
+
+export const updateRecipeIngredientSchema = z.object({
+  quantity_required: z.number().min(0.01, 'Quantity must be greater than 0'),
+})
+
 // Export types
 export type CreateUserData = z.infer<typeof createUserSchema>
 export type UpdateUserData = z.infer<typeof updateUserSchema>
@@ -201,3 +211,7 @@ export type POSSettingsData = z.infer<typeof posSettingsSchema>
 // Reservation types
 export type ReservationFormData = z.infer<typeof reservationSchema>
 export type UpdateReservationStatusData = z.infer<typeof updateReservationStatusSchema>
+
+// Recipe types
+export type RecipeIngredientData = z.infer<typeof recipeIngredientSchema>
+export type UpdateRecipeIngredientData = z.infer<typeof updateRecipeIngredientSchema>

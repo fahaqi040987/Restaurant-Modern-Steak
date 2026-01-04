@@ -454,3 +454,122 @@ type GetNotificationsResponse struct {
 	Notifications []OrderNotification `json:"notifications"`
 	UnreadCount   int                 `json:"unread_count"`
 }
+
+// ============================================
+// Ingredient & Recipe Models (Feature: 007-fix-order-inventory-system)
+// Ingredient-based inventory with recipe management
+// ============================================
+
+// Ingredient represents a raw material used in food preparation
+type Ingredient struct {
+	ID             uuid.UUID  `json:"id"`
+	Name           string     `json:"name"`
+	Description    *string    `json:"description"`
+	Unit           string     `json:"unit"` // kg, liter, pcs, dozen, box
+	CurrentStock   float64    `json:"current_stock"`
+	MinimumStock   float64    `json:"minimum_stock"`
+	MaximumStock   float64    `json:"maximum_stock"`
+	UnitCost       float64    `json:"unit_cost"` // Cost per unit in IDR
+	Supplier       *string    `json:"supplier"`
+	LastRestockedAt *time.Time `json:"last_restocked_at"`
+	IsActive       bool       `json:"is_active"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
+}
+
+// ProductIngredient represents the recipe relationship between a product and its ingredients
+type ProductIngredient struct {
+	ID               uuid.UUID  `json:"id"`
+	ProductID        uuid.UUID  `json:"product_id"`
+	IngredientID     uuid.UUID  `json:"ingredient_id"`
+	QuantityRequired float64    `json:"quantity_required"` // Amount of ingredient per product unit
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
+	// Expanded fields (populated via JOIN)
+	IngredientName   string     `json:"ingredient_name,omitempty"`
+	IngredientUnit   string     `json:"ingredient_unit,omitempty"`
+	CurrentStock     float64    `json:"current_stock,omitempty"`
+}
+
+// IngredientHistory represents an audit record of ingredient stock changes
+type IngredientHistory struct {
+	ID            uuid.UUID  `json:"id"`
+	IngredientID  uuid.UUID  `json:"ingredient_id"`
+	OrderID       *uuid.UUID `json:"order_id,omitempty"` // Reference to order for consumption/cancellation
+	Operation     string     `json:"operation"`          // add, remove, restock, usage, spoilage, adjustment, order_consumption, order_cancellation
+	Quantity      float64    `json:"quantity"`
+	PreviousStock float64    `json:"previous_stock"`
+	NewStock      float64    `json:"new_stock"`
+	Reason        *string    `json:"reason"`
+	Notes         *string    `json:"notes"`
+	AdjustedBy    *uuid.UUID `json:"adjusted_by"`
+	CreatedAt     time.Time  `json:"created_at"`
+	// Expanded fields
+	AdjustedByUser *User `json:"adjusted_by_user,omitempty"`
+}
+
+// Recipe DTOs
+
+// AddRecipeIngredientRequest is the DTO for adding an ingredient to a product's recipe
+type AddRecipeIngredientRequest struct {
+	IngredientID     uuid.UUID `json:"ingredient_id" binding:"required"`
+	QuantityRequired float64   `json:"quantity_required" binding:"required,gt=0"`
+}
+
+// UpdateRecipeIngredientRequest is the DTO for updating ingredient quantity in a recipe
+type UpdateRecipeIngredientRequest struct {
+	QuantityRequired float64 `json:"quantity_required" binding:"required,gt=0"`
+}
+
+// RecipeResponse is the DTO for returning a product's recipe
+type RecipeResponse struct {
+	ProductID   uuid.UUID           `json:"product_id"`
+	ProductName string              `json:"product_name"`
+	Ingredients []ProductIngredient `json:"ingredients"`
+}
+
+// BulkRecipeRequest is the DTO for bulk updating multiple product recipes
+type BulkRecipeRequest struct {
+	Recipes []BulkRecipeItem `json:"recipes" binding:"required"`
+}
+
+// BulkRecipeItem represents a single product's recipe in bulk update
+type BulkRecipeItem struct {
+	ProductID   uuid.UUID                    `json:"product_id" binding:"required"`
+	Ingredients []AddRecipeIngredientRequest `json:"ingredients" binding:"required"`
+}
+
+// BulkRecipeResponse is the DTO for bulk recipe update results
+type BulkRecipeResponse struct {
+	UpdatedCount int                  `json:"updated_count"`
+	FailedCount  int                  `json:"failed_count"`
+	Errors       []BulkRecipeError    `json:"errors,omitempty"`
+}
+
+// BulkRecipeError represents an error in bulk recipe update
+type BulkRecipeError struct {
+	ProductID uuid.UUID `json:"product_id"`
+	Error     string    `json:"error"`
+}
+
+// IngredientUsageReport is the DTO for ingredient usage analytics
+type IngredientUsageReport struct {
+	Period      UsageReportPeriod       `json:"period"`
+	Ingredients []IngredientUsageItem   `json:"ingredients"`
+}
+
+// UsageReportPeriod represents the time period for usage reports
+type UsageReportPeriod struct {
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
+}
+
+// IngredientUsageItem represents usage data for a single ingredient
+type IngredientUsageItem struct {
+	IngredientID   uuid.UUID `json:"ingredient_id"`
+	IngredientName string    `json:"ingredient_name"`
+	Unit           string    `json:"unit"`
+	TotalUsed      float64   `json:"total_used"`
+	TotalCost      float64   `json:"total_cost"` // in IDR
+	OrderCount     int       `json:"order_count"`
+}

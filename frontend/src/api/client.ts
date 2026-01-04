@@ -44,6 +44,14 @@ import type {
   SurveyStatsResponse,
   OrderNotification,
   GetNotificationsResponse,
+  // Recipe management types (007-fix-order-inventory-system)
+  RecipeResponse,
+  ProductIngredient,
+  AddRecipeIngredientRequest,
+  UpdateRecipeIngredientRequest,
+  BulkRecipeRequest,
+  BulkRecipeResponse,
+  IngredientUsageReport,
 } from '@/types';
 
 class APIClient {
@@ -177,6 +185,37 @@ class APIClient {
       method: 'GET',
       url: `/categories/${categoryId}/products`,
       params: { available_only: availableOnly },
+    });
+  }
+
+  // Recipe/Ingredient endpoints
+  async getProductIngredients(productId: string): Promise<APIResponse<ProductIngredient[]>> {
+    return this.request({
+      method: 'GET',
+      url: `/admin/products/${productId}/ingredients`,
+    });
+  }
+
+  async addProductIngredient(productId: string, data: AddRecipeIngredientRequest): Promise<APIResponse<{ id: string }>> {
+    return this.request({
+      method: 'POST',
+      url: `/admin/products/${productId}/ingredients`,
+      data,
+    });
+  }
+
+  async updateProductIngredient(productId: string, ingredientId: string, data: UpdateRecipeIngredientRequest): Promise<APIResponse<void>> {
+    return this.request({
+      method: 'PUT',
+      url: `/admin/products/${productId}/ingredients/${ingredientId}`,
+      data,
+    });
+  }
+
+  async deleteProductIngredient(productId: string, ingredientId: string): Promise<APIResponse<void>> {
+    return this.request({
+      method: 'DELETE',
+      url: `/admin/products/${productId}/ingredients/${ingredientId}`,
     });
   }
 
@@ -960,6 +999,106 @@ class APIClient {
     return this.request({
       method: 'GET',
       url: '/admin/ingredients/low-stock',
+    });
+  }
+
+  // ============================================
+  // RECIPE MANAGEMENT (Feature: 007-fix-order-inventory-system)
+  // ============================================
+
+  /**
+   * Get a product's recipe (list of ingredients)
+   * @param productId - Product UUID
+   * @returns Recipe response with ingredients
+   */
+  async getProductRecipe(productId: string): Promise<APIResponse<RecipeResponse>> {
+    return this.request({
+      method: 'GET',
+      url: `/admin/products/${productId}/ingredients`,
+    });
+  }
+
+  /**
+   * Add an ingredient to a product's recipe
+   * @param productId - Product UUID
+   * @param ingredientData - Ingredient ID and quantity required
+   * @returns Created product ingredient
+   */
+  async addRecipeIngredient(
+    productId: string,
+    ingredientData: AddRecipeIngredientRequest
+  ): Promise<APIResponse<ProductIngredient>> {
+    return this.request({
+      method: 'POST',
+      url: `/admin/products/${productId}/ingredients`,
+      data: ingredientData,
+    });
+  }
+
+  /**
+   * Update ingredient quantity in a product's recipe
+   * @param productId - Product UUID
+   * @param ingredientId - Ingredient UUID
+   * @param data - Updated quantity
+   * @returns Updated product ingredient
+   */
+  async updateRecipeIngredient(
+    productId: string,
+    ingredientId: string,
+    data: UpdateRecipeIngredientRequest
+  ): Promise<APIResponse<ProductIngredient>> {
+    return this.request({
+      method: 'PUT',
+      url: `/admin/products/${productId}/ingredients/${ingredientId}`,
+      data,
+    });
+  }
+
+  /**
+   * Remove an ingredient from a product's recipe
+   * @param productId - Product UUID
+   * @param ingredientId - Ingredient UUID
+   * @returns Success response
+   */
+  async removeRecipeIngredient(
+    productId: string,
+    ingredientId: string
+  ): Promise<APIResponse> {
+    return this.request({
+      method: 'DELETE',
+      url: `/admin/products/${productId}/ingredients/${ingredientId}`,
+    });
+  }
+
+  /**
+   * Bulk update multiple product recipes
+   * @param recipes - Array of product recipes to update
+   * @returns Bulk update results
+   */
+  async bulkUpdateRecipes(
+    recipes: BulkRecipeRequest
+  ): Promise<APIResponse<BulkRecipeResponse>> {
+    return this.request({
+      method: 'POST',
+      url: '/admin/recipes/bulk',
+      data: recipes,
+    });
+  }
+
+  /**
+   * Get ingredient usage report for a time period
+   * @param startDate - Start date (YYYY-MM-DD)
+   * @param endDate - End date (YYYY-MM-DD)
+   * @returns Usage report with ingredient consumption data
+   */
+  async getIngredientUsageReport(
+    startDate: string,
+    endDate: string
+  ): Promise<APIResponse<IngredientUsageReport>> {
+    return this.request({
+      method: 'GET',
+      url: '/admin/ingredients/usage-report',
+      params: { start_date: startDate, end_date: endDate },
     });
   }
 

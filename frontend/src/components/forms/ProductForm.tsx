@@ -20,6 +20,8 @@ import { toastHelpers } from '@/lib/toast-helpers'
 import apiClient from '@/api/client'
 import type { Product, Category } from '@/types'
 import { X } from 'lucide-react'
+import { RecipeManagement } from '@/components/admin/RecipeManagement'
+import { Separator } from '@/components/ui/separator'
 
 interface ProductFormProps {
   product?: Product // If provided, we're editing; otherwise creating
@@ -287,6 +289,14 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
             </div>
           </form>
         </Form>
+
+        {/* Recipe Management - Only shown when editing existing product */}
+        {isEditing && product && (
+          <>
+            <Separator className="my-6" />
+            <RecipeManagement productId={product.id} />
+          </>
+        )}
       </CardContent>
     </Card>
   )

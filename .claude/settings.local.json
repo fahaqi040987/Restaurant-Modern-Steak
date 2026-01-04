@@ -35,7 +35,22 @@
       "Skill(speckit.tasks)",
       "Skill(speckit.implement)",
       "Bash(docker exec:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNGI2YmFmYWMtY2E4Mi00M2ZkLTkwZDMtZGU5ODg1MzNmM2UyIiwidXNlcm5hbWUiOiJjb3VudGVyMSIsInJvbGUiOiJjb3VudGVyIiwiaXNzIjoicG9zLXN5c3RlbSIsImV4cCI6MTc2NzU0NzEzOSwiaWF0IjoxNzY3NDYwNzM5fQ.24bxzr52RsCOdFQjPMK1NlwjS0K7FbO5LZAzuFpKrk4\")",
+      "Bash(__NEW_LINE__ echo \"=== Test 1: Dine-in without table_id \\(T008\\) ===\")",
+      "Bash(make dev:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiN2IwYzQyY2EtN2VjNi00ZTFkLWIzZmMtMzZmMDQwNDAxYzJlIiwidXNlcm5hbWUiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlzcyI6InBvcy1zeXN0ZW0iLCJleHAiOjE3Njc1OTg3NTcsImlhdCI6MTc2NzUxMjM1N30.gNws2qeR7PnsRcR7nMkTq5rxeLuHmdQNx-kwYETGQVU\")",
+      "Bash(PRODUCT_ID=\"40d5a9fd-3dcc-4de6-9a5f-dd7d4e9781fd\":*)",
+      "Bash(__NEW_LINE__ echo \"=== Test 1: Get product ingredients \\(should be empty\\) ===\")",
+      "Bash(INGREDIENT_ID=\"dd5b3516-02d3-455f-9db7-4b1d05b6f8e8\")",
+      "Bash(__NEW_LINE__ echo \"=== Test 3: Get product ingredients \\(should have 1 ingredient\\) ===\")",
+      "Bash(__NEW_LINE__ echo \"=== Test 4: Update ingredient quantity ===\")",
+      "Bash(__NEW_LINE__ echo \"=== Test 5: Verify quantity updated ===\")",
+      "Bash(__NEW_LINE__ echo \"=== Test 6: Delete ingredient from product ===\")",
+      "Bash(__NEW_LINE__ echo \"=== Test 7: Verify ingredient deleted ===\")",
+      "Bash(npm install:*)"
     ]
   }
 }
