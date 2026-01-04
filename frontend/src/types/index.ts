@@ -564,3 +564,147 @@ export interface GetNotificationsResponse {
   notifications: OrderNotification[];
   unread_count: number;
 }
+
+// ===========================================
+// Ingredient & Recipe Types (Feature: 007-fix-order-inventory-system)
+// Ingredient-based inventory with recipe management
+// ===========================================
+
+/**
+ * Ingredient represents a raw material used in food preparation
+ */
+export interface Ingredient {
+  id: string;
+  name: string;
+  description?: string;
+  unit: string; // kg, liter, pcs, dozen, box
+  current_stock: number;
+  minimum_stock: number;
+  maximum_stock: number;
+  unit_cost: number; // Cost per unit in IDR
+  supplier?: string;
+  last_restocked_at?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * ProductIngredient represents the recipe relationship between a product and its ingredients
+ */
+export interface ProductIngredient {
+  id: string;
+  product_id: string;
+  ingredient_id: string;
+  quantity_required: number; // Amount of ingredient per product unit
+  created_at: string;
+  updated_at: string;
+  // Expanded fields (populated via JOIN)
+  ingredient_name?: string;
+  ingredient_unit?: string;
+  current_stock?: number;
+}
+
+/**
+ * IngredientHistory represents an audit record of ingredient stock changes
+ */
+export interface IngredientHistory {
+  id: string;
+  ingredient_id: string;
+  order_id?: string; // Reference to order for consumption/cancellation
+  operation: 'add' | 'remove' | 'restock' | 'usage' | 'spoilage' | 'adjustment' | 'order_consumption' | 'order_cancellation';
+  quantity: number;
+  previous_stock: number;
+  new_stock: number;
+  reason?: string;
+  notes?: string;
+  adjusted_by?: string;
+  created_at: string;
+  adjusted_by_user?: User;
+}
+
+// Recipe Request/Response Types
+
+/**
+ * Request payload for adding an ingredient to a product's recipe
+ */
+export interface AddRecipeIngredientRequest {
+  ingredient_id: string;
+  quantity_required: number;
+}
+
+/**
+ * Request payload for updating ingredient quantity in a recipe
+ */
+export interface UpdateRecipeIngredientRequest {
+  quantity_required: number;
+}
+
+/**
+ * Response containing a product's recipe (list of ingredients)
+ */
+export interface RecipeResponse {
+  product_id: string;
+  product_name: string;
+  ingredients: ProductIngredient[];
+}
+
+/**
+ * Request payload for bulk updating multiple product recipes
+ */
+export interface BulkRecipeRequest {
+  recipes: BulkRecipeItem[];
+}
+
+/**
+ * Single product's recipe in bulk update
+ */
+export interface BulkRecipeItem {
+  product_id: string;
+  ingredients: AddRecipeIngredientRequest[];
+}
+
+/**
+ * Response from bulk recipe update
+ */
+export interface BulkRecipeResponse {
+  updated_count: number;
+  failed_count: number;
+  errors?: BulkRecipeError[];
+}
+
+/**
+ * Error in bulk recipe update
+ */
+export interface BulkRecipeError {
+  product_id: string;
+  error: string;
+}
+
+/**
+ * Ingredient usage report for analytics
+ */
+export interface IngredientUsageReport {
+  period: UsageReportPeriod;
+  ingredients: IngredientUsageItem[];
+}
+
+/**
+ * Time period for usage reports
+ */
+export interface UsageReportPeriod {
+  start_date: string;
+  end_date: string;
+}
+
+/**
+ * Usage data for a single ingredient
+ */
+export interface IngredientUsageItem {
+  ingredient_id: string;
+  ingredient_name: string;
+  unit: string;
+  total_used: number;
+  total_cost: number; // in IDR
+  order_count: number;
+}

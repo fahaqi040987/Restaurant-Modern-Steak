@@ -22,36 +22,37 @@ interface StorySectionProps {
 }
 
 const defaultStory = [
-  'Steak Kenangan bermula dari sebuah mimpi sederhana: menghadirkan pengalaman makan steak premium yang tidak hanya memuaskan lidah, tetapi juga menghangatkan hati. Di tahun 2015, kami membuka pintu pertama kami di Jakarta dengan keyakinan bahwa setiap hidangan adalah sebuah karya seni.',
-  'Sejak awal, kami berkomitmen untuk menggunakan bahan-bahan berkualitas terbaik. Daging sapi kami dipilih dengan cermat dari peternakan terpercaya, dimatangkan dengan sempurna, dan diolah oleh chef berpengalaman yang memiliki passion yang sama dengan kami.',
-  'Hari ini, Steak Kenangan telah menjadi destinasi favorit bagi pecinta steak di Jakarta. Namun filosofi kami tetap sama: memberikan pengalaman kuliner yang tak terlupakan dengan kehangatan hospitality Indonesia.',
+  'Steak Kenangan berawal dari sebuah dapur sederhana di Belitung, tempat di mana rasa, kebersamaan, dan kenangan pertama kali disatukan. Kami ingin menghadirkan steak rumahan yang bukan hanya lezat dan terjangkau, tetapi juga mampu menemani momen-momen kecil bersama keluarga dan orang terdekat.',
+  'Dari sana, langkah kami perlahan meluas hingga ke Pulau Jawa. Kehadiran Steak Kenangan di Depok menjadi titik di mana cerita kami mulai dikenal lebih banyak orang—mahasiswa, keluarga, hingga mereka yang mencari tempat makan nyaman dengan rasa yang konsisten. Perjalanan itu berlanjut ke Cibitung, Bekasi, mempertemukan kami dengan pelanggan baru dan semakin menguatkan ikatan yang telah terbangun.',
+  'Cerita kami kemudian sampai ke Yogyakarta, sebuah kota penuh budaya dan kenangan, tempat Steak Kenangan membawa cita rasa rumahan ke tengah hiruk pikuk destinasi wisata. Dalam perjalanan ini, kami juga belajar bahwa bertumbuh berarti berani menata ulang langkah, memilih lokasi yang lebih tepat, dan kembali hadir lebih dekat dengan pelanggan yang telah setia.',
+  'Hari ini, Steak Kenangan bukan sekadar tentang steak di atas piring, tetapi tentang cerita di setiap meja, tawa yang dibagi, dan kenangan yang terus hidup di setiap kunjungan. Karena bagi kami, makanan terbaik adalah yang selalu mengingatkan kita untuk pulang.'
 ]
 
 const defaultMilestones: TimelineMilestone[] = [
   {
-    year: '2015',
-    title: 'The Beginning',
-    description: 'Steak Kenangan membuka gerai pertama di Bangka Belitung',
-  },
-  {
-    year: '2017',
-    title: 'Growing Together',
-    description: 'Memperluas menu dengan variasi steak premium dan wine collection',
-  },
-  {
-    year: '2019',
-    title: 'Recognition',
-    description: 'Meraih penghargaan Best Steakhouse dari Indonesian Culinary Awards',
+    year: '2021',
+    title: 'Lahirnya Pertama Kali di Belitung',
+    description: 'Steak Kenangan resmi berdiri di Belitung pada tahun 2021. Cabang pertama ini menjadi fondasi berkembangnya brand dengan konsep steak rumahan yang lezat, affordable, dan ramah keluarga.',
   },
   {
     year: '2022',
-    title: 'Innovation',
-    description: 'Memperkenalkan konsep dining experience baru dengan private dining room',
+    title: 'Ekspansi ke Pulau Jawa (Depok – Kukusan)',
+    description: 'Tahun 2022, Steak Kenangan melakukan ekspansi pertama ke Jawa dengan membuka cabang di Depok, Kukusan. Kehadiran cabang ini memperkuat brand dan mulai dikenal di kalangan mahasiswa serta keluarga diluar Belitung.',
+  },
+  {
+    year: '2023',
+    title: 'Buka Cabang di Cibitung, Bekasi',
+    description: 'Pada tahun 2023, Steak Kenangan terus berkembang dan membuka cabang di Cibitung, Bekasi. Cabang ini menjadi pusat pertumbuhan pelanggan di area Bekasi dan sekitarnya.',
   },
   {
     year: '2024',
-    title: 'The Journey Continues',
-    description: 'Terus berkomitmen untuk menghadirkan pengalaman kuliner terbaik',
+    title: 'Buka Cabang di Jogjakarta',
+    description: 'Pada akhir Tahun 2024 tepatnya pada Desember 2024 Steak Kenangan kembali melakukan ekspansi lebih jauh lagi yakni membuka cabang di Kota Destinasi Pariwisata Nasional Jogjakarta.',
+  },
+  {
+    year: '2025',
+    title: 'Reopening & Pengembangan Baru',
+    description: 'Cabang Depok Tanah Baru resmi dibuka kembali sebagai bentuk ekspansi dan komitmen menghadirkan pengalaman kuliner yang lebih dekat dengan pelanggan. Sementara itu, cabang Kukusan Depok ditutup pada tahun 2024 karena strategi penyesuaian lokasi dan pengembangan usaha.',
   },
 ]
 

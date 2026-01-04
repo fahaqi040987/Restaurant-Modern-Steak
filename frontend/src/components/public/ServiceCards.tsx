@@ -12,6 +12,9 @@ import {
 import { cn } from '@/lib/utils'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
 
+// Fallback text for missing operating hours data (US3)
+// Uses i18n key: public.hoursNotAvailable
+
 interface ServiceCard {
   icon: React.ElementType
   titleKey: string
@@ -244,13 +247,19 @@ const defaultInfoCards: InfoCard[] = [
 ]
 
 export function InfoCards({ className, info }: InfoCardsProps) {
+  const { t } = useTranslation()
+
+  // US3: Fallback text for missing/invalid operating hours
+  const hoursFallback = t('public.hoursNotAvailable')
+
   const cards: InfoCard[] = info
     ? [
         {
           icon: Clock,
           title: 'Opening Hours',
-          value: info.hours || 'Senin - Sabtu: 09:00 WIB - 22:00 WIB',
-          subtitle: 'Sunday: Closed',
+          // US3: Use fallback when hours is undefined or invalid
+          value: info.hours ?? hoursFallback,
+          subtitle: info.hours ? 'Sunday: Closed' : undefined,
         },
         {
           icon: Phone,

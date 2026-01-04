@@ -368,6 +368,78 @@ describe('AdminDashboard', () => {
       expect(screen.getByText(/Add, edit staff accounts/)).toBeInTheDocument();
       expect(screen.getByText(/Detailed analytics/)).toBeInTheDocument();
     });
+
+    // ========================
+    // T009: Quick Action Card Navigation Tests (US1)
+    // ========================
+
+    it('navigates to menu page when Manage Menu card is clicked', async () => {
+      render(<AdminDashboard />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText('Manage Menu')).toBeInTheDocument();
+      });
+
+      // Click the Manage Menu card
+      const manageMenuCard = screen.getByText('Manage Menu').closest('[class*="cursor-pointer"]');
+      expect(manageMenuCard).toBeInTheDocument();
+      if (manageMenuCard) {
+        fireEvent.click(manageMenuCard);
+      }
+
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/admin/menu' });
+    });
+
+    it('navigates to tables page when Manage Tables card is clicked', async () => {
+      render(<AdminDashboard />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText('Manage Tables')).toBeInTheDocument();
+      });
+
+      // Click the Manage Tables card
+      const manageTablesCard = screen.getByText('Manage Tables').closest('[class*="cursor-pointer"]');
+      expect(manageTablesCard).toBeInTheDocument();
+      if (manageTablesCard) {
+        fireEvent.click(manageTablesCard);
+      }
+
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/admin/tables' });
+    });
+
+    it('navigates to staff page when Manage Staff card is clicked', async () => {
+      render(<AdminDashboard />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText('Manage Staff')).toBeInTheDocument();
+      });
+
+      // Click the Manage Staff card
+      const manageStaffCard = screen.getByText('Manage Staff').closest('[class*="cursor-pointer"]');
+      expect(manageStaffCard).toBeInTheDocument();
+      if (manageStaffCard) {
+        fireEvent.click(manageStaffCard);
+      }
+
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/admin/staff' });
+    });
+
+    it('navigates to reports page when View Reports card is clicked', async () => {
+      render(<AdminDashboard />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText('View Reports')).toBeInTheDocument();
+      });
+
+      // Click the View Reports card
+      const viewReportsCard = screen.getByText('View Reports').closest('[class*="cursor-pointer"]');
+      expect(viewReportsCard).toBeInTheDocument();
+      if (viewReportsCard) {
+        fireEvent.click(viewReportsCard);
+      }
+
+      expect(mockNavigate).toHaveBeenCalledWith({ to: '/admin/reports' });
+    });
   });
 
   describe('IncomeBreakdown', () => {

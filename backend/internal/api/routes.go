@@ -32,6 +32,7 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	uploadHandler := handlers.NewUploadHandler("./uploads")
 	surveyHandler := handlers.NewSurveyHandler(db)                 // T075: Added for satisfaction surveys
 	restaurantInfoHandler := handlers.NewRestaurantInfoHandler(db) // Restaurant info management
+	recipeHandler := handlers.NewRecipeHandler(db)                 // Recipe/ingredient management for products
 
 	// Rate limiters for different endpoint types
 	publicRateLimiter := middleware.PublicRateLimiter()
@@ -201,6 +202,12 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		admin.POST("/products", productHandler.CreateProduct)
 		admin.PUT("/products/:id", productHandler.UpdateProduct)
 		admin.DELETE("/products/:id", productHandler.DeleteProduct)
+
+		// Recipe/Ingredient configuration for products
+		admin.GET("/products/:id/ingredients", recipeHandler.GetProductIngredients)
+		admin.POST("/products/:id/ingredients", recipeHandler.AddProductIngredient)
+		admin.PUT("/products/:id/ingredients/:ingredient_id", recipeHandler.UpdateProductIngredient)
+		admin.DELETE("/products/:id/ingredients/:ingredient_id", recipeHandler.DeleteProductIngredient)
 
 		// Table management with pagination
 		admin.GET("/tables", getAdminTables(db)) // Add pagination
@@ -537,19 +544,11 @@ func updateOrderItemStatus(db *sql.DB) gin.HandlerFunc {
 }
 
 // Server role handler - only allows dine-in orders
+// T010: Fixed to properly handle UUID types without request body reconstruction
 func createDineInOrder(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req struct {
-			TableID      *string `json:"table_id"`
-			CustomerName *string `json:"customer_name"`
-			Items        []struct {
-				ProductID           string  `json:"product_id"`
-				Quantity            int     `json:"quantity"`
-				SpecialInstructions *string `json:"special_instructions"`
-			} `json:"items"`
-			Notes *string `json:"notes"`
-		}
-
+		// Bind directly to the proper model types
+		var req models.CreateOrderRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(400, gin.H{
 				"success": false,
@@ -560,21 +559,21 @@ func createDineInOrder(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Force order type to dine_in for servers
-		orderHandler := handlers.NewOrderHandler(db)
+		req.OrderType = "dine_in"
 
-		// Create order request with forced dine_in type
-		createOrderReq := map[string]interface{}{
-			"table_id":      req.TableID,
-			"customer_name": req.CustomerName,
-			"order_type":    "dine_in", // Force dine-in for servers
-			"items":         req.Items,
-			"notes":         req.Notes,
+		// Re-encode the request with forced order_type and set body for handler
+		reqBytes, err := json.Marshal(req)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"success": false,
+				"message": "Failed to process order request",
+				"error":   err.Error(),
+			})
+			return
 		}
-
-		// Convert to JSON and back to simulate the request
-		reqBytes, _ := json.Marshal(createOrderReq)
 		c.Request.Body = io.NopCloser(strings.NewReader(string(reqBytes)))
 
+		orderHandler := handlers.NewOrderHandler(db)
 		orderHandler.CreateOrder(c)
 	}
 }
