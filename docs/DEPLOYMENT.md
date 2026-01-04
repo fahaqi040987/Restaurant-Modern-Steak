@@ -41,9 +41,9 @@ Before deployment, create a Cloudflare tunnel:
 3. Click **Create a tunnel**
 4. Name it (e.g., "steak-kenangan")
 5. Copy the tunnel token (starts with `eyJ...`)
-6. Configure routes:
-   - `steakkenangan.com` → `http://frontend:80`
-   - `steakkenangan.com/api/*` → `http://backend:8080`
+6. Configure routes (ORDER MATTERS - most specific first):
+   - `steakkenangan.com/api/*` → `http://backend:8080` (MUST be first)
+   - `steakkenangan.com/*` → `http://frontend:80` (catch-all, MUST be last)
 
 ## Deployment Steps
 
@@ -108,18 +108,18 @@ cd ..
 ### Step 4: Start Services
 
 ```bash
-# Start all services in background
-docker compose -f docker-compose.prod.yml up -d
+# Start all services in background (--env-file is REQUIRED)
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 
 # Watch logs (Ctrl+C to exit)
-docker compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f
 ```
 
 ### Step 5: Verify Deployment
 
 ```bash
 # Check container status
-docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml --env-file .env.production ps
 
 # Expected output:
 # NAME                      STATUS
@@ -128,11 +128,11 @@ docker compose -f docker-compose.prod.yml ps
 # steak-kenangan-frontend   Up (healthy)
 # steak-kenangan-tunnel     Up
 
-# Check backend health
-curl http://localhost:8080/health
-
-# If backend is not accessible directly, check via docker:
+# Check backend health via docker
 docker compose -f docker-compose.prod.yml --env-file .env.production exec backend wget -q -O- http://localhost:8080/health
+
+# Test external API endpoint
+curl https://steakkenangan.com/api/v1/health
 ```
 
 ### Step 6: Access Application
@@ -176,52 +176,54 @@ All use password: `admin123`
 
 ## Common Operations
 
+**Note**: All commands require `--env-file .env.production`. Use `./deploy.sh` for convenience.
+
 ### View Logs
 
 ```bash
 # All services
-docker compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f
 
 # Specific service
-docker compose -f docker-compose.prod.yml logs -f backend
-docker compose -f docker-compose.prod.yml logs -f frontend
-docker compose -f docker-compose.prod.yml logs -f db
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f backend
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f frontend
+docker compose -f docker-compose.prod.yml --env-file .env.production logs -f db
 ```
 
 ### Restart Services
 
 ```bash
 # Restart all
-docker compose -f docker-compose.prod.yml restart
+docker compose -f docker-compose.prod.yml --env-file .env.production restart
 
 # Restart specific service
-docker compose -f docker-compose.prod.yml restart backend
+docker compose -f docker-compose.prod.yml --env-file .env.production restart backend
 ```
 
 ### Database Backup
 
 ```bash
 # Create backup
-docker compose -f docker-compose.prod.yml exec db pg_dump -U steakkenangan steak_kenangan > backup_$(date +%Y%m%d).sql
+docker compose -f docker-compose.prod.yml --env-file .env.production exec db pg_dump -U steakkenangan steak_kenangan > backup_$(date +%Y%m%d).sql
 
 # Restore backup
-docker compose -f docker-compose.prod.yml exec -T db psql -U steakkenangan steak_kenangan < backup_20260104.sql
+docker compose -f docker-compose.prod.yml --env-file .env.production exec -T db psql -U steakkenangan steak_kenangan < backup_20260104.sql
 ```
 
 ### Database Shell
 
 ```bash
-docker compose -f docker-compose.prod.yml exec db psql -U steakkenangan steak_kenangan
+docker compose -f docker-compose.prod.yml --env-file .env.production exec db psql -U steakkenangan steak_kenangan
 ```
 
 ### Stop Services
 
 ```bash
 # Stop but keep volumes (data preserved)
-docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml --env-file .env.production down
 
 # Stop and remove volumes (DATA LOSS!)
-docker compose -f docker-compose.prod.yml down -v
+docker compose -f docker-compose.prod.yml --env-file .env.production down -v
 ```
 
 ## Troubleshooting
@@ -230,19 +232,20 @@ docker compose -f docker-compose.prod.yml down -v
 
 ```bash
 # Check logs
-docker compose -f docker-compose.prod.yml logs <service-name>
+docker compose -f docker-compose.prod.yml --env-file .env.production logs <service-name>
 
 # Common issues:
 # - Missing .env.production file
 # - Invalid CLOUDFLARE_TUNNEL_TOKEN
 # - Port already in use
+# - Missing --env-file flag (causes "variable not set" warnings)
 ```
 
 ### Database connection failed
 
 ```bash
 # Verify database is running
-docker compose -f docker-compose.prod.yml ps db
+docker compose -f docker-compose.prod.yml --env-file .env.production ps db
 
 # Check credentials in .env.production
 # Verify DB_HOST=db (not localhost)
@@ -251,11 +254,18 @@ docker compose -f docker-compose.prod.yml ps db
 ### Tunnel not working
 
 1. Check token in Cloudflare dashboard
-2. Verify routes are configured
+2. Verify routes are configured (api/* MUST be before /*)
 3. Check cloudflared logs:
    ```bash
-   docker compose -f docker-compose.prod.yml logs cloudflared
+   docker compose -f docker-compose.prod.yml --env-file .env.production logs cloudflared
    ```
+
+### API returns HTML instead of JSON
+
+This means Cloudflare tunnel routing is misconfigured:
+1. Go to Cloudflare Zero Trust Dashboard → Networks → Tunnels
+2. Check route order: `/api/*` route MUST be listed BEFORE `/*` route
+3. Save and wait for propagation
 
 ### Out of disk space
 
@@ -267,7 +277,7 @@ df -h
 docker system prune -a
 
 # Clean old logs
-docker compose -f docker-compose.prod.yml logs --no-log-prefix | tail -1000 > /dev/null
+docker compose -f docker-compose.prod.yml --env-file .env.production logs --no-log-prefix | tail -1000 > /dev/null
 ```
 
 ## Security Checklist

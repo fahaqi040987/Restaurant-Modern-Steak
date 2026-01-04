@@ -53,7 +53,18 @@
       "Bash(npm install:*)",
       "Bash(du:*)",
       "Bash(xargs -I {} sh -c 'cat \"\"{}\"\" 2>/dev/null | wc -c')",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "WebFetch(domain:steakkenangan.com)",
+      "Bash(sort:*)",
+      "Bash(git -C /Users/fajarardhihaqi/Documents/Repository/project/Restaurant-Modern-Steak check-ignore:*)",
+      "Bash(git -C /Users/fajarardhihaqi/Documents/Repository/project/Restaurant-Modern-Steak status -sb)",
+      "Bash(git -C /Users/fajarardhihaqi/Documents/Repository/project/Restaurant-Modern-Steak rev-parse:*)",
+      "Bash(git -C /Users/fajarardhihaqi/Documents/Repository/project/Restaurant-Modern-Steak status --porcelain)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\ndocs: update DEPLOYMENT.md with correct env-file usage and route order\n\n- Add --env-file .env.production to all docker compose commands\n- Fix Cloudflare route order: api/* MUST be before /* \n- Add troubleshooting section for API returning HTML\n- Add note about required --env-file flag\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(npm run build:prod:*)",
+      "Bash(export TOKEN=:*)"
     ]
   }
 }

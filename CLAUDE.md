@@ -248,3 +248,5 @@ The project includes 17 Cursor AI rule files in `.cursor/rules/` covering:
 - Go 1.23+ (backend), TypeScript 5+ strict mode (frontend) + Gin v1.9.1, React 18.3.1, TanStack Router v1.57+, TanStack Query v5+ (007-fix-order-inventory-system)
 - Go 1.23+ (backend), Node.js 20+ (frontend build) + Docker 20.10+, Docker Compose 2.0+, Cloudflare Tunnel (cloudflared) (008-production-deploy)
 - PostgreSQL 15 (Docker container), Docker volumes for persistence (008-production-deploy)
+- Go 1.23+ (backend), TypeScript 5+ (frontend) + Gin v1.9.1, React 18, TanStack Router, Docker Compose, Cloudflare Tunnel (cloudflared) (009-fix-production-parity)
+- PostgreSQL 15+ (Docker container) (009-fix-production-parity)

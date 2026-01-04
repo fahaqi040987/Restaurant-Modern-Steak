@@ -5,6 +5,7 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "types": ["node"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -28,7 +29,9 @@
     }
   },
   "include": [
-    "src"
+    "src",
+    "playwright.config.ts",
+    "vite.config.ts"
   ]
 }
 

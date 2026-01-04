@@ -55,7 +55,7 @@ function PublicLandingPage() {
           'Experience the finest premium steaks crafted with passion and served with elegance'
         }
         backgroundImage={
-          restaurantInfo?.hero_image_url || '/assets/restoran/images/hero.jpg'
+          restaurantInfo?.hero_image_url || '/assets/restoran/images/banner_landing_page.jpg'
         }
       />
 

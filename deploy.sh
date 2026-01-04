@@ -87,7 +87,7 @@ check_health() {
     fi
 
     # Check backend health endpoint
-    if dc exec -T backend wget -q --spider http://localhost:8080/health 2>/dev/null; then
+    if dc exec -T backend wget -q -O /dev/null http://localhost:8080/health 2>/dev/null; then
         log_info "Backend health endpoint: OK"
     else
         log_warn "Backend health endpoint: Not responding"
@@ -115,8 +115,16 @@ deploy() {
     if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
         log_info "Building frontend..."
         cd frontend
+        
+        # Ensure .env.production exists with correct API URL
+        if [ ! -f ".env.production" ]; then
+            log_warn ".env.production not found, creating with default values..."
+            echo "VITE_API_URL=http://localhost:8080/api/v1" > .env.production
+        fi
+        
         npm ci --production=false
-        npm run build:prod
+        # Build with explicit API URL to ensure correct endpoint
+        VITE_API_URL=http://localhost:8080/api/v1 npm run build:prod
         cd ..
     fi
 
@@ -158,8 +166,15 @@ rollback() {
     if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
         log_info "Rebuilding frontend..."
         cd frontend
+        
+        # Ensure .env.production exists
+        if [ ! -f ".env.production" ]; then
+            log_warn ".env.production not found, creating with default values..."
+            echo "VITE_API_URL=http://localhost:8080/api/v1" > .env.production
+        fi
+        
         npm ci --production=false
-        npm run build:prod
+        VITE_API_URL=http://localhost:8080/api/v1 npm run build:prod
         cd ..
     fi
 

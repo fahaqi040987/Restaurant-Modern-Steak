@@ -133,7 +133,7 @@ export function Header() {
         >
           {restaurantInfo?.logo_url ? (
             <img
-              src={restaurantInfo.logo_url}
+              src={restaurantInfo?.logo_url || '/assets/restoran/images/LogoSteakKenangan.png'}
               alt={restaurantInfo.name || 'Steak Kenangan'}
               className="h-28 md:h-30 lg:h-32 w-auto object-contain transition-all duration-300"
             />
@@ -262,20 +262,11 @@ export function Header() {
           >
             <SheetHeader>
               <SheetTitle className="text-left">
-                {restaurantInfo?.logo_url ? (
-                  <img
-                    src={restaurantInfo.logo_url}
-                    alt={restaurantInfo.name || 'Steak Kenangan'}
-                    className="h-28 w-auto object-contain"
-                  />
-                ) : (
-                  <span
-                    className="font-accent text-2xl text-[var(--public-accent)]"
-                    style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
-                  >
-                    Steak Kenangan
-                  </span>
-                )}
+                <img
+                  src={restaurantInfo?.logo_url || '/assets/restoran/images/LogoSteakKenangan.png'}
+                  alt={restaurantInfo?.name || 'Steak Kenangan'}
+                  className="h-20 w-auto object-contain"
+                />
               </SheetTitle>
             </SheetHeader>
 
