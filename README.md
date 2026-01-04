@@ -200,50 +200,47 @@ cd backend && go test ./...
 
 ## Production Deployment
 
-### Prerequisites
+For detailed VPS deployment with Docker and Cloudflare Tunnel, see **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
 
-- Docker & Docker Compose
-- PostgreSQL 14+ (or use Docker)
-- Node.js 18+ (for frontend build)
-- Go 1.21+ (for backend build)
-
-### Environment Variables
-
-Create `.env` file for production:
+### Quick Start (VPS)
 
 ```bash
-# Database
-DB_HOST=your-db-host
-DB_PORT=5432
-DB_USER=your-db-user
-DB_PASSWORD=your-secure-password
-DB_NAME=restaurant
+# 1. Clone and configure
+git clone https://github.com/your-username/Restaurant-Modern-Steak.git
+cd Restaurant-Modern-Steak
+cp .env.production.example .env.production
+nano .env.production  # Edit with your values
 
-# Security (minimum 32 characters)
-JWT_SECRET=your-256-bit-secret-key-minimum-32-chars
+# 2. Build frontend
+cd frontend && npm ci && npm run build:prod && cd ..
 
-# CORS (comma-separated for multiple origins)
-CORS_ALLOWED_ORIGINS=https://your-domain.com
+# 3. Start services
+docker compose -f docker-compose.prod.yml up -d
 
-# API
-VITE_API_URL=https://api.your-domain.com
+# 4. Verify
+docker compose -f docker-compose.prod.yml ps
+curl http://localhost:8080/health
 ```
 
-### Deploy Steps
+### Deploy Script
+
+After initial setup, use `deploy.sh` for updates:
 
 ```bash
-# 1. Build frontend
-cd frontend && npm ci && npm run build
+chmod +x deploy.sh     # First time only
+./deploy.sh            # Deploy latest
+./deploy.sh --status   # Check health
+./deploy.sh --rollback # Revert if needed
+```
 
-# 2. Build backend
-cd backend && CGO_ENABLED=0 go build -o server .
+### Architecture
 
-# 3. Run with Docker Compose
-docker-compose -f docker-compose.prod.yml up -d
-
-# 4. Initialize database
-make db-reset
-make create-demo-users
+```
+Internet → Cloudflare (SSL/CDN) → Tunnel → VPS
+                                            ├── frontend (nginx:80)
+                                            ├── backend (go:8080)
+                                            ├── db (postgres:5432)
+                                            └── uptime-kuma (monitoring)
 ```
 
 ## Database Backup & Restore
