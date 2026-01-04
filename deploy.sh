@@ -48,33 +48,38 @@ check_prerequisites() {
     log_info "Prerequisites check passed"
 }
 
+# Docker compose command with env file
+dc() {
+    docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
+}
+
 # Health check
 check_health() {
     log_info "Running health checks..."
 
     # Check if containers are running
-    if docker compose -f "$COMPOSE_FILE" ps --status running | grep -q "backend"; then
+    if dc ps --status running | grep -q "backend"; then
         log_info "Backend: Running"
     else
         log_warn "Backend: Not running"
         return 1
     fi
 
-    if docker compose -f "$COMPOSE_FILE" ps --status running | grep -q "frontend"; then
+    if dc ps --status running | grep -q "frontend"; then
         log_info "Frontend: Running"
     else
         log_warn "Frontend: Not running"
         return 1
     fi
 
-    if docker compose -f "$COMPOSE_FILE" ps --status running | grep -q "db"; then
+    if dc ps --status running | grep -q "db"; then
         log_info "Database: Running"
     else
         log_warn "Database: Not running"
         return 1
     fi
 
-    if docker compose -f "$COMPOSE_FILE" ps --status running | grep -q "cloudflared"; then
+    if dc ps --status running | grep -q "cloudflared"; then
         log_info "Cloudflare Tunnel: Running"
     else
         log_warn "Cloudflare Tunnel: Not running"
@@ -82,7 +87,7 @@ check_health() {
     fi
 
     # Check backend health endpoint
-    if docker compose -f "$COMPOSE_FILE" exec -T backend wget -q --spider http://localhost:8080/health 2>/dev/null; then
+    if dc exec -T backend wget -q --spider http://localhost:8080/health 2>/dev/null; then
         log_info "Backend health endpoint: OK"
     else
         log_warn "Backend health endpoint: Not responding"
@@ -115,13 +120,13 @@ deploy() {
         cd ..
     fi
 
-    # Pull latest Docker images
+    # Pull latest Docker images (continue on error for rate limits)
     log_info "Pulling Docker images..."
-    docker compose -f "$COMPOSE_FILE" pull
+    dc pull || log_warn "Some images failed to pull (may be rate limited). Continuing with cached images..."
 
-    # Restart services
-    log_info "Restarting services..."
-    docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
+    # Build and restart services
+    log_info "Building and restarting services..."
+    dc up -d --build --remove-orphans
 
     # Wait for services to start
     log_info "Waiting for services to start (30s)..."
@@ -160,7 +165,7 @@ rollback() {
 
     # Restart services
     log_info "Restarting services..."
-    docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
+    dc up -d --build --remove-orphans
 
     # Wait and check health
     log_info "Waiting for services to start (30s)..."
@@ -179,7 +184,7 @@ show_status() {
     echo ""
 
     log_info "Container status:"
-    docker compose -f "$COMPOSE_FILE" ps
+    dc ps
     echo ""
 
     check_health
@@ -190,9 +195,9 @@ show_logs() {
     local service=${1:-""}
 
     if [ -n "$service" ]; then
-        docker compose -f "$COMPOSE_FILE" logs -f "$service"
+        dc logs -f "$service"
     else
-        docker compose -f "$COMPOSE_FILE" logs -f
+        dc logs -f
     fi
 }
 
