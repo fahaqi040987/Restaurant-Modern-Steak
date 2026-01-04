@@ -16,7 +16,7 @@ NC := \033[0m # No Color
 # Docker compose files
 COMPOSE_DEV := docker-compose.dev.yml
 COMPOSE_PROD := docker-compose.prod.yml
-COMPOSE_LEGACY := docker-compose.yml
+COMPOSE_TEST_PROD := docker-compose.local-test.yml
 
 ## Help - Display available commands
 help:
@@ -91,6 +91,19 @@ prod:
 	fi
 	@docker compose -f $(COMPOSE_PROD) up -d --build
 	@echo "$(GREEN)✅ Production environment started!$(NC)"
+
+# Setup and start local test environment (production-like)
+local-test:
+	@echo "$(GREEN)🚀 Starting POS System in Local Test Mode...$(NC)"
+	@if [ ! -f .env ]; then \
+		echo "$(RED)❌ .env file not found. Please create one based on .env.production$(NC)"; \
+		exit 1; \
+	fi
+	@docker compose -f $(COMPOSE_PROD) -f $(COMPOSE_TEST_PROD) --env-file .env up -d --build
+	@echo "$(GREEN)✅ Local test environment started!$(NC)"
+	@echo "$(BLUE)📱 Frontend: http://localhost:3000$(NC)"
+	@echo "$(BLUE)🔧 Backend API: http://localhost:8080$(NC)"
+	@echo "$(BLUE)🗄️  Database: localhost:5432$(NC)"
 
 # Start Docker containers (development mode)
 up:

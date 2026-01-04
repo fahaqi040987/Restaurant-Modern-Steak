@@ -30,7 +30,7 @@ interface HeroSectionProps {
  */
 export function HeroSection({
   className,
-  backgroundImage = '/assets/restoran/images/hero.jpg',
+  backgroundImage = '/assets/restoran/images/banner_landing_page.jpg',
   heading = 'Steak Kenangan',
   tagline = 'Experience the finest premium steaks crafted with passion and served with elegance',
 }: HeroSectionProps) {
