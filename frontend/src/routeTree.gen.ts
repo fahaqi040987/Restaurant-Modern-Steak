@@ -15,7 +15,9 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SiteIndexRouteImport } from './routes/site/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as SiteTermsRouteImport } from './routes/site/terms'
 import { Route as SiteReservationRouteImport } from './routes/site/reservation'
+import { Route as SitePrivacyRouteImport } from './routes/site/privacy'
 import { Route as SiteMenuRouteImport } from './routes/site/menu'
 import { Route as SiteContactRouteImport } from './routes/site/contact'
 import { Route as SiteAboutRouteImport } from './routes/site/about'
@@ -67,9 +69,19 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const SiteTermsRoute = SiteTermsRouteImport.update({
+  id: '/site/terms',
+  path: '/site/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SiteReservationRoute = SiteReservationRouteImport.update({
   id: '/site/reservation',
   path: '/site/reservation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitePrivacyRoute = SitePrivacyRouteImport.update({
+  id: '/site/privacy',
+  path: '/site/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SiteMenuRoute = SiteMenuRouteImport.update({
@@ -198,7 +210,9 @@ export interface FileRoutesByFullPath {
   '/site/about': typeof SiteAboutRoute
   '/site/contact': typeof SiteContactRoute
   '/site/menu': typeof SiteMenuRoute
+  '/site/privacy': typeof SitePrivacyRoute
   '/site/reservation': typeof SiteReservationRoute
+  '/site/terms': typeof SiteTermsRoute
   '/admin/': typeof AdminIndexRoute
   '/site': typeof SiteIndexRoute
 }
@@ -226,7 +240,9 @@ export interface FileRoutesByTo {
   '/site/about': typeof SiteAboutRoute
   '/site/contact': typeof SiteContactRoute
   '/site/menu': typeof SiteMenuRoute
+  '/site/privacy': typeof SitePrivacyRoute
   '/site/reservation': typeof SiteReservationRoute
+  '/site/terms': typeof SiteTermsRoute
   '/admin': typeof AdminIndexRoute
   '/site': typeof SiteIndexRoute
 }
@@ -256,7 +272,9 @@ export interface FileRoutesById {
   '/site/about': typeof SiteAboutRoute
   '/site/contact': typeof SiteContactRoute
   '/site/menu': typeof SiteMenuRoute
+  '/site/privacy': typeof SitePrivacyRoute
   '/site/reservation': typeof SiteReservationRoute
+  '/site/terms': typeof SiteTermsRoute
   '/admin/': typeof AdminIndexRoute
   '/site/': typeof SiteIndexRoute
 }
@@ -287,7 +305,9 @@ export interface FileRouteTypes {
     | '/site/about'
     | '/site/contact'
     | '/site/menu'
+    | '/site/privacy'
     | '/site/reservation'
+    | '/site/terms'
     | '/admin/'
     | '/site'
   fileRoutesByTo: FileRoutesByTo
@@ -315,7 +335,9 @@ export interface FileRouteTypes {
     | '/site/about'
     | '/site/contact'
     | '/site/menu'
+    | '/site/privacy'
     | '/site/reservation'
+    | '/site/terms'
     | '/admin'
     | '/site'
   id:
@@ -344,7 +366,9 @@ export interface FileRouteTypes {
     | '/site/about'
     | '/site/contact'
     | '/site/menu'
+    | '/site/privacy'
     | '/site/reservation'
+    | '/site/terms'
     | '/admin/'
     | '/site/'
   fileRoutesById: FileRoutesById
@@ -360,7 +384,9 @@ export interface RootRouteChildren {
   SiteAboutRoute: typeof SiteAboutRoute
   SiteContactRoute: typeof SiteContactRoute
   SiteMenuRoute: typeof SiteMenuRoute
+  SitePrivacyRoute: typeof SitePrivacyRoute
   SiteReservationRoute: typeof SiteReservationRoute
+  SiteTermsRoute: typeof SiteTermsRoute
   SiteIndexRoute: typeof SiteIndexRoute
 }
 
@@ -408,11 +434,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/site/terms': {
+      id: '/site/terms'
+      path: '/site/terms'
+      fullPath: '/site/terms'
+      preLoaderRoute: typeof SiteTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/site/reservation': {
       id: '/site/reservation'
       path: '/site/reservation'
       fullPath: '/site/reservation'
       preLoaderRoute: typeof SiteReservationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/site/privacy': {
+      id: '/site/privacy'
+      path: '/site/privacy'
+      fullPath: '/site/privacy'
+      preLoaderRoute: typeof SitePrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/site/menu': {
@@ -607,7 +647,9 @@ const rootRouteChildren: RootRouteChildren = {
   SiteAboutRoute: SiteAboutRoute,
   SiteContactRoute: SiteContactRoute,
   SiteMenuRoute: SiteMenuRoute,
+  SitePrivacyRoute: SitePrivacyRoute,
   SiteReservationRoute: SiteReservationRoute,
+  SiteTermsRoute: SiteTermsRoute,
   SiteIndexRoute: SiteIndexRoute,
 }
 export const routeTree = rootRouteImport
