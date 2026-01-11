@@ -8,13 +8,13 @@ import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 // Payment method type for customer ordering
-export type PaymentMethod = 'cash' | 'qris' | 'card'
+export type PaymentMethodType = 'cash' | 'qris' | 'card'
 
 interface PaymentMethodProps {
   /** Callback when payment method is selected */
-  onSelect: (method: PaymentMethod) => void
+  onSelect: (method: PaymentMethodType) => void
   /** Currently selected payment method */
-  selectedMethod?: PaymentMethod
+  selectedMethod?: PaymentMethodType
   /** Custom class name */
   className?: string
   /** Disable selection */
@@ -22,7 +22,7 @@ interface PaymentMethodProps {
 }
 
 const paymentOptions: Array<{
-  method: PaymentMethod
+  method: PaymentMethodType
   label: string
   icon: typeof CreditCard
   description: string
@@ -65,7 +65,7 @@ export function PaymentMethod({
   className,
   disabled = false,
 }: PaymentMethodProps) {
-  const [hoveredMethod, setHoveredMethod] = useState<PaymentMethod | null>(null)
+  const [hoveredMethod, setHoveredMethod] = useState<PaymentMethodType | null>(null)
 
   return (
     <div className={cn('space-y-4', className)} data-testid="payment-method">

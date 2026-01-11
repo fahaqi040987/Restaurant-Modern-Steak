@@ -32,36 +32,93 @@ interface FooterProps {
 export function Footer({ restaurantInfo, className }: FooterProps) {
   const { t } = useTranslation()
 
-  const formatOperatingHours = (hours: OperatingHours[]): string => {
-    if (!hours || hours.length === 0) return t('public.hoursNotAvailable')
+  const formatOperatingHours = (hours: OperatingHours[]): JSX.Element => {
+    if (!hours || hours.length === 0) {
+      return <span className="text-[var(--public-text-muted)]">{t('public.hoursNotAvailable')}</span>
+    }
 
-    // Find typical weekday hours (Monday)
-    const mondayHours = hours.find((h) => h.day_of_week === 1)
-    if (!mondayHours || mondayHours.is_closed) return t('public.variesByDay')
+    const dayNames = [
+      t('public.monday'), t('public.tuesday'), t('public.wednesday'),
+      t('public.thursday'), t('public.friday'), t('public.saturday'),
+      t('public.sunday')
+    ]
 
     const formatTime = (time: string): string => {
-      // Handle HH:MM:SS or HH:MM format from database
       const parts = time.split(':')
-      if (parts.length < 2) return time // Fallback for invalid format
-      
+      if (parts.length < 2) return time
       const hour = parseInt(parts[0], 10)
       const min = parts[1] || '00'
-      
-      // Validate hour range
-      if (isNaN(hour) || hour < 0 || hour > 23) return time
-      
       const ampm = hour >= 12 ? 'PM' : 'AM'
       const hour12 = hour % 12 || 12
       return `${hour12}:${min} ${ampm}`
     }
 
-    try {
-      // T070: Added WIB (UTC+7) timezone label
-      return `${formatTime(mondayHours.open_time)} - ${formatTime(mondayHours.close_time)} WIB`
-    } catch (error) {
-      console.error('Error formatting operating hours:', error)
-      return 'Mon - Sat: 11AM - 10PM WIB' // Fallback to default with timezone
-    }
+    const groupedHours: Array<{ days: string[], time: string, isClosed: boolean }> = []
+    let currentGroup: string[] = []
+    let currentHours: OperatingHours | null = null
+
+    hours.forEach((hour, index) => {
+      const nextHour = hours[index + 1]
+
+      if (hour.is_closed) {
+        if (currentGroup.length > 0) {
+          groupedHours.push({ days: currentGroup, time: '', isClosed: false })
+          currentGroup = []
+        }
+        groupedHours.push({
+          days: [dayNames[hour.day_of_week - 1]],
+          time: '',
+          isClosed: true
+        })
+      } else if (!currentHours ||
+        hour.open_time !== currentHours.open_time ||
+        hour.close_time !== currentHours.close_time) {
+        if (currentGroup.length > 0) {
+          groupedHours.push({
+            days: currentGroup,
+            time: `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)} WIB`,
+            isClosed: false
+          })
+        }
+        currentGroup = [dayNames[hour.day_of_week - 1]]
+        currentHours = hour
+      } else {
+        currentGroup.push(dayNames[hour.day_of_week - 1])
+      }
+
+      if (!nextHour || nextHour.is_closed || nextHour.open_time !== hour.open_time || nextHour.close_time !== hour.close_time) {
+        if (currentGroup.length > 0 && currentHours) {
+          groupedHours.push({
+            days: currentGroup,
+            time: `${formatTime(currentHours.open_time)} - ${formatTime(currentHours.close_time)} WIB`,
+            isClosed: false
+          })
+          currentGroup = []
+          currentHours = null
+        }
+      }
+    })
+
+    return (
+      <ul className="space-y-2">
+        {groupedHours.map((group, idx) => (
+          <li
+            key={idx}
+            className="flex items-center gap-3 text-sm text-[var(--public-text-secondary)]"
+          >
+            <Clock className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <div>
+              <span className="font-medium">
+                {group.days.length > 1 ? `${group.days[0]} - ${group.days[group.days.length - 1]}` : group.days[0]}
+              </span>
+              <span className="ml-2">
+                {group.isClosed ? t('public.closed') : group.time}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )
   }
 
   const quickLinks = [
@@ -70,12 +127,6 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
     { to: '/site/about', labelKey: 'public.aboutUs' },
     { to: '/site/reservation', labelKey: 'public.reservations' },
     { to: '/site/contact', labelKey: 'public.contact' },
-  ]
-
-  const operatingDays = [
-    { day: 'Monday - Friday', hours: '11:00 AM - 10:00 PM' },
-    { day: 'Saturday', hours: '10:00 AM - 11:00 PM' },
-    { day: 'Sunday', hours: '10:00 AM - 9:00 PM' },
   ]
 
   return (
@@ -339,24 +390,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
             >
               {t('public.openingHours')}
             </h4>
-            <ul className="space-y-3">
-              {restaurantInfo?.operating_hours ? (
-                <li className="flex items-center gap-3 text-sm text-[var(--public-text-secondary)]">
-                  <Clock className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-                  <span>{formatOperatingHours(restaurantInfo.operating_hours)}</span>
-                </li>
-              ) : (
-                operatingDays.map((item) => (
-                  <li
-                    key={item.day}
-                    className="flex justify-between text-sm text-[var(--public-text-secondary)]"
-                  >
-                    <span className="font-medium">{item.day}</span>
-                    <span>{item.hours}</span>
-                  </li>
-                ))
-              )}
-            </ul>
+            {formatOperatingHours(restaurantInfo?.operating_hours || [])}
 
             {/* Staff Portal Link */}
             <div className="pt-4 mt-4 border-t border-[var(--public-border)]">
@@ -383,13 +417,13 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
             </p>
             <div className="flex items-center gap-6 text-xs text-[var(--public-text-muted)]">
               <Link
-                to="/site"
+                to="/site/privacy"
                 className="hover:text-[var(--public-accent)] transition-colors"
               >
                 {t('public.privacyPolicy')}
               </Link>
               <Link
-                to="/site"
+                to="/site/terms"
                 className="hover:text-[var(--public-accent)] transition-colors"
               >
                 {t('public.termsOfService')}

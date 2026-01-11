@@ -112,13 +112,7 @@ export function Header() {
 
   return (
     <header
-      className={cn(
-        'header-fixed',
-        'transition-all duration-300',
-        isScrolled
-          ? 'bg-[var(--public-primary)] shadow-lg py-2'
-          : 'bg-transparent py-4'
-      )}
+      className="fixed top-0 left-0 right-0 z-50 bg-[var(--public-primary)] shadow-md py-3 transition-all duration-300"
       role="banner"
     >
       <nav
@@ -153,7 +147,7 @@ export function Header() {
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8">
           {navLinkKeys.map((link) => (
-            <NavLink key={link.to} to={link.to} isScrolled={isScrolled}>
+            <NavLink key={link.to} to={link.to}>
               {t(link.labelKey)}
             </NavLink>
           ))}
