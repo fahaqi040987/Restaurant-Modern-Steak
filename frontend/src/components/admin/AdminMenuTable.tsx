@@ -26,7 +26,6 @@ import {
   Trash2,
   Package,
   Clock,
-  Image,
   Tag,
   Banknote
 } from "lucide-react"

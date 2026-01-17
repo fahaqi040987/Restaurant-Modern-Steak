@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Link, useRouter, useLocation } from '@tanstack/react-router'
+import { Link, useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { UserMenu } from '@/components/ui/user-menu'
 import {
   LayoutDashboard,
@@ -10,7 +9,6 @@ import {
   CreditCard,
   ChefHat,
   Settings,
-  User,
   Menu,
   BarChart3,
   UserCog,
@@ -21,7 +19,6 @@ import {
   Package
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
-import apiClient from '@/api/client'
 
 interface AdminSidebarProps {
   user: UserType
@@ -120,7 +117,6 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
-  const router = useRouter()
   const location = useLocation()
 
   // Responsive checks

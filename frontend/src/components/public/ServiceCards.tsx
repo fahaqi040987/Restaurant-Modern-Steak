@@ -229,8 +229,7 @@ const defaultInfoCards: InfoCard[] = [
   {
     icon: Clock,
     title: 'Opening Hours',
-    value: 'Senin - Sabtu: 11:00 WIB - 22:00 WIB',
-    subtitle: 'Minggu: Tutup',
+    value: 'Senin - Kamis: 11:00 - 22:00 WIB\nJumat: 11:00 - 23:00 WIB\nSabtu: 10:00 - 23:00 WIB',
   },
   {
     icon: Phone,
@@ -259,7 +258,6 @@ export function InfoCards({ className, info }: InfoCardsProps) {
           title: 'Opening Hours',
           // US3: Use fallback when hours is undefined or invalid
           value: info.hours ?? hoursFallback,
-          subtitle: info.hours ? 'Sunday: Closed' : undefined,
         },
         {
           icon: Phone,

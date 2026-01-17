@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import type {
   APIResponse,
   PaginatedResponse,
@@ -9,7 +9,6 @@ import type {
   Category,
   DiningTable,
   Order,
-  OrderItem,
   Payment,
   CreateOrderRequest,
   UpdateOrderStatusRequest,
@@ -18,7 +17,6 @@ import type {
   DashboardStats,
   SalesReportItem,
   OrdersReportItem,
-  KitchenOrder,
   TableStatus,
   OrderFilters,
   ProductFilters,
@@ -42,7 +40,6 @@ import type {
   CreateSurveyRequest,
   SatisfactionSurvey,
   SurveyStatsResponse,
-  OrderNotification,
   GetNotificationsResponse,
   // Recipe management types (007-fix-order-inventory-system)
   RecipeResponse,
@@ -52,28 +49,29 @@ import type {
   BulkRecipeRequest,
   BulkRecipeResponse,
   IngredientUsageReport,
-} from '@/types';
+} from "@/types";
 
 class APIClient {
   private client: AxiosInstance;
 
   constructor() {
-    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1';
-    console.log('🔧 API Client baseURL:', apiUrl);
-    console.log('🔧 Environment VITE_API_URL:', import.meta.env?.VITE_API_URL);
+    const apiUrl =
+      import.meta.env?.VITE_API_URL || "http://localhost:8080/api/v1";
+    console.log("🔧 API Client baseURL:", apiUrl);
+    console.log("🔧 Environment VITE_API_URL:", import.meta.env?.VITE_API_URL);
 
     this.client = axios.create({
       baseURL: apiUrl,
       timeout: 30000,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('pos_token');
+        const token = localStorage.getItem("pos_token");
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -81,7 +79,7 @@ class APIClient {
       },
       (error) => {
         return Promise.reject(error);
-      }
+      },
     );
 
     // Response interceptor to handle auth errors
@@ -89,13 +87,13 @@ class APIClient {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          localStorage.removeItem('pos_token');
-          localStorage.removeItem('pos_user');
+          localStorage.removeItem("pos_token");
+          localStorage.removeItem("pos_user");
           // Redirect to login page
-          window.location.href = '/login';
+          window.location.href = "/login";
         }
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -114,107 +112,136 @@ class APIClient {
 
   // Generic HTTP methods for backward compatibility
   async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'GET', url });
+    return this.request<T>({ ...config, method: "GET", url });
   }
 
-  async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'POST', url, data });
+  async post<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    return this.request<T>({ ...config, method: "POST", url, data });
   }
 
-  async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'PUT', url, data });
+  async put<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    return this.request<T>({ ...config, method: "PUT", url, data });
   }
 
   async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'DELETE', url });
+    return this.request<T>({ ...config, method: "DELETE", url });
   }
 
-  async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'PATCH', url, data });
+  async patch<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    return this.request<T>({ ...config, method: "PATCH", url, data });
   }
 
   // Authentication endpoints
   async login(credentials: LoginRequest): Promise<APIResponse<LoginResponse>> {
     return this.request({
-      method: 'POST',
-      url: '/auth/login',
+      method: "POST",
+      url: "/auth/login",
       data: credentials,
     });
   }
 
   async logout(): Promise<APIResponse> {
     return this.request({
-      method: 'POST',
-      url: '/auth/logout',
+      method: "POST",
+      url: "/auth/logout",
     });
   }
 
   async getCurrentUser(): Promise<APIResponse<User>> {
     return this.request({
-      method: 'GET',
-      url: '/auth/me',
+      method: "GET",
+      url: "/auth/me",
     });
   }
 
   // Product endpoints
-  async getProducts(filters?: ProductFilters): Promise<PaginatedResponse<Product[]>> {
+  async getProducts(
+    filters?: ProductFilters,
+  ): Promise<PaginatedResponse<Product[]>> {
     return this.request({
-      method: 'GET',
-      url: '/products',
+      method: "GET",
+      url: "/products",
       params: filters,
     });
   }
 
   async getProduct(id: string): Promise<APIResponse<Product>> {
     return this.request({
-      method: 'GET',
+      method: "GET",
       url: `/products/${id}`,
     });
   }
 
   async getCategories(activeOnly = true): Promise<APIResponse<Category[]>> {
     return this.request({
-      method: 'GET',
-      url: '/categories',
+      method: "GET",
+      url: "/categories",
       params: { active_only: activeOnly },
     });
   }
 
-  async getProductsByCategory(categoryId: string, availableOnly = true): Promise<APIResponse<Product[]>> {
+  async getProductsByCategory(
+    categoryId: string,
+    availableOnly = true,
+  ): Promise<APIResponse<Product[]>> {
     return this.request({
-      method: 'GET',
+      method: "GET",
       url: `/categories/${categoryId}/products`,
       params: { available_only: availableOnly },
     });
   }
 
   // Recipe/Ingredient endpoints
-  async getProductIngredients(productId: string): Promise<APIResponse<ProductIngredient[]>> {
+  async getProductIngredients(
+    productId: string,
+  ): Promise<APIResponse<ProductIngredient[]>> {
     return this.request({
-      method: 'GET',
+      method: "GET",
       url: `/admin/products/${productId}/ingredients`,
     });
   }
 
-  async addProductIngredient(productId: string, data: AddRecipeIngredientRequest): Promise<APIResponse<{ id: string }>> {
+  async addProductIngredient(
+    productId: string,
+    data: AddRecipeIngredientRequest,
+  ): Promise<APIResponse<{ id: string }>> {
     return this.request({
-      method: 'POST',
+      method: "POST",
       url: `/admin/products/${productId}/ingredients`,
       data,
     });
   }
 
-  async updateProductIngredient(productId: string, ingredientId: string, data: UpdateRecipeIngredientRequest): Promise<APIResponse<void>> {
+  async updateProductIngredient(
+    productId: string,
+    ingredientId: string,
+    data: UpdateRecipeIngredientRequest,
+  ): Promise<APIResponse<void>> {
     return this.request({
-      method: 'PUT',
+      method: "PUT",
       url: `/admin/products/${productId}/ingredients/${ingredientId}`,
       data,
     });
   }
 
-  async deleteProductIngredient(productId: string, ingredientId: string): Promise<APIResponse<void>> {
+  async deleteProductIngredient(
+    productId: string,
+    ingredientId: string,
+  ): Promise<APIResponse<void>> {
     return this.request({
-      method: 'DELETE',
+      method: "DELETE",
       url: `/admin/products/${productId}/ingredients/${ingredientId}`,
     });
   }
@@ -222,70 +249,77 @@ class APIClient {
   // Table endpoints
   async getTables(filters?: TableFilters): Promise<APIResponse<DiningTable[]>> {
     return this.request({
-      method: 'GET',
-      url: '/tables',
+      method: "GET",
+      url: "/tables",
       params: filters,
     });
   }
 
   async getTable(id: string): Promise<APIResponse<DiningTable>> {
     return this.request({
-      method: 'GET',
+      method: "GET",
       url: `/tables/${id}`,
     });
   }
 
   async getTablesByLocation(): Promise<APIResponse<any[]>> {
     return this.request({
-      method: 'GET',
-      url: '/tables/by-location',
+      method: "GET",
+      url: "/tables/by-location",
     });
   }
 
   async getTableStatus(): Promise<APIResponse<TableStatus>> {
     return this.request({
-      method: 'GET',
-      url: '/tables/status',
+      method: "GET",
+      url: "/tables/status",
     });
   }
 
   // Order endpoints
   async getOrders(filters?: OrderFilters): Promise<PaginatedResponse<Order[]>> {
     return this.request({
-      method: 'GET',
-      url: '/orders',
+      method: "GET",
+      url: "/orders",
       params: filters,
     });
   }
 
   async createOrder(order: CreateOrderRequest): Promise<APIResponse<Order>> {
     return this.request({
-      method: 'POST',
-      url: '/orders',
+      method: "POST",
+      url: "/orders",
       data: order,
     });
   }
 
   async getOrder(id: string): Promise<APIResponse<Order>> {
     return this.request({
-      method: 'GET',
+      method: "GET",
       url: `/orders/${id}`,
     });
   }
 
-  async updateOrderStatus(id: string, status: OrderStatus, notes?: string): Promise<APIResponse<Order>> {
+  async updateOrderStatus(
+    id: string,
+    status: OrderStatus,
+    notes?: string,
+  ): Promise<APIResponse<Order>> {
     const statusUpdate: UpdateOrderStatusRequest = { status, notes };
     return this.request({
-      method: 'PATCH',
+      method: "PATCH",
       url: `/orders/${id}/status`,
       data: statusUpdate,
     });
   }
 
   // Payment endpoints
-  async processPayment(orderId: string, payment: ProcessPaymentRequest): Promise<APIResponse<Payment>> {
+  async processPayment(
+    orderId: string,
+    payment: ProcessPaymentRequest,
+  ): Promise<APIResponse<Payment>> {
     return this.request({
-      method: 'POST',
+      method: "POST",
       url: `/orders/${orderId}/payments`,
       data: payment,
     });
@@ -293,14 +327,16 @@ class APIClient {
 
   async getPayments(orderId: string): Promise<APIResponse<Payment[]>> {
     return this.request({
-      method: 'GET',
+      method: "GET",
       url: `/orders/${orderId}/payments`,
     });
   }
 
-  async getPaymentSummary(orderId: string): Promise<APIResponse<PaymentSummary>> {
+  async getPaymentSummary(
+    orderId: string,
+  ): Promise<APIResponse<PaymentSummary>> {
     return this.request({
-      method: 'GET',
+      method: "GET",
       url: `/orders/${orderId}/payment-summary`,
     });
   }
@@ -308,30 +344,34 @@ class APIClient {
   // Dashboard endpoints
   async getDashboardStats(): Promise<APIResponse<DashboardStats>> {
     return this.request({
-      method: 'GET',
-      url: '/admin/dashboard/stats',
+      method: "GET",
+      url: "/admin/dashboard/stats",
     });
   }
 
-  async getSalesReport(period: 'today' | 'week' | 'month' = 'today'): Promise<APIResponse<SalesReportItem[]>> {
+  async getSalesReport(
+    period: "today" | "week" | "month" = "today",
+  ): Promise<APIResponse<SalesReportItem[]>> {
     return this.request({
-      method: 'GET',
-      url: '/admin/reports/sales',
+      method: "GET",
+      url: "/admin/reports/sales",
       params: { period },
     });
   }
 
   async getOrdersReport(): Promise<APIResponse<OrdersReportItem[]>> {
     return this.request({
-      method: 'GET',
-      url: '/admin/reports/orders',
+      method: "GET",
+      url: "/admin/reports/orders",
     });
   }
 
-  async getIncomeReport(period: 'today' | 'week' | 'month' | 'year' = 'today'): Promise<APIResponse<any>> {
+  async getIncomeReport(
+    period: "today" | "week" | "month" | "year" = "today",
+  ): Promise<APIResponse<any>> {
     return this.request({
-      method: 'GET',
-      url: '/admin/reports/income',
+      method: "GET",
+      url: "/admin/reports/income",
       params: { period },
     });
   }
@@ -339,66 +379,81 @@ class APIClient {
   // Kitchen endpoints
   async getKitchenOrders(status?: string): Promise<APIResponse<Order[]>> {
     return this.request({
-      method: 'GET',
-      url: '/kitchen/orders',
-      params: status && status !== 'all' ? { status } : {},
+      method: "GET",
+      url: "/kitchen/orders",
+      params: status && status !== "all" ? { status } : {},
     });
   }
 
-  async updateOrderItemStatus(orderId: string, itemId: string, status: string): Promise<APIResponse> {
+  async updateOrderItemStatus(
+    orderId: string,
+    itemId: string,
+    status: string,
+  ): Promise<APIResponse> {
     return this.request({
-      method: 'PATCH',
+      method: "PATCH",
       url: `/kitchen/orders/${orderId}/items/${itemId}/status`,
       data: { status },
     });
   }
 
   // Role-specific order creation
-  async createServerOrder(order: CreateOrderRequest): Promise<APIResponse<Order>> {
+  async createServerOrder(
+    order: CreateOrderRequest,
+  ): Promise<APIResponse<Order>> {
     return this.request({
-      method: 'POST',
-      url: '/server/orders',
+      method: "POST",
+      url: "/server/orders",
       data: order,
     });
   }
 
-  async createCounterOrder(order: CreateOrderRequest): Promise<APIResponse<Order>> {
+  async createCounterOrder(
+    order: CreateOrderRequest,
+  ): Promise<APIResponse<Order>> {
     return this.request({
-      method: 'POST',
-      url: '/counter/orders',
+      method: "POST",
+      url: "/counter/orders",
       data: order,
     });
   }
 
   // Counter payment processing
-  async processCounterPayment(orderId: string, payment: ProcessPaymentRequest): Promise<APIResponse<Payment>> {
+  async processCounterPayment(
+    orderId: string,
+    payment: ProcessPaymentRequest,
+  ): Promise<APIResponse<Payment>> {
     return this.request({
-      method: 'POST',
+      method: "POST",
       url: `/counter/orders/${orderId}/payments`,
       data: payment,
     });
   }
 
   // User management endpoints (Admin only)
-  async getUsers(params?: { page?: number; limit?: number; search?: string }): Promise<APIResponse<User[]>> {
+  async getUsers(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<APIResponse<User[]>> {
     return this.request({
-      method: 'GET',
-      url: '/admin/users',
+      method: "GET",
+      url: "/admin/users",
       params,
     });
   }
 
   async createUser(userData: any): Promise<APIResponse<User>> {
     return this.request({
-      method: 'POST',
-      url: '/admin/users',
+      method: "POST",
+      url: "/admin/users",
       data: userData,
     });
   }
 
   async updateUser(id: string, userData: any): Promise<APIResponse<User>> {
     return this.request({
-      method: 'PUT',
+      method: "PUT",
       url: `/admin/users/${id}`,
       data: userData,
     });
@@ -406,7 +461,7 @@ class APIClient {
 
   async deleteUser(id: string): Promise<APIResponse> {
     return this.request({
-      method: 'DELETE',
+      method: "DELETE",
       url: `/admin/users/${id}`,
     });
   }
@@ -424,95 +479,145 @@ class APIClient {
     preparation_time?: number;
     sort_order?: number;
   }): Promise<APIResponse<Product>> {
-    return this.request({ method: 'POST', url: '/admin/products', data: productData });
+    return this.request({
+      method: "POST",
+      url: "/admin/products",
+      data: productData,
+    });
   }
 
-  async updateProduct(id: string, productData: {
-    category_id?: string;
-    name?: string;
-    description?: string;
-    price?: number;
-    image_url?: string;
-    barcode?: string;
-    sku?: string;
-    is_available?: boolean;
-    preparation_time?: number;
-    sort_order?: number;
-  }): Promise<APIResponse<Product>> {
-    return this.request({ method: 'PUT', url: `/admin/products/${id}`, data: productData });
+  async updateProduct(
+    id: string,
+    productData: {
+      category_id?: string;
+      name?: string;
+      description?: string;
+      price?: number;
+      image_url?: string;
+      barcode?: string;
+      sku?: string;
+      is_available?: boolean;
+      preparation_time?: number;
+      sort_order?: number;
+    },
+  ): Promise<APIResponse<Product>> {
+    return this.request({
+      method: "PUT",
+      url: `/admin/products/${id}`,
+      data: productData,
+    });
   }
 
   async deleteProduct(id: string): Promise<APIResponse> {
-    return this.request({ method: 'DELETE', url: `/admin/products/${id}` });
+    return this.request({ method: "DELETE", url: `/admin/products/${id}` });
   }
 
-  // Admin-specific category management  
+  // Admin-specific category management
   async createCategory(categoryData: any): Promise<APIResponse<Category>> {
-    return this.request({ method: 'POST', url: '/admin/categories', data: categoryData });
+    return this.request({
+      method: "POST",
+      url: "/admin/categories",
+      data: categoryData,
+    });
   }
 
-  async updateCategory(id: string, categoryData: any): Promise<APIResponse<Category>> {
-    return this.request({ method: 'PUT', url: `/admin/categories/${id}`, data: categoryData });
+  async updateCategory(
+    id: string,
+    categoryData: any,
+  ): Promise<APIResponse<Category>> {
+    return this.request({
+      method: "PUT",
+      url: `/admin/categories/${id}`,
+      data: categoryData,
+    });
   }
 
   async deleteCategory(id: string): Promise<APIResponse> {
-    return this.request({ method: 'DELETE', url: `/admin/categories/${id}` });
+    return this.request({ method: "DELETE", url: `/admin/categories/${id}` });
   }
 
   // Admin products endpoint with pagination
-  async getAdminProducts(params?: { page?: number, per_page?: number, limit?: number, search?: string, category_id?: string }): Promise<APIResponse<Product[]>> {
+  async getAdminProducts(params?: {
+    page?: number;
+    per_page?: number;
+    limit?: number;
+    search?: string;
+    category_id?: string;
+  }): Promise<APIResponse<Product[]>> {
     // Normalize params (handle both per_page and limit)
     const normalizedParams = {
       page: params?.page,
       per_page: params?.per_page || params?.limit,
       search: params?.search,
-      category_id: params?.category_id
-    }
+      category_id: params?.category_id,
+    };
 
     return this.request({
-      method: 'GET',
-      url: '/admin/products',
-      params: normalizedParams
+      method: "GET",
+      url: "/admin/products",
+      params: normalizedParams,
     });
   }
 
   // Admin categories endpoint with pagination
-  async getAdminCategories(params?: { page?: number, per_page?: number, limit?: number, search?: string, active_only?: boolean }): Promise<APIResponse<Category[]>> {
+  async getAdminCategories(params?: {
+    page?: number;
+    per_page?: number;
+    limit?: number;
+    search?: string;
+    active_only?: boolean;
+  }): Promise<APIResponse<Category[]>> {
     // Normalize params (handle both per_page and limit)
     const normalizedParams = {
       page: params?.page,
       per_page: params?.per_page || params?.limit,
       search: params?.search,
-      active_only: params?.active_only
-    }
+      active_only: params?.active_only,
+    };
 
     return this.request({
-      method: 'GET',
-      url: '/admin/categories',
-      params: normalizedParams
+      method: "GET",
+      url: "/admin/categories",
+      params: normalizedParams,
     });
   }
 
   // Admin tables endpoint with pagination
-  async getAdminTables(params?: { page?: number, limit?: number, search?: string, status?: string }): Promise<APIResponse<DiningTable[]>> {
+  async getAdminTables(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }): Promise<APIResponse<DiningTable[]>> {
     return this.request({
-      method: 'GET',
-      url: '/admin/tables',
-      params
+      method: "GET",
+      url: "/admin/tables",
+      params,
     });
   }
 
   // Admin-specific table management
   async createTable(tableData: any): Promise<APIResponse<DiningTable>> {
-    return this.request({ method: 'POST', url: '/admin/tables', data: tableData });
+    return this.request({
+      method: "POST",
+      url: "/admin/tables",
+      data: tableData,
+    });
   }
 
-  async updateTable(id: string, tableData: any): Promise<APIResponse<DiningTable>> {
-    return this.request({ method: 'PUT', url: `/admin/tables/${id}`, data: tableData });
+  async updateTable(
+    id: string,
+    tableData: any,
+  ): Promise<APIResponse<DiningTable>> {
+    return this.request({
+      method: "PUT",
+      url: `/admin/tables/${id}`,
+      data: tableData,
+    });
   }
 
   async deleteTable(id: string): Promise<APIResponse> {
-    return this.request({ method: 'DELETE', url: `/admin/tables/${id}` });
+    return this.request({ method: "DELETE", url: `/admin/tables/${id}` });
   }
 
   // ===========================================
@@ -521,8 +626,8 @@ class APIClient {
 
   async getUserProfile(): Promise<APIResponse<User>> {
     return this.request({
-      method: 'GET',
-      url: '/profile',
+      method: "GET",
+      url: "/profile",
     });
   }
 
@@ -532,8 +637,8 @@ class APIClient {
     email?: string;
   }): Promise<APIResponse<User>> {
     return this.request({
-      method: 'PUT',
-      url: '/profile',
+      method: "PUT",
+      url: "/profile",
       data: profileData,
     });
   }
@@ -543,8 +648,8 @@ class APIClient {
     new_password: string;
   }): Promise<APIResponse> {
     return this.request({
-      method: 'PUT',
-      url: '/profile/password',
+      method: "PUT",
+      url: "/profile/password",
       data: passwordData,
     });
   }
@@ -553,12 +658,14 @@ class APIClient {
   // Notifications endpoints (Protected - Auth Required)
   // ===========================================
 
-  async getUnreadCounts(): Promise<APIResponse<{
-    notifications: number;
-  }>> {
+  async getUnreadCounts(): Promise<
+    APIResponse<{
+      notifications: number;
+    }>
+  > {
     return this.request({
-      method: 'GET',
-      url: '/notifications/counts/unread',
+      method: "GET",
+      url: "/notifications/counts/unread",
     });
   }
 
@@ -567,30 +674,30 @@ class APIClient {
     is_read?: boolean;
   }): Promise<APIResponse<any[]>> {
     return this.request({
-      method: 'GET',
-      url: '/notifications',
+      method: "GET",
+      url: "/notifications",
       params: filters,
     });
   }
 
   async markNotificationRead(id: string): Promise<APIResponse> {
     return this.request({
-      method: 'PUT',
+      method: "PUT",
       url: `/notifications/${id}/read`,
     });
   }
 
   async deleteNotification(id: string): Promise<APIResponse> {
     return this.request({
-      method: 'DELETE',
+      method: "DELETE",
       url: `/notifications/${id}`,
     });
   }
 
   async getNotificationPreferences(): Promise<APIResponse<any>> {
     return this.request({
-      method: 'GET',
-      url: '/notifications/preferences',
+      method: "GET",
+      url: "/notifications/preferences",
     });
   }
 
@@ -601,8 +708,8 @@ class APIClient {
     quiet_hours_end?: string;
   }): Promise<APIResponse<any>> {
     return this.request({
-      method: 'PUT',
-      url: '/notifications/preferences',
+      method: "PUT",
+      url: "/notifications/preferences",
       data: preferences,
     });
   }
@@ -613,38 +720,40 @@ class APIClient {
 
   async getSettings(): Promise<APIResponse<Record<string, any>>> {
     return this.request({
-      method: 'GET',
-      url: '/admin/settings',
+      method: "GET",
+      url: "/admin/settings",
     });
   }
 
   async updateSettings(settings: Record<string, any>): Promise<APIResponse> {
     return this.request({
-      method: 'PUT',
-      url: '/admin/settings',
+      method: "PUT",
+      url: "/admin/settings",
       data: settings,
     });
   }
 
-  async getSystemHealth(): Promise<APIResponse<{
-    database: {
-      status: string;
-      latency_ms: number;
-      last_check: string;
-    };
-    api: {
-      status: string;
-      version: string;
-    };
-    backup: {
-      status: string;
-      last_backup: string;
-      next_backup: string;
-    };
-  }>> {
+  async getSystemHealth(): Promise<
+    APIResponse<{
+      database: {
+        status: string;
+        latency_ms: number;
+        last_check: string;
+      };
+      api: {
+        status: string;
+        version: string;
+      };
+      backup: {
+        status: string;
+        last_backup: string;
+        next_backup: string;
+      };
+    }>
+  > {
     return this.request({
-      method: 'GET',
-      url: '/admin/health',
+      method: "GET",
+      url: "/admin/health",
     });
   }
 
@@ -658,10 +767,13 @@ class APIClient {
    * @param search - Search term for menu items
    * @returns Array of public menu items
    */
-  async getPublicMenu(categoryId?: string, search?: string): Promise<PublicMenuItem[]> {
+  async getPublicMenu(
+    categoryId?: string,
+    search?: string,
+  ): Promise<PublicMenuItem[]> {
     const response = await this.request<APIResponse<PublicMenuItem[]>>({
-      method: 'GET',
-      url: '/public/menu',
+      method: "GET",
+      url: "/public/menu",
       params: {
         ...(categoryId && { category_id: categoryId }),
         ...(search && { search }),
@@ -676,8 +788,8 @@ class APIClient {
    */
   async getPublicCategories(): Promise<PublicCategory[]> {
     const response = await this.request<APIResponse<PublicCategory[]>>({
-      method: 'GET',
-      url: '/public/categories',
+      method: "GET",
+      url: "/public/categories",
     });
     return response.data || [];
   }
@@ -688,11 +800,11 @@ class APIClient {
    */
   async getRestaurantInfo(): Promise<RestaurantInfo> {
     const response = await this.request<APIResponse<RestaurantInfo>>({
-      method: 'GET',
-      url: '/public/restaurant',
+      method: "GET",
+      url: "/public/restaurant",
     });
     if (!response.data) {
-      throw new Error('Restaurant information not found');
+      throw new Error("Restaurant information not found");
     }
     return response.data;
   }
@@ -702,10 +814,12 @@ class APIClient {
    * @param data - Restaurant info data to update
    * @returns Success response
    */
-  async updateRestaurantInfo(data: UpdateRestaurantInfoRequest): Promise<APIResponse> {
+  async updateRestaurantInfo(
+    data: UpdateRestaurantInfoRequest,
+  ): Promise<APIResponse> {
     return this.request<APIResponse>({
-      method: 'PUT',
-      url: '/admin/restaurant-info',
+      method: "PUT",
+      url: "/admin/restaurant-info",
       data,
     });
   }
@@ -715,10 +829,12 @@ class APIClient {
    * @param data - Operating hours for all 7 days
    * @returns Success response
    */
-  async updateOperatingHours(data: UpdateOperatingHoursRequest): Promise<APIResponse> {
+  async updateOperatingHours(
+    data: UpdateOperatingHoursRequest,
+  ): Promise<APIResponse> {
     return this.request<APIResponse>({
-      method: 'PUT',
-      url: '/admin/operating-hours',
+      method: "PUT",
+      url: "/admin/operating-hours",
       data,
     });
   }
@@ -730,12 +846,12 @@ class APIClient {
    */
   async submitContactForm(data: ContactFormData): Promise<ContactFormResponse> {
     const response = await this.request<APIResponse<ContactFormResponse>>({
-      method: 'POST',
-      url: '/public/contact',
+      method: "POST",
+      url: "/public/contact",
       data,
     });
     if (!response.data) {
-      throw new Error('Failed to submit contact form');
+      throw new Error("Failed to submit contact form");
     }
     return response.data;
   }
@@ -745,14 +861,16 @@ class APIClient {
    * @param data - Reservation form data (customer_name, email, phone, party_size, reservation_date, reservation_time required)
    * @returns Reservation response with ID and status
    */
-  async createReservation(data: CreateReservationRequest): Promise<ReservationResponse> {
+  async createReservation(
+    data: CreateReservationRequest,
+  ): Promise<ReservationResponse> {
     const response = await this.request<APIResponse<ReservationResponse>>({
-      method: 'POST',
-      url: '/public/reservations',
+      method: "POST",
+      url: "/public/reservations",
       data,
     });
     if (!response.data) {
-      throw new Error('Failed to submit reservation');
+      throw new Error("Failed to submit reservation");
     }
     return response.data;
   }
@@ -772,17 +890,19 @@ class APIClient {
     seating_capacity: number;
     location?: string;
   }> {
-    const response = await this.request<APIResponse<{
-      id: string;
-      table_number: string;
-      seating_capacity: number;
-      location?: string;
-    }>>({
-      method: 'GET',
+    const response = await this.request<
+      APIResponse<{
+        id: string;
+        table_number: string;
+        seating_capacity: number;
+        location?: string;
+      }>
+    >({
+      method: "GET",
       url: `/customer/table/${encodeURIComponent(qrCode)}`,
     });
     if (!response.data) {
-      throw new Error('Table not found');
+      throw new Error("Table not found");
     }
     return response.data;
   }
@@ -809,20 +929,22 @@ class APIClient {
     tax_amount: number;
     total_amount: number;
   }> {
-    const response = await this.request<APIResponse<{
-      order_id: string;
-      order_number: string;
-      table_number: string;
-      subtotal: number;
-      tax_amount: number;
-      total_amount: number;
-    }>>({
-      method: 'POST',
-      url: '/customer/orders',
+    const response = await this.request<
+      APIResponse<{
+        order_id: string;
+        order_number: string;
+        table_number: string;
+        subtotal: number;
+        tax_amount: number;
+        total_amount: number;
+      }>
+    >({
+      method: "POST",
+      url: "/customer/orders",
       data: orderData,
     });
     if (!response.data) {
-      throw new Error('Failed to create order');
+      throw new Error("Failed to create order");
     }
     return response.data;
   }
@@ -833,14 +955,17 @@ class APIClient {
    * @param paymentData - Payment details (payment_method, amount, reference_number)
    * @returns Payment confirmation
    */
-  async createCustomerPayment(orderId: string, paymentData: CreatePaymentRequest): Promise<PaymentConfirmation> {
+  async createCustomerPayment(
+    orderId: string,
+    paymentData: CreatePaymentRequest,
+  ): Promise<PaymentConfirmation> {
     const response = await this.request<APIResponse<PaymentConfirmation>>({
-      method: 'POST',
+      method: "POST",
       url: `/customer/orders/${orderId}/payment`,
       data: paymentData,
     });
     if (!response.data) {
-      throw new Error('Failed to process payment');
+      throw new Error("Failed to process payment");
     }
     return response.data;
   }
@@ -851,14 +976,17 @@ class APIClient {
    * @param surveyData - Survey ratings and comments
    * @returns Survey submission confirmation
    */
-  async createSurvey(orderId: string, surveyData: CreateSurveyRequest): Promise<SatisfactionSurvey> {
+  async createSurvey(
+    orderId: string,
+    surveyData: CreateSurveyRequest,
+  ): Promise<SatisfactionSurvey> {
     const response = await this.request<APIResponse<SatisfactionSurvey>>({
-      method: 'POST',
+      method: "POST",
       url: `/customer/orders/${orderId}/survey`,
       data: surveyData,
     });
     if (!response.data) {
-      throw new Error('Failed to submit survey');
+      throw new Error("Failed to submit survey");
     }
     return response.data;
   }
@@ -869,11 +997,11 @@ class APIClient {
    */
   async getSurveyStats(): Promise<SurveyStatsResponse> {
     const response = await this.request<APIResponse<SurveyStatsResponse>>({
-      method: 'GET',
-      url: '/admin/surveys/stats',
+      method: "GET",
+      url: "/admin/surveys/stats",
     });
     if (!response.data) {
-      throw new Error('Failed to fetch survey statistics');
+      throw new Error("Failed to fetch survey statistics");
     }
     return response.data;
   }
@@ -883,13 +1011,15 @@ class APIClient {
    * @param orderId - UUID of the order
    * @returns List of notifications and unread count
    */
-  async getOrderNotifications(orderId: string): Promise<GetNotificationsResponse> {
+  async getOrderNotifications(
+    orderId: string,
+  ): Promise<GetNotificationsResponse> {
     const response = await this.request<APIResponse<GetNotificationsResponse>>({
-      method: 'GET',
+      method: "GET",
       url: `/customer/orders/${orderId}/notifications`,
     });
     if (!response.data) {
-      throw new Error('Failed to fetch notifications');
+      throw new Error("Failed to fetch notifications");
     }
     return response.data;
   }
@@ -900,7 +1030,7 @@ class APIClient {
    */
   async markNotificationAsRead(notificationId: string): Promise<void> {
     await this.request({
-      method: 'PUT',
+      method: "PUT",
       url: `/customer/notifications/${notificationId}/read`,
     });
   }
@@ -917,10 +1047,15 @@ class APIClient {
    * @param lowStockOnly - Filter to show only low stock items
    * @returns Paginated list of ingredients
    */
-  async getIngredients(params?: { page?: number; per_page?: number; search?: string; low_stock?: boolean }): Promise<PaginatedResponse<any>> {
+  async getIngredients(params?: {
+    page?: number;
+    per_page?: number;
+    search?: string;
+    low_stock?: boolean;
+  }): Promise<PaginatedResponse<any>> {
     return this.request({
-      method: 'GET',
-      url: '/admin/ingredients',
+      method: "GET",
+      url: "/admin/ingredients",
       params,
     });
   }
@@ -932,8 +1067,8 @@ class APIClient {
    */
   async createIngredient(ingredientData: any): Promise<APIResponse> {
     return this.request({
-      method: 'POST',
-      url: '/admin/ingredients',
+      method: "POST",
+      url: "/admin/ingredients",
       data: ingredientData,
     });
   }
@@ -944,9 +1079,12 @@ class APIClient {
    * @param ingredientData - Updated ingredient data
    * @returns Success response
    */
-  async updateIngredient(id: string, ingredientData: any): Promise<APIResponse> {
+  async updateIngredient(
+    id: string,
+    ingredientData: any,
+  ): Promise<APIResponse> {
     return this.request({
-      method: 'PUT',
+      method: "PUT",
       url: `/admin/ingredients/${id}`,
       data: ingredientData,
     });
@@ -959,7 +1097,7 @@ class APIClient {
    */
   async deleteIngredient(id: string): Promise<APIResponse> {
     return this.request({
-      method: 'DELETE',
+      method: "DELETE",
       url: `/admin/ingredients/${id}`,
     });
   }
@@ -971,9 +1109,13 @@ class APIClient {
    * @param notes - Optional notes
    * @returns Updated stock information
    */
-  async restockIngredient(id: string, quantity: number, notes?: string): Promise<APIResponse> {
+  async restockIngredient(
+    id: string,
+    quantity: number,
+    notes?: string,
+  ): Promise<APIResponse> {
     return this.request({
-      method: 'POST',
+      method: "POST",
       url: `/admin/ingredients/${id}/restock`,
       data: { quantity, notes },
     });
@@ -986,7 +1128,7 @@ class APIClient {
    */
   async getIngredientHistory(id: string): Promise<APIResponse> {
     return this.request({
-      method: 'GET',
+      method: "GET",
       url: `/admin/ingredients/${id}/history`,
     });
   }
@@ -997,8 +1139,8 @@ class APIClient {
    */
   async getLowStockIngredients(): Promise<APIResponse> {
     return this.request({
-      method: 'GET',
-      url: '/admin/ingredients/low-stock',
+      method: "GET",
+      url: "/admin/ingredients/low-stock",
     });
   }
 
@@ -1011,9 +1153,11 @@ class APIClient {
    * @param productId - Product UUID
    * @returns Recipe response with ingredients
    */
-  async getProductRecipe(productId: string): Promise<APIResponse<RecipeResponse>> {
+  async getProductRecipe(
+    productId: string,
+  ): Promise<APIResponse<RecipeResponse>> {
     return this.request({
-      method: 'GET',
+      method: "GET",
       url: `/admin/products/${productId}/ingredients`,
     });
   }
@@ -1026,10 +1170,10 @@ class APIClient {
    */
   async addRecipeIngredient(
     productId: string,
-    ingredientData: AddRecipeIngredientRequest
+    ingredientData: AddRecipeIngredientRequest,
   ): Promise<APIResponse<ProductIngredient>> {
     return this.request({
-      method: 'POST',
+      method: "POST",
       url: `/admin/products/${productId}/ingredients`,
       data: ingredientData,
     });
@@ -1045,10 +1189,10 @@ class APIClient {
   async updateRecipeIngredient(
     productId: string,
     ingredientId: string,
-    data: UpdateRecipeIngredientRequest
+    data: UpdateRecipeIngredientRequest,
   ): Promise<APIResponse<ProductIngredient>> {
     return this.request({
-      method: 'PUT',
+      method: "PUT",
       url: `/admin/products/${productId}/ingredients/${ingredientId}`,
       data,
     });
@@ -1062,10 +1206,10 @@ class APIClient {
    */
   async removeRecipeIngredient(
     productId: string,
-    ingredientId: string
+    ingredientId: string,
   ): Promise<APIResponse> {
     return this.request({
-      method: 'DELETE',
+      method: "DELETE",
       url: `/admin/products/${productId}/ingredients/${ingredientId}`,
     });
   }
@@ -1076,11 +1220,11 @@ class APIClient {
    * @returns Bulk update results
    */
   async bulkUpdateRecipes(
-    recipes: BulkRecipeRequest
+    recipes: BulkRecipeRequest,
   ): Promise<APIResponse<BulkRecipeResponse>> {
     return this.request({
-      method: 'POST',
-      url: '/admin/recipes/bulk',
+      method: "POST",
+      url: "/admin/recipes/bulk",
       data: recipes,
     });
   }
@@ -1093,11 +1237,11 @@ class APIClient {
    */
   async getIngredientUsageReport(
     startDate: string,
-    endDate: string
+    endDate: string,
   ): Promise<APIResponse<IngredientUsageReport>> {
     return this.request({
-      method: 'GET',
-      url: '/admin/ingredients/usage-report',
+      method: "GET",
+      url: "/admin/ingredients/usage-report",
       params: { start_date: startDate, end_date: endDate },
     });
   }
@@ -1112,8 +1256,8 @@ class APIClient {
    */
   async getNewContactsCount(): Promise<APIResponse<{ new_contacts: number }>> {
     return this.request({
-      method: 'GET',
-      url: '/admin/contacts/counts/new',
+      method: "GET",
+      url: "/admin/contacts/counts/new",
     });
   }
 
@@ -1129,31 +1273,32 @@ class APIClient {
    */
   async uploadImage(
     file: File,
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
   ): Promise<APIResponse<UploadResponse>> {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append("image", file);
 
-    const token = localStorage.getItem('pos_token');
-    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1';
+    const token = localStorage.getItem("pos_token");
+    const apiUrl =
+      import.meta.env?.VITE_API_URL || "http://localhost:8080/api/v1";
 
     const response = await axios.post<APIResponse<UploadResponse>>(
       `${apiUrl}/admin/upload`,
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         onUploadProgress: (progressEvent) => {
           if (onProgress && progressEvent.total) {
             const progress = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
+              (progressEvent.loaded * 100) / progressEvent.total,
             );
             onProgress(progress);
           }
         },
-      }
+      },
     );
 
     return response.data;
@@ -1165,23 +1310,23 @@ class APIClient {
    */
   async deleteImage(filename: string): Promise<APIResponse> {
     return this.request({
-      method: 'DELETE',
+      method: "DELETE",
       url: `/admin/upload/${encodeURIComponent(filename)}`,
     });
   }
 
   // Utility methods
   setAuthToken(token: string): void {
-    localStorage.setItem('pos_token', token);
+    localStorage.setItem("pos_token", token);
   }
 
   clearAuth(): void {
-    localStorage.removeItem('pos_token');
-    localStorage.removeItem('pos_user');
+    localStorage.removeItem("pos_token");
+    localStorage.removeItem("pos_user");
   }
 
   getAuthToken(): string | null {
-    return localStorage.getItem('pos_token');
+    return localStorage.getItem("pos_token");
   }
 
   isAuthenticated(): boolean {
@@ -1194,5 +1339,5 @@ export const apiClient = new APIClient();
 export default apiClient;
 
 // Export specific methods for easier testing and direct imports
-export const createReservation = (data: CreateReservationRequest) => apiClient.createReservation(data);
-
+export const createReservation = (data: CreateReservationRequest) =>
+  apiClient.createReservation(data);

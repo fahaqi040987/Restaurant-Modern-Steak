@@ -26,8 +26,7 @@ import {
   Trash2,
   Shield,
   Mail,
-  Calendar,
-  MoreHorizontal
+  Calendar
 } from "lucide-react"
 import type { User } from "@/types"
 

@@ -1,42 +1,40 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import {
-  Keyboard,
-  X,
-  Zap,
-  Info
-} from 'lucide-react'
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Keyboard, X, Zap, Info } from "lucide-react";
 
 interface ShortcutInfo {
-  key: string
-  ctrl?: boolean
-  shift?: boolean
-  alt?: boolean
-  description: string
+  key: string;
+  ctrl?: boolean;
+  shift?: boolean;
+  alt?: boolean;
+  description: string;
 }
 
 interface KeyboardShortcutsHelpProps {
-  shortcuts: ShortcutInfo[]
-  isOpen: boolean
-  onClose: () => void
+  shortcuts: ShortcutInfo[];
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardShortcutsHelpProps) {
-  const { t } = useTranslation()
+export function KeyboardShortcutsHelp({
+  shortcuts,
+  isOpen,
+  onClose,
+}: KeyboardShortcutsHelpProps) {
+  const { t } = useTranslation();
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const formatShortcut = (shortcut: ShortcutInfo) => {
-    const keys: string[] = []
-    if (shortcut.ctrl) keys.push('Ctrl')
-    if (shortcut.shift) keys.push('Shift')
-    if (shortcut.alt) keys.push('Alt')
-    keys.push(shortcut.key.toUpperCase())
-    return keys.join(' + ')
-  }
+    const keys: string[] = [];
+    if (shortcut.ctrl) keys.push("Ctrl");
+    if (shortcut.shift) keys.push("Shift");
+    if (shortcut.alt) keys.push("Alt");
+    keys.push(shortcut.key.toUpperCase());
+    return keys.join(" + ");
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -45,7 +43,7 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Keyboard className="h-5 w-5" />
-              {t('pos.keyboardShortcuts')}
+              {t("pos.keyboardShortcuts")}
             </CardTitle>
             <Button
               variant="ghost"
@@ -61,12 +59,15 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
               <Zap className="h-4 w-4 text-yellow-500" />
-              <span>{t('pos.shortcutsDesc')}</span>
+              <span>{t("pos.shortcutsDesc")}</span>
             </div>
 
             <div className="space-y-3">
               {shortcuts.map((shortcut, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
                   <span className="text-sm text-gray-700 flex-1">
                     {shortcut.description}
                   </span>
@@ -82,13 +83,13 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
                 <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-blue-900 mb-1">
-                    {t('pos.proTips')}
+                    {t("pos.proTips")}
                   </p>
                   <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• {t('pos.tipShortcutsWork')}</li>
-                    <li>• {t('pos.tipProductSearch')}</li>
-                    <li>• {t('pos.tipArrowKeys')}</li>
-                    <li>• {t('pos.tipCloseHelp')}</li>
+                    <li>• {t("pos.tipShortcutsWork")}</li>
+                    <li>• {t("pos.tipProductSearch")}</li>
+                    <li>• {t("pos.tipArrowKeys")}</li>
+                    <li>• {t("pos.tipCloseHelp")}</li>
                   </ul>
                 </div>
               </div>
@@ -97,7 +98,7 @@ export function KeyboardShortcutsHelp({ shortcuts, isOpen, onClose }: KeyboardSh
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 // Quick shortcut indicator component for UI
@@ -106,5 +107,5 @@ export function ShortcutIndicator({ shortcut }: { shortcut: string }) {
     <Badge variant="outline" className="text-xs font-mono opacity-70 ml-2">
       {shortcut}
     </Badge>
-  )
+  );
 }

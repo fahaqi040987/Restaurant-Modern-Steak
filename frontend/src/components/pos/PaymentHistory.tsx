@@ -8,13 +8,10 @@ import { Badge } from '@/components/ui/badge'
 import { CardSkeleton } from '@/components/ui/loading-skeletons'
 import {
   Search,
-  Filter,
-  Calendar,
   CreditCard,
   Banknote,
   Wallet,
   Smartphone,
-  Receipt,
   Eye,
   RefreshCw,
   Clock

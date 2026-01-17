@@ -53,7 +53,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
       return `${hour12}:${min} ${ampm}`
     }
 
-    const groupedHours: Array<{ days: string[], time: string, isClosed: boolean }> = []
+    const groupedHours: Array<{ days: string[], time: string }> = []
     let currentGroup: string[] = []
     let currentHours: OperatingHours | null = null
 
@@ -62,22 +62,17 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
 
       if (hour.is_closed) {
         if (currentGroup.length > 0) {
-          groupedHours.push({ days: currentGroup, time: '', isClosed: false })
+          groupedHours.push({ days: currentGroup, time: `${formatTime(currentHours!.open_time)} - ${formatTime(currentHours!.close_time)} WIB` })
           currentGroup = []
+          currentHours = null
         }
-        groupedHours.push({
-          days: [dayNames[hour.day_of_week - 1]],
-          time: '',
-          isClosed: true
-        })
       } else if (!currentHours ||
         hour.open_time !== currentHours.open_time ||
         hour.close_time !== currentHours.close_time) {
         if (currentGroup.length > 0) {
           groupedHours.push({
             days: currentGroup,
-            time: `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)} WIB`,
-            isClosed: false
+            time: `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)} WIB`
           })
         }
         currentGroup = [dayNames[hour.day_of_week - 1]]
@@ -90,8 +85,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
         if (currentGroup.length > 0 && currentHours) {
           groupedHours.push({
             days: currentGroup,
-            time: `${formatTime(currentHours.open_time)} - ${formatTime(currentHours.close_time)} WIB`,
-            isClosed: false
+            time: `${formatTime(currentHours.open_time)} - ${formatTime(currentHours.close_time)} WIB`
           })
           currentGroup = []
           currentHours = null
@@ -112,7 +106,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                 {group.days.length > 1 ? `${group.days[0]} - ${group.days[group.days.length - 1]}` : group.days[0]}
               </span>
               <span className="ml-2">
-                {group.isClosed ? t('public.closed') : group.time}
+                {group.time}
               </span>
             </div>
           </li>

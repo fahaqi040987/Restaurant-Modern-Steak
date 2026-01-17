@@ -21,7 +21,7 @@ export const Route = createFileRoute('/site/')({
 
 function PublicLandingPage() {
   // Fetch restaurant info
-  const { data: restaurantInfo, isLoading: isLoadingInfo } = useQuery({
+  const { data: restaurantInfo, isLoading: _isLoadingInfo } = useQuery({
     queryKey: ['restaurantInfo'],
     queryFn: () => apiClient.getRestaurantInfo(),
     staleTime: 1000 * 60 * 5, // 5 minutes for faster updates

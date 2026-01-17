@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -25,10 +25,9 @@ interface NavLinkProps {
   children: React.ReactNode
   onClick?: () => void
   className?: string
-  isScrolled?: boolean
 }
 
-function NavLink({ to, children, onClick, className, isScrolled }: NavLinkProps) {
+function NavLink({ to, children, onClick, className }: NavLinkProps) {
   const location = useLocation()
   const isActive = location.pathname === to
 
@@ -40,8 +39,7 @@ function NavLink({ to, children, onClick, className, isScrolled }: NavLinkProps)
         'text-sm font-medium transition-all duration-300',
         'hover:text-[var(--public-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]',
         isActive && 'text-[var(--public-accent)]',
-        !isActive && isScrolled && 'text-[var(--public-text-primary)]',
-        !isActive && !isScrolled && 'text-white',
+        !isActive && 'text-white',
         className
       )}
     >
@@ -65,7 +63,7 @@ const languages = [
 
 /**
  * Fixed header component with scroll behavior (Restoran-master style).
- * - Transparent on top, solid background on scroll
+ * - Fixed position at top of viewport (does NOT follow scroll)
  * - Mobile hamburger menu with slide-out drawer
  * - Staff login link in navigation
  *
@@ -77,7 +75,6 @@ const languages = [
 export function Header() {
   const { t, i18n } = useTranslation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
 
   // Fetch restaurant info for logo
   const { data: restaurantInfo } = useQuery({
@@ -95,54 +92,41 @@ export function Header() {
     localStorage.setItem('i18nextLng', langCode)
   }
 
-  // Handle scroll behavior for header background
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY
-      setIsScrolled(scrollTop > 50)
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll() // Check initial scroll position
-
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 bg-[var(--public-primary)] shadow-md py-3 transition-all duration-300"
+      className="bg-transparent transition-all duration-300 w-full absolute top-0 left-0 right-0 z-50"
       role="banner"
     >
       <nav
         className="public-container flex items-center justify-between"
         aria-label="Main navigation"
       >
-        {/* Logo */}
-        <Link
-          to="/site"
-          className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]"
-          aria-label="Steak Kenangan - Home"
-        >
-          {restaurantInfo?.logo_url ? (
-            <img
-              src={restaurantInfo?.logo_url || '/assets/restoran/images/LogoSteakKenangan.png'}
-              alt={restaurantInfo.name || 'Steak Kenangan'}
-              className="h-28 md:h-30 lg:h-32 w-auto object-contain transition-all duration-300"
-            />
-          ) : (
-            <span
-              className={cn(
-                'font-accent text-2xl md:text-3xl transition-colors duration-300',
-                isScrolled ? 'text-[var(--public-accent)]' : 'text-white'
-              )}
-              style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
-            >
-              Steak Kenangan
-            </span>
-          )}
-        </Link>
+          {/* Logo */}
+          <Link
+            to="/site"
+            className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]"
+            aria-label="Steak Kenangan - Home"
+          >
+            {restaurantInfo?.logo_url ? (
+              <img
+                src={restaurantInfo?.logo_url || '/assets/restoran/images/LogoSteakKenangan.png'}
+                alt={restaurantInfo.name || 'Steak Kenangan'}
+                className="h-28 md:h-30 lg:h-32 w-auto object-contain transition-all duration-300"
+              />
+            ) : (
+              <span
+                className={cn(
+                  'font-accent text-2xl md:text-3xl transition-colors duration-300',
+                  'text-white'
+                )}
+                style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
+              >
+                Steak Kenangan
+              </span>
+            )}
+          </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8">
@@ -162,12 +146,7 @@ export function Header() {
                 variant="ghost"
                 size="sm"
                 data-testid="language-switcher"
-                className={cn(
-                  'gap-2 transition-colors duration-300',
-                  isScrolled
-                    ? 'text-[var(--public-text-secondary)] hover:text-[var(--public-accent)]'
-                    : 'text-white/80 hover:text-white'
-                )}
+                className="gap-2 transition-colors duration-300"
               >
                 <Globe className="h-4 w-4" aria-hidden="true" />
                 <span>{currentLang.flag}</span>
@@ -195,12 +174,7 @@ export function Header() {
             variant="ghost"
             size="sm"
             asChild
-            className={cn(
-              'gap-2 transition-colors duration-300',
-              isScrolled
-                ? 'text-[var(--public-text-secondary)] hover:text-[var(--public-accent)]'
-                : 'text-white/80 hover:text-white'
-            )}
+            className="gap-2 transition-colors duration-300"
           >
             <Link to="/login">
               <User className="h-4 w-4" aria-hidden="true" />
@@ -231,10 +205,7 @@ export function Header() {
               variant="ghost"
               size="icon"
               className={cn(
-                'lg:hidden transition-colors duration-300',
-                isScrolled
-                  ? 'text-[var(--public-text-primary)] hover:text-[var(--public-accent)]'
-                  : 'text-white hover:text-white/80'
+                'lg:hidden transition-colors duration-300'
               )}
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileMenuOpen}

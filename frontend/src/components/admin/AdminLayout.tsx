@@ -13,21 +13,17 @@ import {
   ChefHat,
   ShoppingCart,
   Settings,
-  User,
   Menu,
   BarChart3,
   UserCog,
-  Store,
   LayoutGrid,
   Bell,
   Mail
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
-import apiClient from '@/api/client'
 
 // Import components for different sections
 import { AdminDashboard } from './AdminDashboard'
-import { POSLayout } from '@/components/pos/POSLayout'
 import { ServerInterface } from '@/components/server/ServerInterface'
 import { CounterInterface } from '@/components/counter/CounterInterface'
 import { NewEnhancedKitchenLayout } from '@/components/kitchen/NewEnhancedKitchenLayout'

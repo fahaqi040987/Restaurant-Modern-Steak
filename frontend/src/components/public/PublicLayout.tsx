@@ -42,14 +42,12 @@ export function PublicLayout({
   loaderDuration = 2500,
 }: PublicLayoutProps) {
   const [isLoading, setIsLoading] = useState(showLoader)
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
 
   // Only show loader on first visit (session-based)
   useEffect(() => {
     const hasVisited = sessionStorage.getItem('hasVisitedPublicSite')
     if (hasVisited) {
       setIsLoading(false)
-      setHasLoadedOnce(true)
     } else if (showLoader) {
       setIsLoading(true)
     }
@@ -57,7 +55,6 @@ export function PublicLayout({
 
   const handleLoaderComplete = () => {
     setIsLoading(false)
-    setHasLoadedOnce(true)
     sessionStorage.setItem('hasVisitedPublicSite', 'true')
   }
 
@@ -81,12 +78,12 @@ export function PublicLayout({
         />
       )}
 
-      {/* Header - Fixed position */}
+      {/* Header - Static (does not follow scroll) */}
       <Header />
 
       {/* Main Content */}
       <main
-        className={`flex-1 pt-24 transition-opacity duration-500 ${
+        className={`flex-1 transition-opacity duration-500 ${
           isLoading ? 'opacity-0' : 'opacity-100'
         }`}
         role="main"

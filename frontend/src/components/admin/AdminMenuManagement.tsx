@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
@@ -27,7 +27,7 @@ import { AdminMenuTable } from '@/components/admin/AdminMenuTable'
 import { AdminCategoriesTable } from '@/components/admin/AdminCategoriesTable'
 import { PaginationControlsComponent } from '@/components/ui/pagination-controls'
 import { usePagination } from '@/hooks/usePagination'
-import { ProductListSkeleton, CategoryListSkeleton, SearchingSkeleton } from '@/components/ui/skeletons'
+import { ProductListSkeleton, CategoryListSkeleton } from '@/components/ui/skeletons'
 import { InlineLoading } from '@/components/ui/loading-spinner'
 import type { Product, Category } from '@/types'
 
@@ -51,13 +51,11 @@ function getProductImageUrl(url: string | null | undefined): string | null {
   return url;
 }
 
-type ViewMode = 'list' | 'product-form' | 'category-form'
 type DisplayMode = 'table' | 'cards'
 type ActiveTab = 'products' | 'categories'
 
 export function AdminMenuManagement() {
   const { t } = useTranslation()
-  const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [displayMode, setDisplayMode] = useState<DisplayMode>('table')
   const [activeTab, setActiveTab] = useState<ActiveTab>('products')
   const [searchTerm, setSearchTerm] = useState('')
@@ -168,7 +166,6 @@ export function AdminMenuManagement() {
     setShowCreateCategoryForm(false)
     setEditingProduct(null)
     setEditingCategory(null)
-    setViewMode('list')
   }
 
   const handleCancelForm = () => {
@@ -176,7 +173,6 @@ export function AdminMenuManagement() {
     setShowCreateCategoryForm(false)
     setEditingProduct(null)
     setEditingCategory(null)
-    setViewMode('list')
   }
 
   const handleDeleteProduct = (product: Product) => {

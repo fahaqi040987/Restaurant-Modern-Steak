@@ -18,7 +18,7 @@ import { ImageUploader } from '@/components/ui/ImageUploader'
 import { createProductSchema, updateProductSchema, type CreateProductData, type UpdateProductData } from '@/lib/form-schemas'
 import { toastHelpers } from '@/lib/toast-helpers'
 import apiClient from '@/api/client'
-import type { Product, Category } from '@/types'
+import type { Product } from '@/types'
 import { X } from 'lucide-react'
 import { RecipeManagement } from '@/components/admin/RecipeManagement'
 import { Separator } from '@/components/ui/separator'
@@ -124,7 +124,7 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
       };
       return apiClient.updateProduct(data.id.toString(), apiData);
     },
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       queryClient.invalidateQueries({ queryKey: ['products'] })
       queryClient.invalidateQueries({ queryKey: ['categories'] })

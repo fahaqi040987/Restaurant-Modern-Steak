@@ -8,7 +8,6 @@ import { Clock, CheckCircle, Loader2, ChefHat, AlertCircle } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { apiClient } from '@/api/client'
 import type { Order, OrderStatus as OrderStatusType } from '@/types'
 
 interface OrderStatusProps {

@@ -1,69 +1,62 @@
-import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import {
-  Zap,
-  Clock,
-  Star,
-  TrendingUp,
-  ShoppingCart,
-  RotateCcw,
-  Plus
-} from 'lucide-react'
-import { formatCurrency } from '@/lib/utils'
-import type { Product } from '@/types'
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Zap, Clock, Star, TrendingUp, RotateCcw, Plus } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import type { Product } from "@/types";
 
 interface QuickAccessPanelProps {
-  products: Product[]
-  recentOrders?: any[] // Recent order data
-  onProductSelect: (product: Product) => void
-  className?: string
+  products: Product[];
+  recentOrders?: any[]; // Recent order data
+  onProductSelect: (product: Product) => void;
+  className?: string;
 }
 
 export function QuickAccessPanel({
   products,
-  recentOrders = [],
   onProductSelect,
-  className
+  className,
 }: QuickAccessPanelProps) {
-  const { t } = useTranslation()
-  const [recentItems, setRecentItems] = useState<Product[]>([])
-  const [popularItems, setPopularItems] = useState<Product[]>([])
+  const { t } = useTranslation();
+  const [recentItems, setRecentItems] = useState<Product[]>([]);
+  const [popularItems, setPopularItems] = useState<Product[]>([]);
 
   // Simulate recent items (in real app, this would come from order history)
   useEffect(() => {
     // Mock recent items - replace with actual recent order data
-    const mockRecentIds = ['1', '3', '5', '7'] // Recently ordered product IDs
-    const recent = products.filter(p => mockRecentIds.includes(p.id)).slice(0, 6)
-    setRecentItems(recent)
+    const mockRecentIds = ["1", "3", "5", "7"]; // Recently ordered product IDs
+    const recent = products
+      .filter((p) => mockRecentIds.includes(p.id))
+      .slice(0, 6);
+    setRecentItems(recent);
 
     // Mock popular items - replace with actual sales data
     const popular = [...products]
       .sort(() => Math.random() - 0.5) // Random for demo
-      .slice(0, 8)
-    setPopularItems(popular)
-  }, [products])
+      .slice(0, 8);
+    setPopularItems(popular);
+  }, [products]);
 
   const quickActions = [
     {
-      id: 'popular',
-      titleKey: 'pos.popularItems',
+      id: "popular",
+      titleKey: "pos.popularItems",
       icon: TrendingUp,
       items: popularItems,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50'
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
     },
     {
-      id: 'recent',
-      titleKey: 'pos.recentlyOrdered',
+      id: "recent",
+      titleKey: "pos.recentlyOrdered",
       icon: Clock,
       items: recentItems,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    }
-  ]
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+    },
+  ];
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -72,7 +65,7 @@ export function QuickAccessPanel({
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <Zap className="h-4 w-4 text-yellow-500" />
-            {t('pos.quickAccess')}
+            {t("pos.quickAccess")}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -84,12 +77,12 @@ export function QuickAccessPanel({
               onClick={() => {
                 // Add most popular item to cart
                 if (popularItems[0]) {
-                  onProductSelect(popularItems[0])
+                  onProductSelect(popularItems[0]);
                 }
               }}
             >
               <Star className="h-4 w-4 text-yellow-500" />
-              <span>{t('pos.mostPopular')}</span>
+              <span>{t("pos.mostPopular")}</span>
             </Button>
             <Button
               variant="outline"
@@ -98,12 +91,12 @@ export function QuickAccessPanel({
               onClick={() => {
                 // Add last ordered item
                 if (recentItems[0]) {
-                  onProductSelect(recentItems[0])
+                  onProductSelect(recentItems[0]);
                 }
               }}
             >
               <RotateCcw className="h-4 w-4 text-blue-500" />
-              <span>{t('pos.lastOrder')}</span>
+              <span>{t("pos.lastOrder")}</span>
             </Button>
           </div>
         </CardContent>
@@ -111,8 +104,8 @@ export function QuickAccessPanel({
 
       {/* Quick Action Sections */}
       {quickActions.map((section) => {
-        const Icon = section.icon
-        
+        const Icon = section.icon;
+
         return (
           <Card key={section.id}>
             <CardHeader className="pb-3">
@@ -139,7 +132,7 @@ export function QuickAccessPanel({
                         </span>
                         {product.is_available && (
                           <Badge variant="outline" className="text-xs py-0">
-                            {t('pos.available')}
+                            {t("pos.available")}
                           </Badge>
                         )}
                       </div>
@@ -149,8 +142,8 @@ export function QuickAccessPanel({
                       variant="ghost"
                       className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        onProductSelect(product)
+                        e.stopPropagation();
+                        onProductSelect(product);
                       }}
                     >
                       <Plus className="h-4 w-4" />
@@ -159,24 +152,24 @@ export function QuickAccessPanel({
                 ))
               ) : (
                 <div className="text-center py-4 text-gray-500">
-                  <p className="text-sm">{t('pos.noItemsAvailable')}</p>
+                  <p className="text-sm">{t("pos.noItemsAvailable")}</p>
                 </div>
               )}
             </CardContent>
           </Card>
-        )
+        );
       })}
 
       {/* Quick Quantity Buttons */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-700">
-            {t('pos.quickQuantities')}
+            {t("pos.quickQuantities")}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="grid grid-cols-3 gap-2">
-            {[1, 2, 5].map(qty => (
+            {[1, 2, 5].map((qty) => (
               <Button
                 key={qty}
                 variant="outline"
@@ -184,7 +177,7 @@ export function QuickAccessPanel({
                 className="h-8 text-xs"
                 onClick={() => {
                   // This would be used with a selected product to add multiple quantities
-                  console.log(`Quick add quantity: ${qty}`)
+                  console.log(`Quick add quantity: ${qty}`);
                 }}
               >
                 ×{qty}
@@ -192,7 +185,7 @@ export function QuickAccessPanel({
             ))}
           </div>
           <p className="text-xs text-gray-500 mt-2 text-center">
-            {t('pos.quickQuantitiesHint')}
+            {t("pos.quickQuantitiesHint")}
           </p>
         </CardContent>
       </Card>
@@ -203,16 +196,16 @@ export function QuickAccessPanel({
           <div className="text-center">
             <Zap className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
             <p className="text-xs font-medium text-gray-700 mb-1">
-              {t('pos.powerUserTips')}
+              {t("pos.powerUserTips")}
             </p>
             <p className="text-xs text-gray-600 leading-relaxed">
-              • {t('pos.tipSearch')}<br/>
-              • {t('pos.tipRecent')}<br/>
-              • {t('pos.tipPopular')}
+              • {t("pos.tipSearch")}
+              <br />• {t("pos.tipRecent")}
+              <br />• {t("pos.tipPopular")}
             </p>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

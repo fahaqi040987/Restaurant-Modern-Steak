@@ -141,12 +141,9 @@ export function RestaurantInfoSettings() {
 
       // Process operating hours from API
       if (restaurantInfo.operating_hours && restaurantInfo.operating_hours.length > 0) {
-        console.log('API Operating Hours:', restaurantInfo.operating_hours) // Debug log
-
         const processedHours: OperatingHourUpdate[] = restaurantInfo.operating_hours.map((oh) => {
           const openTime = normalizeTimeForInput(oh.open_time)
           const closeTime = normalizeTimeForInput(oh.close_time)
-          console.log(`Day ${oh.day_of_week}: open=${oh.open_time} -> ${openTime}, close=${oh.close_time} -> ${closeTime}`) // Debug
           return {
             day_of_week: oh.day_of_week,
             open_time: openTime,
@@ -188,8 +185,8 @@ export function RestaurantInfoSettings() {
   const updateHoursMutation = useMutation({
     mutationFn: (hours: OperatingHourUpdate[]) =>
       apiClient.updateOperatingHours({ hours }),
-    onSuccess: async (_, savedHours) => {
-      // Keep the local state - don't reset it
+    onSuccess: async (_, _savedHours) => {
+      // Keep of local state - don't reset it
       // The saved hours are already valid, just refresh from server
       await queryClient.invalidateQueries({ queryKey: ['restaurantInfo'] })
       toastHelpers.success(t('Operating hours updated successfully'))
@@ -256,8 +253,6 @@ export function RestaurantInfoSettings() {
         }
       }
     }
-
-    console.log('Saving hours:', validatedHours) // Debug log
 
     // Update local state with validated values first
     setOperatingHours(validatedHours)

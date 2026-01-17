@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Grid3x3, Loader2 } from 'lucide-react'
+import { Grid3x3 } from 'lucide-react'
 import type { Category } from '@/types'
 
 interface CategorySidebarProps {

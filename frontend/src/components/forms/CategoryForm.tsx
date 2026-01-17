@@ -68,7 +68,7 @@ export function CategoryForm({ category, onSuccess, onCancel, mode = 'create' }:
   // Update mutation  
   const updateMutation = useMutation({
     mutationFn: (data: UpdateCategoryData) => apiClient.updateCategory(data.id.toString(), data),
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] })
       queryClient.invalidateQueries({ queryKey: ['categories'] })
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })

@@ -6,11 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Plus, 
-  Minus, 
-  ShoppingCart, 
-  CreditCard, 
+import {
+  Plus,
+  Minus,
+  ShoppingCart,
+  CreditCard,
   DollarSign,
   Check,
   Clock,
@@ -19,10 +19,9 @@ import {
   Package,
   Car,
   Users,
-  Receipt,
-  History
+  Receipt
 } from 'lucide-react'
-import type { Product, Category, DiningTable, Order } from '@/types'
+import type { Product, DiningTable, Order } from '@/types'
 
 interface CartItem {
   product: Product

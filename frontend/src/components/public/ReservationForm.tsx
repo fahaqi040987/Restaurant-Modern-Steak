@@ -59,7 +59,6 @@ export function ReservationForm({
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
   } = useForm<ReservationFormData>({
     resolver: zodResolver(reservationSchema),
     defaultValues: {

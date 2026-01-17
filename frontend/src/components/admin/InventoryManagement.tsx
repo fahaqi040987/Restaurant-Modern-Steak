@@ -98,8 +98,8 @@ export default function InventoryManagement() {
     },
   })
 
-  // Fetch low stock items
-  const { data: lowStock = [] } = useQuery<InventoryItem[]>({
+  // Fetch low stock items (used for alerting purposes)
+  useQuery<InventoryItem[]>({
     queryKey: ['lowStock'],
     queryFn: async () => {
       const response = await apiClient.get('/admin/inventory/low-stock')

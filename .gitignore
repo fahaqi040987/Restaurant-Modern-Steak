@@ -110,3 +110,5 @@ Restoran-master/
 # Local Deployment Configurations
 docker/frontend-nginx-local.conf
 docker-compose.local-test.yml
+
+opencode.json

@@ -195,7 +195,7 @@ export default function IngredientsManagement() {
     },
   })
 
-  const getStatusBadge = (status: string, currentStock: number, minStock: number) => {
+  const getStatusBadge = (status: string, _currentStock: number, _minStock: number) => {
     if (status === 'out') {
       return (
         <Badge variant="destructive" className="gap-1">

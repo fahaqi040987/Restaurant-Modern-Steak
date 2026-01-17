@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { KitchenHeader } from './KitchenHeader'
@@ -14,7 +14,6 @@ interface KitchenLayoutProps {
 export function KitchenLayout({ user }: KitchenLayoutProps) {
   const { t } = useTranslation()
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
-  const [isTabletOptimized, setIsTabletOptimized] = useState(true) // Kitchen is primarily tablet-focused
   const [searchQuery, setSearchQuery] = useState('')
   const [autoRefresh, setAutoRefresh] = useState(true)
 
