@@ -19,7 +19,7 @@ describe('Utils', () => {
     })
 
     it('handles conditional classes', () => {
-      expect(cn('foo', false && 'bar', 'baz')).toBe('foo baz')
+      expect(cn('foo', undefined, 'baz')).toBe('foo baz')
     })
 
     it('merges tailwind classes correctly', () => {

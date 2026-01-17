@@ -5,8 +5,6 @@ import {
   Printer,
   Download,
   Eye,
-  CheckCircle2,
-  XCircle,
   Loader2,
 } from 'lucide-react';
 import { receiptPrinter } from '@/services/receiptPrinter';
@@ -104,7 +102,7 @@ export function ReceiptPrintButton({
       if (success) {
         toastHelpers.success(t('common.export', 'Receipt downloaded'));
       }
-    } catch (error) {
+    } catch (_error) {
       toastHelpers.error(t('errors.generic', 'Failed to download receipt'));
     }
   };

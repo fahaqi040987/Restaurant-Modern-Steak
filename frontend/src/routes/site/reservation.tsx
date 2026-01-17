@@ -120,7 +120,7 @@ function ReservationPage() {
                 <CardContent>
                   <ReservationForm
                     onSuccess={(response) => {
-                      console.log('Reservation created:', response.id)
+                      console.warn('Reservation created:', response.id)
                     }}
                   />
                 </CardContent>

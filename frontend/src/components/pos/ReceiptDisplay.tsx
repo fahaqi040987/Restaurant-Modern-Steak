@@ -8,7 +8,6 @@ import {
   Download,
   X,
   MapPin,
-  Clock,
   User,
   CreditCard,
   Banknote,

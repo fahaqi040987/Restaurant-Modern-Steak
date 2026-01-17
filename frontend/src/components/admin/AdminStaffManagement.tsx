@@ -23,8 +23,8 @@ import { UserForm } from '@/components/forms/UserForm'
 import { AdminStaffTable } from '@/components/admin/AdminStaffTable'
 import { PaginationControlsComponent } from '@/components/ui/pagination-controls'
 import { usePagination } from '@/hooks/usePagination'
-import { UserListSkeleton, SearchingSkeleton } from '@/components/ui/skeletons'
-import { PageLoading, InlineLoading } from '@/components/ui/loading-spinner'
+import { UserListSkeleton } from '@/components/ui/skeletons'
+import { InlineLoading } from '@/components/ui/loading-spinner'
 import type { User } from '@/types'
 
 type DisplayMode = 'table' | 'cards'
@@ -61,7 +61,7 @@ export function AdminStaffManagement() {
   }, [searchTerm, debouncedSearch])
 
   // Fetch users with pagination
-  const { data: usersData, isLoading, isFetching, isPlaceholderData } = useQuery({
+  const { data: usersData, isLoading, isFetching } = useQuery({
     queryKey: ['users', pagination.page, pagination.pageSize, debouncedSearch],
     queryFn: () => apiClient.getUsers({
       page: pagination.page,

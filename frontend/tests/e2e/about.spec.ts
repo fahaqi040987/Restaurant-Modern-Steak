@@ -88,7 +88,6 @@ test.describe('About Page', () => {
     test('should navigate to next testimonial on button click', async ({ page }) => {
       const nextBtn = page.locator('[data-testid="testimonial-next"]')
       if (await nextBtn.isVisible()) {
-        const initialCard = page.locator('[data-testid="testimonial-card"].active')
         await nextBtn.click()
         await page.waitForTimeout(500) // Wait for animation
         // Verify something changed (active state or position)

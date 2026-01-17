@@ -16,16 +16,12 @@ function KitchenPage() {
     const loadAuthState = async () => {
       const token = localStorage.getItem('pos_token');
       const storedUser = localStorage.getItem('pos_user');
-      
-      console.log('🔍 Loading kitchen auth - token:', token ? 'exists' : 'missing');
-      console.log('🔍 Loading kitchen auth - user:', storedUser ? 'exists' : 'missing');
-      
+
       if (storedUser && token) {
         try {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-          console.log('✅ Kitchen auth loaded - user role:', parsedUser.role);
-        } catch (error) {
+        } catch (_error) {
           console.error('❌ Invalid stored auth data, clearing');
           apiClient.clearAuth();
         }

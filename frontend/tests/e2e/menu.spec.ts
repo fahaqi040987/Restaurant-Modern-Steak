@@ -59,7 +59,6 @@ test.describe('Menu Page', () => {
 
       // Get first category button
       const firstCategoryBtn = page.locator('[data-testid="category-button"]').first()
-      const categoryName = await firstCategoryBtn.textContent()
 
       // Click the category
       await firstCategoryBtn.click()

@@ -177,7 +177,7 @@ export class OfflineQueueManager {
   static addToQueue(request: {
     url: string;
     method: string;
-    data?: any;
+    data?: unknown;
     timestamp: number;
   }) {
     const queue = this.getQueue();
@@ -188,7 +188,7 @@ export class OfflineQueueManager {
   static getQueue(): Array<{
     url: string;
     method: string;
-    data?: any;
+    data?: unknown;
     timestamp: number;
     retries: number;
   }> {
@@ -200,18 +200,16 @@ export class OfflineQueueManager {
     localStorage.removeItem(this.STORAGE_KEY);
   }
 
-  static async processQueue(apiClient: any) {
+  static async processQueue(_apiClient: unknown) {
     if (!navigator.onLine) return;
 
     const queue = this.getQueue();
     if (queue.length === 0) return;
 
-    console.log(`Processing ${queue.length} queued requests...`);
-
     const failedRequests: Array<{
       url: string;
       method: string;
-      data?: any;
+      data?: unknown;
       timestamp: number;
       retries: number;
     }> = [];
@@ -219,18 +217,14 @@ export class OfflineQueueManager {
     for (const request of queue) {
       try {
         // Attempt to replay the request
-        console.log(`Retrying: ${request.method} ${request.url}`);
-        
         // You would call your API client here
         // await apiClient[request.method](request.url, request.data);
-        
-        console.log(`✓ Success: ${request.url}`);
       } catch (error) {
-        console.error(`✗ Failed: ${request.url}`, error);
-        
+        console.error(`Failed to process queued request: ${request.url}`, error);
+
         // Increment retry count
         request.retries += 1;
-        
+
         // Re-queue if under retry limit
         if (request.retries < this.MAX_RETRIES) {
           failedRequests.push(request);

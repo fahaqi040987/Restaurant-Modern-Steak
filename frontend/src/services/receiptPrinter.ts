@@ -394,8 +394,7 @@ class ReceiptPrinterService {
       }, 1000);
 
       return true;
-    } catch (error) {
-      console.error('Print receipt error:', error);
+    } catch (_error) {
       return false;
     }
   }
@@ -417,8 +416,7 @@ class ReceiptPrinterService {
       URL.revokeObjectURL(url);
 
       return true;
-    } catch (error) {
-      console.error('Download receipt error:', error);
+    } catch (_error) {
       return false;
     }
   }
@@ -459,7 +457,6 @@ class ReceiptPrinterService {
   async printToThermalPrinter(data: ReceiptData): Promise<boolean> {
     // This would require actual thermal printer SDK/driver
     // For now, fall back to browser print
-    console.log('Thermal printer integration - using browser print fallback');
     return this.printReceipt(data);
   }
 
@@ -530,8 +527,7 @@ class ReceiptPrinterService {
         );
       }
       return true;
-    } catch (error) {
-      console.error('Test print error:', error);
+    } catch (_error) {
       throw new PrintError(
         PrinterError.PRINT_FAILED,
         'Test print gagal. Periksa koneksi printer.'

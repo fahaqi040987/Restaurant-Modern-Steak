@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   ShoppingCart,
   Plus,
@@ -11,7 +11,6 @@ import {
   X,
   Trash2,
   CreditCard,
-  Receipt,
   MapPin
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'

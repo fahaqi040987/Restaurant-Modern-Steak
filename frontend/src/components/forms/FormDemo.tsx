@@ -2,16 +2,15 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form } from '@/components/ui/form'
-import { 
+import {
   TextInputField,
   NumberInputField,
   PriceInputField,
   SelectField,
   TextareaField,
-  SwitchField,
   FormSubmitButton,
   roleOptions,
-  productStatusOptions 
+  productStatusOptions
 } from '@/components/forms/FormComponents'
 import { createProductSchema, type CreateProductData } from '@/lib/form-schemas'
 import { toastHelpers } from '@/lib/toast-helpers'
@@ -38,7 +37,6 @@ export function FormDemo() {
   })
 
   const onSubmit = (data: CreateProductData) => {
-    console.log('Form submitted:', data)
     toastHelpers.success('Demo Form Submitted!', JSON.stringify(data, null, 2))
   }
 

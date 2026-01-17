@@ -70,7 +70,7 @@ export function TableForm({ table, onSuccess, onCancel, mode = 'create' }: Table
   // Update mutation  
   const updateMutation = useMutation({
     mutationFn: (data: UpdateTableData) => apiClient.updateTable(data.id.toString(), data),
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-tables'] })
       queryClient.invalidateQueries({ queryKey: ['tables'] })
       queryClient.invalidateQueries({ queryKey: ['tables-summary'] })

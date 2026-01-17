@@ -12,7 +12,7 @@ export interface SoundSettings {
 }
 
 export interface SoundEvent {
-  type: 'new_order' | 'order_ready' | 'takeaway_ready';
+  type: "new_order" | "order_ready" | "takeaway_ready";
   orderId: string;
   metadata?: Record<string, any>;
 }
@@ -26,10 +26,9 @@ class KitchenSoundService {
     orderReadyEnabled: true,
     takeawayReadyEnabled: true,
   };
-  
+
   private soundCache = new Map<string, AudioBuffer>();
   private isInitialized = false;
-
 
   constructor() {
     this.loadSettings();
@@ -49,9 +48,8 @@ class KitchenSoundService {
       await this.loadSoundFiles();
 
       this.isInitialized = true;
-      console.log('✅ Kitchen Sound Service initialized');
     } catch (error) {
-      console.error('❌ Failed to initialize Kitchen Sound Service:', error);
+      console.error("❌ Failed to initialize Kitchen Sound Service:", error);
       throw error;
     }
   }
@@ -62,23 +60,26 @@ class KitchenSoundService {
   private async initializeAudioContext(): Promise<void> {
     if (!this.audioContext) {
       // Create AudioContext without microphone access
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-
-      // Resume context if suspended (required by some browsers)
-      if (this.audioContext.state === 'suspended') {
-        await this.audioContext.resume();
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (AudioContextClass) {
+        this.audioContext = new AudioContextClass();
       }
+    }
+
+    // Resume context if suspended (required by some browsers)
+    if (this.audioContext && this.audioContext.state === "suspended") {
+      await this.audioContext.resume();
     }
   }
 
-  /**
-   * Load sound files into memory
-   */
   private async loadSoundFiles(): Promise<void> {
     const sounds = {
-      new_order: '/sounds/kitchen/new-order.mp3',
-      order_ready: '/sounds/kitchen/order-ready.mp3',
-      takeaway_ready: '/sounds/kitchen/takeaway-ready.mp3',
+      new_order: "/sounds/kitchen/new-order.mp3",
+      order_ready: "/sounds/kitchen/order-ready.mp3",
+      takeaway_ready: "/sounds/kitchen/takeaway-ready.mp3",
     };
 
     const loadPromises = Object.entries(sounds).map(async ([key, url]) => {
@@ -90,11 +91,12 @@ class KitchenSoundService {
           this.soundCache.set(key, buffer);
           return;
         }
-        
+
         const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await this.audioContext!.decodeAudioData(arrayBuffer);
+        const audioBuffer =
+          await this.audioContext!.decodeAudioData(arrayBuffer);
         this.soundCache.set(key, audioBuffer);
-      } catch (error) {
+      } catch (_error) {
         console.warn(`Failed to load sound ${key}, using generated sound`);
         const buffer = await this.generateSound(key as keyof typeof sounds);
         this.soundCache.set(key, buffer);
@@ -102,18 +104,21 @@ class KitchenSoundService {
     });
 
     await Promise.all(loadPromises);
-    console.log('✅ Sound files loaded');
   }
 
   /**
    * Generate programmatic sounds as fallback
    */
   private async generateSound(type: string): Promise<AudioBuffer> {
-    if (!this.audioContext) throw new Error('Audio context not initialized');
+    if (!this.audioContext) throw new Error("Audio context not initialized");
 
     const sampleRate = this.audioContext.sampleRate;
     const duration = 0.3; // 300ms
-    const buffer = this.audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+    const buffer = this.audioContext.createBuffer(
+      1,
+      sampleRate * duration,
+      sampleRate,
+    );
     const channelData = buffer.getChannelData(0);
 
     // Generate different tones for different events
@@ -124,17 +129,17 @@ class KitchenSoundService {
     };
 
     const freqs = frequencies[type as keyof typeof frequencies] || [440];
-    
+
     for (let i = 0; i < channelData.length; i++) {
       const time = i / sampleRate;
       let sample = 0;
-      
-      freqs.forEach((freq, index) => {
+
+      freqs.forEach((freq) => {
         const phase = time * freq * 2 * Math.PI;
         const envelope = Math.exp(-time * 3); // Decay envelope
         sample += Math.sin(phase) * envelope * (0.3 / freqs.length);
       });
-      
+
       channelData[i] = sample;
     }
 
@@ -162,7 +167,7 @@ class KitchenSoundService {
 
     try {
       // Ensure audio context is running (resume if suspended)
-      if (this.audioContext.state === 'suspended') {
+      if (this.audioContext.state === "suspended") {
         await this.audioContext.resume();
       }
 
@@ -182,16 +187,14 @@ class KitchenSoundService {
       gainNode.connect(this.audioContext.destination);
 
       source.start();
-
-      console.log(`🔊 Playing sound for: ${event.type}`);
     } catch (error) {
-      console.error('Failed to play sound:', error);
+      console.error("Failed to play sound:", error);
       // Try to resume audio context if it was suspended
-      if (this.audioContext?.state === 'suspended') {
+      if (this.audioContext?.state === "suspended") {
         try {
           await this.audioContext.resume();
         } catch (resumeError) {
-          console.error('Failed to resume audio context:', resumeError);
+          console.error("Failed to resume audio context:", resumeError);
         }
       }
     }
@@ -202,9 +205,9 @@ class KitchenSoundService {
    */
   async playNewOrderSound(orderId: string): Promise<void> {
     await this.playSound({
-      type: 'new_order',
+      type: "new_order",
       orderId,
-      metadata: { timestamp: Date.now() }
+      metadata: { timestamp: Date.now() },
     });
   }
 
@@ -212,11 +215,12 @@ class KitchenSoundService {
    * Play order ready notification
    */
   async playOrderReadySound(orderId: string, orderType: string): Promise<void> {
-    const soundType = orderType === 'takeout' ? 'takeaway_ready' : 'order_ready';
+    const soundType =
+      orderType === "takeout" ? "takeaway_ready" : "order_ready";
     await this.playSound({
       type: soundType,
       orderId,
-      metadata: { orderType, timestamp: Date.now() }
+      metadata: { orderType, timestamp: Date.now() },
     });
   }
 
@@ -226,7 +230,6 @@ class KitchenSoundService {
   updateSettings(newSettings: Partial<SoundSettings>): void {
     this.settings = { ...this.settings, ...newSettings };
     this.saveSettings();
-    console.log('🔧 Sound settings updated:', this.settings);
   }
 
   /**
@@ -241,12 +244,12 @@ class KitchenSoundService {
    */
   private loadSettings(): void {
     try {
-      const stored = localStorage.getItem('kitchen_sound_settings');
+      const stored = localStorage.getItem("kitchen_sound_settings");
       if (stored) {
         this.settings = { ...this.settings, ...JSON.parse(stored) };
       }
     } catch (error) {
-      console.warn('Failed to load sound settings:', error);
+      console.warn("Failed to load sound settings:", error);
     }
   }
 
@@ -255,20 +258,23 @@ class KitchenSoundService {
    */
   private saveSettings(): void {
     try {
-      localStorage.setItem('kitchen_sound_settings', JSON.stringify(this.settings));
+      localStorage.setItem(
+        "kitchen_sound_settings",
+        JSON.stringify(this.settings),
+      );
     } catch (error) {
-      console.warn('Failed to save sound settings:', error);
+      console.warn("Failed to save sound settings:", error);
     }
   }
 
   /**
    * Test sound playback
    */
-  async testSound(type: SoundEvent['type']): Promise<void> {
+  async testSound(type: SoundEvent["type"]): Promise<void> {
     await this.playSound({
       type,
-      orderId: 'test-order',
-      metadata: { test: true }
+      orderId: "test-order",
+      metadata: { test: true },
     });
   }
 
@@ -282,7 +288,6 @@ class KitchenSoundService {
     }
     this.soundCache.clear();
     this.isInitialized = false;
-    console.log('🧹 Kitchen Sound Service disposed');
   }
 }
 
@@ -290,8 +295,8 @@ class KitchenSoundService {
 export const kitchenSoundService = new KitchenSoundService();
 
 // Auto-initialize on first import (with error handling)
-kitchenSoundService.initialize().catch(error => {
-  console.warn('Kitchen Sound Service initialization failed:', error);
+kitchenSoundService.initialize().catch((error) => {
+  console.warn("Kitchen Sound Service initialization failed:", error);
 });
 
 export default kitchenSoundService;

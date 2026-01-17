@@ -552,7 +552,6 @@ describe('ServerInterface (Server Station)', () => {
     });
 
     it('should show validation message when creating order without table', async () => {
-      const { toastHelpers } = await import('@/lib/toast-helpers');
       setupDefaultMocks();
 
       renderWithProviders(<ServerInterface />);
@@ -707,10 +706,9 @@ describe('ServerInterface (Server Station)', () => {
       setupDefaultMocks();
 
       // Make createServerOrder hang
-      let resolveOrder: (value: any) => void;
       vi.mocked(apiClient.createServerOrder).mockReturnValue(
-        new Promise(resolve => {
-          resolveOrder = resolve;
+        new Promise(() => {
+          // Keep promise pending to simulate loading
         })
       );
 
@@ -735,13 +733,6 @@ describe('ServerInterface (Server Station)', () => {
       // Should show loading state
       await waitFor(() => {
         expect(screen.getByText(/Sending to Kitchen/i)).toBeInTheDocument();
-      });
-
-      // Resolve the promise
-      resolveOrder!({
-        success: true,
-        message: 'Order created',
-        data: { order_number: 'ORD-TEST' },
       });
     });
 

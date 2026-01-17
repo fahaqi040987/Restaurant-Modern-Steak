@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Store,
-  User as UserIcon,
   LogOut,
   Settings,
   UtensilsCrossed,
@@ -38,13 +37,12 @@ export function POSHeader({
   onCustomerNameChange
 }: POSHeaderProps) {
   const { t } = useTranslation()
-  const [showUserMenu, setShowUserMenu] = useState(false)
   const [showPaymentHistory, setShowPaymentHistory] = useState(false)
 
   const handleLogout = async () => {
     try {
       await apiClient.logout()
-    } catch (error) {
+    } catch (_error) {
       // Even if logout fails, clear local auth
     } finally {
       apiClient.clearAuth()

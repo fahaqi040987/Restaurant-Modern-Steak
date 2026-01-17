@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { CardSkeleton } from '@/components/ui/loading-skeletons'
-import { Plus, Clock, Loader2, Package } from 'lucide-react'
+import { Plus, Clock, Package } from 'lucide-react'
 import { formatCurrency, getPreparationTimeDisplay } from '@/lib/utils'
 import type { Product } from '@/types'
 
