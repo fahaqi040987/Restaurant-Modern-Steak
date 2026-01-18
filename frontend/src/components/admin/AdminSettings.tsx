@@ -43,6 +43,7 @@ import { useTheme } from "@/components/theme-provider";
 import { receiptPrinter } from "@/services/receiptPrinter";
 import { RestaurantInfoSettings } from "./RestaurantInfoSettings";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SystemSettings = Record<string, any>;
 
 export function AdminSettings() {
@@ -124,6 +125,7 @@ export function AdminSettings() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateSetting = (key: string, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };

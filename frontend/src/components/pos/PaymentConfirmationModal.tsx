@@ -26,6 +26,24 @@ import type {
   ProcessPaymentRequest,
 } from "@/types";
 
+// Receipt data structure for printing
+interface ReceiptData {
+  order_number: string;
+  order_date: string;
+  items: Array<{
+    product_name: string;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+  }>;
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+  payment_method: string;
+  payment_amount: number;
+  change_amount: number;
+}
+
 interface PaymentConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -58,7 +76,7 @@ export function PaymentConfirmationModal({
   );
   const [paymentData] = useState<PaymentData | null>(null);
   const [orderId] = useState<string>("");
-  const [receiptData] = useState<any>(null);
+  const [receiptData] = useState<ReceiptData | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
   const [autoPrintTriggered, setAutoPrintTriggered] = useState(false);
   const queryClient = useQueryClient();
@@ -108,15 +126,39 @@ export function PaymentConfirmationModal({
 
     setIsPrinting(true);
     try {
+      // Helper to safely convert settings value to string
+      const getSettingString = (key: string, defaultValue: string): string => {
+        const value = settingsData?.[key];
+        return typeof value === "string" ? value : defaultValue;
+      };
+
+      // Helper to safely convert settings value to number
+      const getSettingNumber = (key: string, defaultValue: number): number => {
+        const value = settingsData?.[key];
+        if (typeof value === "number") return value;
+        if (typeof value === "string") {
+          const parsed = parseFloat(value);
+          return isNaN(parsed) ? defaultValue : parsed;
+        }
+        return defaultValue;
+      };
+
+      // Get paper size with proper type validation
+      const paperSizeValue = settingsData?.paper_size;
+      const paperSize: "58mm" | "80mm" =
+        paperSizeValue === "58mm" || paperSizeValue === "80mm"
+          ? paperSizeValue
+          : "80mm";
+
       // Update printer settings from system settings
       receiptPrinter.updateSettings({
-        restaurant_name: settingsData?.restaurant_name || "Steak Kenangan",
-        receipt_header: settingsData?.receipt_header,
-        receipt_footer: settingsData?.receipt_footer,
-        paper_size: settingsData?.paper_size || "80mm",
-        currency: settingsData?.currency || "IDR",
-        tax_rate: parseFloat(settingsData?.tax_rate) || 11,
-        print_copies: parseInt(settingsData?.print_copies) || 1,
+        restaurant_name: getSettingString("restaurant_name", "Steak Kenangan"),
+        receipt_header: settingsData?.receipt_header ? String(settingsData.receipt_header) : undefined,
+        receipt_footer: settingsData?.receipt_footer ? String(settingsData.receipt_footer) : undefined,
+        paper_size: paperSize,
+        currency: getSettingString("currency", "IDR"),
+        tax_rate: getSettingNumber("tax_rate", 11),
+        print_copies: Math.floor(getSettingNumber("print_copies", 1)),
       });
 
       // Prepare receipt data for printer
@@ -142,7 +184,7 @@ export function PaymentConfirmationModal({
       };
 
       // Print with configured number of copies
-      const copies = parseInt(settingsData?.print_copies) || 1;
+      const copies = Math.floor(getSettingNumber("print_copies", 1));
       await receiptPrinter.printMultipleCopies(printData, copies);
       toastHelpers.success("Struk berhasil dicetak!");
     } catch (error) {

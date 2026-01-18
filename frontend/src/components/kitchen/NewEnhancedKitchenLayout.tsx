@@ -19,7 +19,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import apiClient from "@/api/client";
-import type { User as UserType, Order } from "@/types";
+import type { User as UserType, Order, OrderStatus } from "@/types";
+
+// Extend Window interface for webkit prefixed AudioContext
+declare global {
+  interface Window {
+    webkitAudioContext: typeof AudioContext;
+  }
+}
 
 interface NewEnhancedKitchenLayoutProps {
   user: UserType;
@@ -94,10 +101,10 @@ export function NewEnhancedKitchenLayout({
   // Handle order status update
   const handleOrderStatusUpdate = async (
     orderId: string,
-    newStatus: string,
+    newStatus: OrderStatus,
   ) => {
     try {
-      await apiClient.updateOrderStatus(orderId, newStatus as any);
+      await apiClient.updateOrderStatus(orderId, newStatus);
       refetch();
     } catch (error) {
       console.error("Failed to update order status:", error);
@@ -127,8 +134,8 @@ export function NewEnhancedKitchenLayout({
       // Play notification sound
       if (soundEnabled) {
         try {
-          const audioContext = new (window.AudioContext ||
-            (window as any).webkitAudioContext)();
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          const audioContext = new AudioContextClass();
           const oscillator = audioContext.createOscillator();
           const gainNode = audioContext.createGain();
 
@@ -476,8 +483,8 @@ export function NewEnhancedKitchenLayout({
                     // Play ready notification sound
                     if (soundEnabled) {
                       try {
-                        const audioContext = new (window.AudioContext ||
-                          (window as any).webkitAudioContext)();
+                        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                        const audioContext = new AudioContextClass();
                         const oscillator = audioContext.createOscillator();
                         const gainNode = audioContext.createGain();
 
@@ -637,8 +644,8 @@ export function NewEnhancedKitchenLayout({
             className="flex-1"
             onClick={() => {
               // Play a simple beep sound for new order
-              const audioContext = new (window.AudioContext ||
-                (window as any).webkitAudioContext)();
+              const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+              const audioContext = new AudioContextClass();
               const oscillator = audioContext.createOscillator();
               const gainNode = audioContext.createGain();
 
@@ -670,8 +677,8 @@ export function NewEnhancedKitchenLayout({
             className="flex-1"
             onClick={() => {
               // Play a different beep sound for ready order
-              const audioContext = new (window.AudioContext ||
-                (window as any).webkitAudioContext)();
+              const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+              const audioContext = new AudioContextClass();
               const oscillator = audioContext.createOscillator();
               const gainNode = audioContext.createGain();
 

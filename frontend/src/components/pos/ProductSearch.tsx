@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, X, ShoppingCart, DollarSign, Package } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import type { Product } from "@/types";
+import type { Product, Category } from "@/types";
 
 interface ProductSearchProps {
   products: Product[];
-  categories: any[];
+  categories: Category[];
   onProductSelect: (product: Product) => void;
   onClose: () => void;
   className?: string;

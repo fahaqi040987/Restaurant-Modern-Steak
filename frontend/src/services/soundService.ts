@@ -14,7 +14,7 @@ export interface SoundSettings {
 export interface SoundEvent {
   type: "new_order" | "order_ready" | "takeaway_ready";
   orderId: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class KitchenSoundService {
