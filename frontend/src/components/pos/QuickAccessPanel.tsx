@@ -5,11 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Zap, Clock, Star, TrendingUp, RotateCcw, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import type { Product } from "@/types";
+import type { Product, Order } from "@/types";
 
 interface QuickAccessPanelProps {
   products: Product[];
-  recentOrders?: any[]; // Recent order data
+  recentOrders?: Order[];
   onProductSelect: (product: Product) => void;
   className?: string;
 }

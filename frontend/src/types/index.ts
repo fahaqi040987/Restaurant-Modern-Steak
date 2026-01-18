@@ -1,12 +1,12 @@
 // API Response Types
-export interface APIResponse<T = any> {
+export interface APIResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;
   error?: string;
 }
 
-export interface PaginatedResponse<T = any> {
+export interface PaginatedResponse<T = unknown> {
   success: boolean;
   message: string;
   data: T;
@@ -709,4 +709,207 @@ export interface IngredientUsageItem {
   total_used: number;
   total_cost: number; // in IDR
   order_count: number;
+}
+
+// ===========================================
+// Admin Management Types
+// ===========================================
+
+/**
+ * Table grouped by location for getTablesByLocation endpoint
+ */
+export interface TableByLocation {
+  location: string;
+  tables: DiningTable[];
+}
+
+/**
+ * Income report response from admin reports
+ */
+export interface IncomeReportResponse {
+  period: string;
+  total_revenue: number;
+  total_orders: number;
+  average_order_value: number;
+  data: IncomeReportItem[];
+}
+
+export interface IncomeReportItem {
+  date: string;
+  revenue: number;
+  order_count: number;
+}
+
+/**
+ * User creation payload
+ */
+export interface CreateUserData {
+  username: string;
+  password: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: 'admin' | 'manager' | 'cashier' | 'kitchen' | 'server' | 'counter';
+  is_active?: boolean;
+}
+
+/**
+ * User update payload
+ */
+export interface UpdateUserData {
+  username?: string;
+  password?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  role?: 'admin' | 'manager' | 'cashier' | 'kitchen' | 'server' | 'counter';
+  is_active?: boolean;
+}
+
+/**
+ * Category creation payload
+ */
+export interface CreateCategoryData {
+  name: string;
+  description?: string;
+  color?: string;
+  image_url?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+/**
+ * Category update payload
+ */
+export interface UpdateCategoryData {
+  name?: string;
+  description?: string;
+  color?: string;
+  image_url?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+/**
+ * Table creation payload
+ */
+export interface CreateTableData {
+  table_number: string;
+  seating_capacity: number;
+  location?: string;
+  is_occupied?: boolean;
+  qr_code?: string;
+}
+
+/**
+ * Table update payload
+ */
+export interface UpdateTableData {
+  table_number?: string;
+  seating_capacity?: number;
+  location?: string;
+  is_occupied?: boolean;
+  qr_code?: string;
+}
+
+// ===========================================
+// Notification Types
+// ===========================================
+
+/**
+ * User notification
+ */
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Notification preferences for a user
+ */
+export interface NotificationPreferences {
+  email_enabled: boolean;
+  notification_types: string[];
+  quiet_hours_start?: string;
+  quiet_hours_end?: string;
+}
+
+// ===========================================
+// System Settings Types
+// ===========================================
+
+/**
+ * System settings key-value store
+ */
+export type SystemSettings = Record<string, string | number | boolean>;
+
+/**
+ * System health response
+ */
+export interface SystemHealth {
+  database: {
+    status: string;
+    latency_ms: number;
+    last_check: string;
+  };
+  api: {
+    status: string;
+    version: string;
+  };
+  backup: {
+    status: string;
+    last_backup: string;
+    next_backup: string;
+  };
+}
+
+// ===========================================
+// Ingredient Management Types
+// ===========================================
+
+/**
+ * Ingredient creation payload
+ */
+export interface CreateIngredientData {
+  name: string;
+  description?: string;
+  unit: string;
+  current_stock?: number;
+  minimum_stock?: number;
+  maximum_stock?: number;
+  unit_cost?: number;
+  supplier?: string;
+  is_active?: boolean;
+}
+
+/**
+ * Ingredient update payload
+ */
+export interface UpdateIngredientData {
+  name?: string;
+  description?: string;
+  unit?: string;
+  current_stock?: number;
+  minimum_stock?: number;
+  maximum_stock?: number;
+  unit_cost?: number;
+  supplier?: string;
+  is_active?: boolean;
+}
+
+/**
+ * Restock response
+ */
+export interface RestockResponse {
+  ingredient_id: string;
+  previous_stock: number;
+  added_quantity: number;
+  new_stock: number;
 }

@@ -94,6 +94,7 @@ export function AdminMenuManagement() {
       setIsSearching(false)
     }, 500)
     return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, debouncedSearch])
 
   // Debounce category search
@@ -107,6 +108,7 @@ export function AdminMenuManagement() {
       setIsSearching(false)
     }, 500)
     return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categorySearch, debouncedCategorySearch])
 
   // Fetch products with pagination
@@ -131,11 +133,11 @@ export function AdminMenuManagement() {
 
   // Extract data and pagination info from response
   // Backend returns: { success, message, data: products[], meta: { currentPage, perPage, total, totalPages } }
-  const products = (productsResponse as any)?.data || []
-  const productsPaginationInfo = (productsResponse as any)?.meta || { total: 0, currentPage: 1, perPage: 10, totalPages: 1 }
+  const products = productsResponse?.data || []
+  const productsPaginationInfo = productsResponse?.meta || { total: 0, currentPage: 1, perPage: 10, totalPages: 1 }
 
-  const categories = (categoriesResponse as any)?.data || []
-  const categoriesPaginationInfo = (categoriesResponse as any)?.meta || { total: 0, currentPage: 1, perPage: 10, totalPages: 1 }
+  const categories = categoriesResponse?.data || []
+  const categoriesPaginationInfo = categoriesResponse?.meta || { total: 0, currentPage: 1, perPage: 10, totalPages: 1 }
 
   // Delete product mutation
   const deleteProductMutation = useMutation({
@@ -144,7 +146,7 @@ export function AdminMenuManagement() {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       toastHelpers.productDeleted(productId)
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toastHelpers.apiError('Delete product', error)
     }
   })
@@ -156,7 +158,7 @@ export function AdminMenuManagement() {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] })
       toastHelpers.categoryDeleted(categoryId)
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toastHelpers.apiError('Delete category', error)
     }
   })
