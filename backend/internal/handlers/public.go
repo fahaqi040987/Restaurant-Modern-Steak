@@ -21,13 +21,13 @@ import (
 
 // T102: Input length validation constants
 const (
-	maxCustomerNameLength          = 100
-	maxSpecialInstructionsLength   = 500
-	maxSurveyCommentsLength        = 1000
-	maxNotesLength                 = 500
-	maxContactNameLength           = 100
-	maxContactSubjectLength        = 200
-	maxContactMessageLength        = 2000
+	maxCustomerNameLength        = 100
+	maxSpecialInstructionsLength = 500
+	maxSurveyCommentsLength      = 1000
+	maxNotesLength               = 500
+	maxContactNameLength         = 100
+	maxContactSubjectLength      = 200
+	maxContactMessageLength      = 2000
 )
 
 // T101: Rate limiting configuration
@@ -314,7 +314,7 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 	infoQuery := `
 		SELECT id, name, tagline, description, address, city, postal_code, country,
 		       phone, email, whatsapp, map_latitude, map_longitude, google_maps_url,
-		       instagram_url, facebook_url, twitter_url, logo_url, hero_image_url
+		       instagram_url, facebook_url, twitter_url, logo_url, hero_image_url, timezone
 		FROM restaurant_info
 		LIMIT 1
 	`
@@ -324,6 +324,7 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 	var whatsapp, googleMapsURL, instagramURL, facebookURL, twitterURL sql.NullString
 	var logoURL, heroImageURL sql.NullString
 	var mapLatitude, mapLongitude sql.NullFloat64
+	var timezone sql.NullString
 
 	err := h.db.QueryRow(infoQuery).Scan(
 		&info.ID,
@@ -345,6 +346,7 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 		&twitterURL,
 		&logoURL,
 		&heroImageURL,
+		&timezone,
 	)
 
 	if err == sql.ErrNoRows {
@@ -408,6 +410,11 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 	if heroImageURL.Valid {
 		info.HeroImageURL = &heroImageURL.String
 	}
+	if timezone.Valid {
+		info.Timezone = timezone.String
+	} else {
+		info.Timezone = "Asia/Jakarta"
+	}
 
 	// Query operating hours
 	hoursQuery := `
@@ -431,12 +438,14 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 	var operatingHours []models.OperatingHours
 	for rows.Next() {
 		var oh models.OperatingHours
+		var openTimeStr, closeTimeStr string
+
 		err := rows.Scan(
 			&oh.ID,
 			&oh.RestaurantInfoID,
 			&oh.DayOfWeek,
-			&oh.OpenTime,
-			&oh.CloseTime,
+			&openTimeStr,
+			&closeTimeStr,
 			&oh.IsClosed,
 		)
 		if err != nil {
@@ -447,11 +456,54 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 			})
 			return
 		}
+
+		// Parse the time from database format (ISO or HH:MM:SS)
+		// PostgreSQL TIME type returns as "HH:MM:SS" or "0000-01-01THH:MM:SSZ"
+		if len(openTimeStr) > 8 {
+			// ISO format: extract just the time portion "HH:MM:SS"
+			// Format: 0000-01-01T03:00:00Z -> extract 03:00:00
+			if idx := strings.Index(openTimeStr, "T"); idx != -1 {
+				timePart := openTimeStr[idx+1:]
+				if idx2 := strings.Index(timePart, "Z"); idx2 != -1 {
+					openTimeStr = timePart[:idx2]
+				} else if idx2 := strings.Index(timePart, "+"); idx2 != -1 {
+					openTimeStr = timePart[:idx2]
+				}
+			}
+		}
+
+		if len(closeTimeStr) > 8 {
+			// ISO format: extract just the time portion "HH:MM:SS"
+			if idx := strings.Index(closeTimeStr, "T"); idx != -1 {
+				timePart := closeTimeStr[idx+1:]
+				if idx2 := strings.Index(timePart, "Z"); idx2 != -1 {
+					closeTimeStr = timePart[:idx2]
+				} else if idx2 := strings.Index(timePart, "+"); idx2 != -1 {
+					closeTimeStr = timePart[:idx2]
+				}
+			}
+		}
+
+		oh.OpenTime = openTimeStr
+		oh.CloseTime = closeTimeStr
+
 		operatingHours = append(operatingHours, oh)
 	}
 
-	// Calculate is_open_now based on current server time
-	isOpenNow := models.CalculateIsOpenNow(operatingHours, time.Now())
+	// Calculate is_open_now based on restaurant's timezone
+	// Load the restaurant's timezone location
+	timezoneLocation, err := time.LoadLocation(info.Timezone)
+	if err != nil {
+		// Fallback to UTC if timezone is invalid
+		log.Printf("WARNING: Invalid timezone '%s' for restaurant, falling back to UTC: %v", info.Timezone, err)
+		timezoneLocation = time.UTC
+	}
+
+	// Get current time in restaurant's timezone
+	currentTimeInTimezone := time.Now().In(timezoneLocation)
+
+	// Calculate if restaurant is open now
+	isOpenNow := models.CalculateIsOpenNow(operatingHours, currentTimeInTimezone)
 
 	// Build response DTO
 	response := models.RestaurantInfoResponse{
@@ -474,6 +526,7 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 		TwitterURL:     info.TwitterURL,
 		LogoURL:        info.LogoURL,
 		HeroImageURL:   info.HeroImageURL,
+		Timezone:       info.Timezone,
 		IsOpenNow:      isOpenNow,
 		OperatingHours: operatingHours,
 	}

@@ -735,7 +735,11 @@
     "unitPriceRp": "Harga Satuan (Rp)",
     "ingredientNamePlaceholder": "Kentang, Tomat, dll",
     "additionalNotes": "Keterangan tambahan",
-    "supplierName": "Nama supplier"
+    "supplierName": "Nama supplier",
+    "timezone": "Zona Waktu",
+    "timezoneDescription": "Pilih zona waktu restoran Anda untuk tampilan jam operasional yang akurat",
+    "invalidMidnightTime": "Jam tengah malam (00:00) tidak valid untuk {{day}}. Silakan atur jam buka yang valid atau tandai hari sebagai tutup.",
+    "invalidTimeRange": "Jam buka harus sebelum jam tutup untuk {{day}}."
   },
   "navigation": {
     "home": "Beranda",
@@ -891,6 +895,8 @@
     "reservation": "Reservasi",
     "contact": "Kontak",
     "staffLogin": "Login Staf",
+    "openNow": "Buka Sekarang",
+    "closedNow": "Tutup Sekarang",
     "bookATable": "Pesan Meja",
     "bookNow": "Pesan Sekarang",
     "viewMenu": "Lihat Menu",

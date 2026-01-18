@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { Phone, Mail, MapPin, Clock, Copy, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { cn, getTimezoneAbbreviation } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import type { RestaurantInfo, OperatingHours } from '@/types'
 
@@ -232,38 +232,41 @@ export function ContactInfo({
               </div>
             ) : restaurantInfo?.operating_hours && restaurantInfo.operating_hours.length > 0 ? (
               <div className="space-y-2">
-                {restaurantInfo.operating_hours
-                  .sort((a: OperatingHours, b: OperatingHours) => a.day_of_week - b.day_of_week)
-                  .map((hours: OperatingHours) => (
-                    <div
-                      key={hours.id}
-                      className={cn(
-                        'flex justify-between py-2 px-3 rounded',
-                        hours.day_of_week === today
-                          ? 'bg-[var(--public-accent)]/10 border border-[var(--public-accent)]/30'
-                          : ''
-                      )}
-                    >
-                      <span
+                {(() => {
+                  const timezoneAbbrev = getTimezoneAbbreviation(restaurantInfo?.timezone)
+                  return restaurantInfo.operating_hours
+                    .sort((a: OperatingHours, b: OperatingHours) => a.day_of_week - b.day_of_week)
+                    .map((hours: OperatingHours) => (
+                      <div
+                        key={hours.id}
                         className={cn(
-                          'font-medium',
+                          'flex justify-between py-2 px-3 rounded',
                           hours.day_of_week === today
-                            ? 'text-[var(--public-accent)]'
-                            : 'text-[var(--public-text-primary)]'
+                            ? 'bg-[var(--public-accent)]/10 border border-[var(--public-accent)]/30'
+                            : ''
                         )}
                       >
-                        {t(`public.${DAY_KEYS[hours.day_of_week]}`)}
-                        {hours.day_of_week === today && (
-                          <span className="ml-2 text-xs">{t('public.today')}</span>
-                        )}
-                      </span>
-                      <span className="text-[var(--public-text-secondary)]">
-                        {hours.is_closed
-                          ? t('public.closed')
-                          : `${formatTime(hours.open_time)} - ${formatTime(hours.close_time)}`}
-                      </span>
-                    </div>
-                  ))}
+                        <span
+                          className={cn(
+                            'font-medium',
+                            hours.day_of_week === today
+                              ? 'text-[var(--public-accent)]'
+                              : 'text-[var(--public-text-primary)]'
+                          )}
+                        >
+                          {t(`public.${DAY_KEYS[hours.day_of_week]}`)}
+                          {hours.day_of_week === today && (
+                            <span className="ml-2 text-xs">{t('public.today')}</span>
+                          )}
+                        </span>
+                        <span className="text-[var(--public-text-secondary)]">
+                          {hours.is_closed
+                            ? t('public.closed')
+                            : `${formatTime(hours.open_time)} - ${formatTime(hours.close_time)} ${timezoneAbbrev}`}
+                        </span>
+                      </div>
+                    ))
+                })()}
               </div>
             ) : (
               <p className="text-[var(--public-text-muted)]">{t('public.operatingHoursNotAvailable')}</p>

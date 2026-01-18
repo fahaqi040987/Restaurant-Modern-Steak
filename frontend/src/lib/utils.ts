@@ -187,3 +187,22 @@ export function formatOperatingTime(time: string | null | undefined): string {
   return `${hourNum}:${minutes}`
 }
 
+/**
+ * Get timezone abbreviation from IANA timezone identifier
+ * @param timezone - IANA timezone (e.g., "Asia/Jakarta")
+ * @returns Timezone abbreviation (WIB, WITA, WIT) or default to WIB
+ */
+export function getTimezoneAbbreviation(
+  timezone: string | null | undefined
+): string {
+  if (!timezone) return 'WIB'
+
+  const timezoneMap: Record<string, string> = {
+    'Asia/Jakarta': 'WIB',
+    'Asia/Makassar': 'WITA',
+    'Asia/Jayapura': 'WIT',
+  }
+
+  return timezoneMap[timezone] || 'WIB'
+}
+

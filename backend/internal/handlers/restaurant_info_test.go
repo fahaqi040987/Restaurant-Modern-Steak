@@ -87,7 +87,7 @@ func TestUpdateOperatingHours_ZeroTimeForNonClosedDay(t *testing.T) {
 
 	// Create test request with 00:00 for non-closed day
 	hours := []OperatingHourUpdate{
-		{DayOfWeek: 0, OpenTime: "00:00", CloseTime: "00:00", IsClosed: true}, // OK - closed
+		{DayOfWeek: 0, OpenTime: "00:00", CloseTime: "00:00", IsClosed: true},  // OK - closed
 		{DayOfWeek: 1, OpenTime: "00:00", CloseTime: "22:00", IsClosed: false}, // INVALID - 00:00 for open day
 		{DayOfWeek: 2, OpenTime: "08:00", CloseTime: "22:00", IsClosed: false},
 		{DayOfWeek: 3, OpenTime: "08:00", CloseTime: "22:00", IsClosed: false},

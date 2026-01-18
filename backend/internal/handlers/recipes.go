@@ -304,4 +304,3 @@ func (h *RecipeHandler) DeleteProductIngredient(c *gin.Context) {
 		Message: "Ingredient removed from product successfully",
 	})
 }
-

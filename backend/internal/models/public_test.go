@@ -158,3 +158,30 @@ func TestCalculateIsOpenNow(t *testing.T) {
 		t.Errorf("expected closed on Sunday")
 	}
 }
+
+// TestCalculateIsOpenNowWithTimezone tests timezone-aware open/closed calculation
+func TestCalculateIsOpenNowWithTimezone(t *testing.T) {
+	hours := []OperatingHours{
+		{DayOfWeek: 1, OpenTime: "11:00:00", CloseTime: "22:00:00", IsClosed: false}, // Monday
+	}
+
+	// Test timezone conversion: UTC 04:00 = 11:00 WIB (Asia/Jakarta, UTC+7)
+	// Restaurant opens at 11:00 WIB, so it should be open at 04:00 UTC
+	jakartaLocation, _ := time.LoadLocation("Asia/Jakarta")
+	utcTime := time.Date(2024, 1, 1, 4, 0, 0, 0, time.UTC)
+	jakartaTime := utcTime.In(jakartaLocation)
+
+	// At 04:00 UTC it's 11:00 in Jakarta (should be open)
+	if !CalculateIsOpenNow(hours, jakartaTime) {
+		t.Errorf("expected open at 11:00 WIB (04:00 UTC)")
+	}
+
+	// Test timezone conversion: UTC 03:00 = 10:00 WIB (Asia/Jakarta, UTC+7)
+	// Restaurant opens at 11:00 WIB, so it should be closed at 03:00 UTC
+	utcTime2 := time.Date(2024, 1, 1, 3, 0, 0, 0, time.UTC)
+	jakartaTime2 := utcTime2.In(jakartaLocation)
+
+	if CalculateIsOpenNow(hours, jakartaTime2) {
+		t.Errorf("expected closed at 10:00 WIB (03:00 UTC)")
+	}
+}

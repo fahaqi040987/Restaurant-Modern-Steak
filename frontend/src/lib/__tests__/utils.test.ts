@@ -8,6 +8,7 @@ import {
   getPaymentStatusColor,
   calculateOrderTotals,
   getPreparationTimeDisplay,
+  getTimezoneAbbreviation,
   generateOrderNumber,
   debounce,
 } from '../utils'
@@ -284,5 +285,35 @@ describe('Utils', () => {
       vi.advanceTimersByTime(50)
       expect(fn).toHaveBeenCalledTimes(1)
     })
+  })
+})
+
+describe('getTimezoneAbbreviation', () => {
+  it('should return WIB for Asia/Jakarta', () => {
+    expect(getTimezoneAbbreviation('Asia/Jakarta')).toBe('WIB')
+  })
+
+  it('should return WITA for Asia/Makassar', () => {
+    expect(getTimezoneAbbreviation('Asia/Makassar')).toBe('WITA')
+  })
+
+  it('should return WIT for Asia/Jayapura', () => {
+    expect(getTimezoneAbbreviation('Asia/Jayapura')).toBe('WIT')
+  })
+
+  it('should return WIB for null', () => {
+    expect(getTimezoneAbbreviation(null)).toBe('WIB')
+  })
+
+  it('should return WIB for undefined', () => {
+    expect(getTimezoneAbbreviation(undefined)).toBe('WIB')
+  })
+
+  it('should return WIB for empty string', () => {
+    expect(getTimezoneAbbreviation('')).toBe('WIB')
+  })
+
+  it('should return WIB for unknown timezone', () => {
+    expect(getTimezoneAbbreviation('America/New_York')).toBe('WIB')
   })
 })

@@ -331,6 +331,7 @@ export interface RestaurantInfo {
   twitter_url: string | null;
   logo_url: string | null;
   hero_image_url: string | null;
+  timezone: string;
   is_open_now: boolean;
   operating_hours: OperatingHours[];
 }
@@ -375,6 +376,7 @@ export interface UpdateRestaurantInfoRequest {
   twitter_url?: string | null;
   logo_url?: string | null;
   hero_image_url?: string | null;
+  timezone?: string | null;
 }
 
 /**
