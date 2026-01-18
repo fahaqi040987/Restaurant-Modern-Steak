@@ -12,7 +12,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn, getTimezoneAbbreviation } from '@/lib/utils'
 import type { RestaurantInfo, OperatingHours } from '@/types'
 
 interface FooterProps {
@@ -44,14 +44,55 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
     ]
 
     const formatTime = (time: string): string => {
-      const parts = time.split(':')
-      if (parts.length < 2) return time
+      let timeStr = String(time).trim()
+
+      // Handle ISO datetime format like "0000-01-01T02:00:00Z" or "2024-01-01T11:00:00"
+      if (timeStr.includes('T')) {
+        const match = timeStr.match(/T(\d{2}):(\d{2})/)
+        if (match) {
+          const [, hour, min] = match
+          const hourNum = parseInt(hour, 10)
+          const ampm = hourNum >= 12 ? 'PM' : 'AM'
+          const hour12 = hourNum % 12 || 12
+          return `${hour12}:${min} ${ampm}`
+        }
+      }
+
+      // Handle HH:MM:SS or HH:MM format
+      const parts = timeStr.split(':')
+      if (parts.length < 2) return timeStr
       const hour = parseInt(parts[0], 10)
       const min = parts[1] || '00'
       const ampm = hour >= 12 ? 'PM' : 'AM'
       const hour12 = hour % 12 || 12
       return `${hour12}:${min} ${ampm}`
     }
+
+    // Validate time range - only reject midnight-to-midnight (00:00-00:00)
+    const isValidTimeRange = (openTime: string, closeTime: string): boolean => {
+      // Extract time portion from ISO datetime format if present
+      const extractHour = (timeStr: string): number => {
+        if (timeStr.includes('T')) {
+          const match = timeStr.match(/T(\d{2}):/)
+          return match ? parseInt(match[1], 10) : 0
+        }
+        return parseInt(timeStr.split(':')[0], 10)
+      }
+
+      const open = extractHour(openTime)
+      const close = extractHour(closeTime)
+      
+      // Reject only midnight-to-midnight (00:00-00:00) for open days
+      if (open === 0 && close === 0) {
+        return false // Invalid: midnight to midnight
+      }
+      
+      // Valid if open < close and both are within 0-24 range
+      // Allow: 01:00-23:00, 08:00-18:00, 12:00-23:59, etc.
+      return open < close && open >= 0 && close <= 24
+    }
+
+    const timezoneAbbrev = getTimezoneAbbreviation(restaurantInfo?.timezone)
 
     const groupedHours: Array<{ days: string[], time: string }> = []
     let currentGroup: string[] = []
@@ -62,17 +103,22 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
 
       if (hour.is_closed) {
         if (currentGroup.length > 0) {
-          groupedHours.push({ days: currentGroup, time: `${formatTime(currentHours!.open_time)} - ${formatTime(currentHours!.close_time)} WIB` })
+          groupedHours.push({ days: currentGroup, time: `${formatTime(currentHours!.open_time)} - ${formatTime(currentHours!.close_time)} ${timezoneAbbrev}` })
           currentGroup = []
           currentHours = null
         }
       } else if (!currentHours ||
         hour.open_time !== currentHours.open_time ||
         hour.close_time !== currentHours.close_time) {
+        // Skip invalid time ranges
+        if (!isValidTimeRange(hour.open_time, hour.close_time)) {
+          return // Skip this entry
+        }
+
         if (currentGroup.length > 0) {
           groupedHours.push({
             days: currentGroup,
-            time: `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)} WIB`
+            time: `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)} ${timezoneAbbrev}`
           })
         }
         currentGroup = [dayNames[hour.day_of_week - 1]]
@@ -83,15 +129,23 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
 
       if (!nextHour || nextHour.is_closed || nextHour.open_time !== hour.open_time || nextHour.close_time !== hour.close_time) {
         if (currentGroup.length > 0 && currentHours) {
-          groupedHours.push({
-            days: currentGroup,
-            time: `${formatTime(currentHours.open_time)} - ${formatTime(currentHours.close_time)} WIB`
-          })
+          // Skip invalid time ranges
+          if (isValidTimeRange(currentHours.open_time, currentHours.close_time)) {
+            groupedHours.push({
+              days: currentGroup,
+              time: `${formatTime(currentHours.open_time)} - ${formatTime(currentHours.close_time)} ${timezoneAbbrev}`
+            })
+          }
           currentGroup = []
           currentHours = null
         }
       }
     })
+
+    // Show message if no valid hours found
+    if (groupedHours.length === 0) {
+      return <span className="text-[var(--public-text-muted)]">{t('public.hoursNotAvailable')}</span>
+    }
 
     return (
       <ul className="space-y-2">
@@ -384,6 +438,33 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
             >
               {t('public.openingHours')}
             </h4>
+
+            {/* Open/Closed Status Badge */}
+            {restaurantInfo && (
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
+                    restaurantInfo.is_open_now
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                  )}
+                >
+                  {restaurantInfo.is_open_now ? (
+                    <>
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+                      {t('public.openNow')}
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 bg-red-500 rounded-full mr-2" />
+                      {t('public.closedNow')}
+                    </>
+                  )}
+                </span>
+              </div>
+            )}
+
             {formatOperatingHours(restaurantInfo?.operating_hours || [])}
 
             {/* Staff Portal Link */}

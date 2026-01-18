@@ -15,10 +15,10 @@ import (
 
 // T094: Fraud detection constants
 const (
-	maxPaymentsPerMinute     = 5    // Maximum payments allowed per minute per user
-	maxPaymentAmount         = 50000000 // Maximum single payment amount (50 million IDR)
+	maxPaymentsPerMinute     = 5         // Maximum payments allowed per minute per user
+	maxPaymentAmount         = 50000000  // Maximum single payment amount (50 million IDR)
 	suspiciousPatternWindow  = time.Hour // Window to check for suspicious patterns
-	maxFailedPaymentAttempts = 3    // Max failed attempts before flagging
+	maxFailedPaymentAttempts = 3         // Max failed attempts before flagging
 )
 
 type PaymentHandler struct {

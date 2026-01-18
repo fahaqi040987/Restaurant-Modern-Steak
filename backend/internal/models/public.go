@@ -1,6 +1,7 @@
 package models
 
 import (
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,6 +28,7 @@ type RestaurantInfo struct {
 	TwitterURL    *string   `json:"twitter_url"`
 	LogoURL       *string   `json:"logo_url"`
 	HeroImageURL  *string   `json:"hero_image_url"`
+	Timezone      string    `json:"timezone"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
@@ -77,6 +79,7 @@ type RestaurantInfoResponse struct {
 	TwitterURL     *string          `json:"twitter_url"`
 	LogoURL        *string          `json:"logo_url"`
 	HeroImageURL   *string          `json:"hero_image_url"`
+	Timezone       string           `json:"timezone"`
 	IsOpenNow      bool             `json:"is_open_now"`
 	OperatingHours []OperatingHours `json:"operating_hours"`
 }
@@ -109,17 +112,20 @@ func IsValidDayOfWeek(day int) bool {
 // IsOpenAt checks if the restaurant is open at a specific time for this operating hours entry
 func (oh *OperatingHours) IsOpenAt(t time.Time) bool {
 	if oh.IsClosed {
+		log.Printf("DEBUG: Day %d is marked as closed", oh.DayOfWeek)
 		return false
 	}
 
 	// Parse open and close times
 	openTime, err := time.Parse("15:04:05", oh.OpenTime)
 	if err != nil {
+		log.Printf("DEBUG: Failed to parse open_time '%s': %v", oh.OpenTime, err)
 		return false
 	}
 
 	closeTime, err := time.Parse("15:04:05", oh.CloseTime)
 	if err != nil {
+		log.Printf("DEBUG: Failed to parse close_time '%s': %v", oh.CloseTime, err)
 		return false
 	}
 
@@ -141,19 +147,33 @@ func (oh *OperatingHours) IsOpenAt(t time.Time) bool {
 	openSeconds := openHour*3600 + openMin*60 + openSec
 	closeSeconds := closeHour*3600 + closeMin*60 + closeSec
 
-	return checkSeconds >= openSeconds && checkSeconds < closeSeconds
+	result := checkSeconds >= openSeconds && checkSeconds < closeSeconds
+	log.Printf("DEBUG: Day %d: Check %02d:%02d:%02d (%d sec), Open %02d:%02d:%02d (%d sec), Close %02d:%02d:%02d (%d sec), Result: %v",
+		oh.DayOfWeek, checkHour, checkMin, checkSec, checkSeconds,
+		openHour, openMin, openSec, openSeconds,
+		closeHour, closeMin, closeSec, closeSeconds, result)
+
+	return result
 }
 
 // CalculateIsOpenNow determines if the restaurant is currently open based on operating hours
 func CalculateIsOpenNow(hours []OperatingHours, checkTime time.Time) bool {
 	dayOfWeek := int(checkTime.Weekday())
 
+	log.Printf("DEBUG: Check time: %s (weekday: %d, %s), Total entries: %d",
+		checkTime.Format("2006-01-02 15:04:05 MST"), dayOfWeek, GetDayName(dayOfWeek), len(hours))
+
 	for _, h := range hours {
+		log.Printf("DEBUG: Checking entry: Day %d (%s), Open: %s, Close: %s, IsClosed: %v",
+			h.DayOfWeek, GetDayName(h.DayOfWeek), h.OpenTime, h.CloseTime, h.IsClosed)
+
 		if h.DayOfWeek == dayOfWeek {
+			log.Printf("DEBUG: Found matching day: %d", dayOfWeek)
 			return h.IsOpenAt(checkTime)
 		}
 	}
 
+	log.Printf("DEBUG: No matching day found for weekday %d (%s)", dayOfWeek, GetDayName(dayOfWeek))
 	return false
 }
 

@@ -150,6 +150,7 @@ CREATE TABLE restaurant_info (
     twitter_url VARCHAR(255),
     logo_url VARCHAR(500),
     hero_image_url VARCHAR(500),
+    timezone VARCHAR(50) DEFAULT 'Asia/Jakarta',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

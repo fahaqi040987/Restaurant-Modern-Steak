@@ -735,7 +735,11 @@
     "unitPriceRp": "Unit Price (Rp)",
     "ingredientNamePlaceholder": "Potatoes, Tomatoes, etc.",
     "additionalNotes": "Additional notes",
-    "supplierName": "Supplier name"
+    "supplierName": "Supplier name",
+    "timezone": "Timezone",
+    "timezoneDescription": "Select your restaurant's timezone for accurate operating hours display",
+    "invalidMidnightTime": "Midnight (00:00) is not valid for {{day}}. Please set valid opening hours or mark the day as closed.",
+    "invalidTimeRange": "Opening time must be before closing time for {{day}}."
   },
   "navigation": {
     "home": "Home",
@@ -891,6 +895,8 @@
     "reservation": "Reservation",
     "contact": "Contact",
     "staffLogin": "Staff Login",
+    "openNow": "Open Now",
+    "closedNow": "Closed Now",
     "bookATable": "Book a Table",
     "bookNow": "Book Now",
     "viewMenu": "View Menu",

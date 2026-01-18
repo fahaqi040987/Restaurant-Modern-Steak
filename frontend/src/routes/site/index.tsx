@@ -12,7 +12,7 @@ import { PublicLayout } from '@/components/public/PublicLayout'
 import { HeroSection } from '@/components/public/HeroSection'
 import { ServiceCards, InfoCards } from '@/components/public/ServiceCards'
 import { apiClient } from '@/api/client'
-import { cn, formatOperatingTime, isValidOperatingTime } from '@/lib/utils'
+import { cn, formatOperatingTime, isValidOperatingTime, getTimezoneAbbreviation } from '@/lib/utils'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
 
 export const Route = createFileRoute('/site/')({
@@ -70,6 +70,7 @@ function PublicLandingPage() {
                 const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', "Jum'at", 'Sabtu']
                 const today = new Date().getDay()
                 const todayHours = restaurantInfo.operating_hours.find(h => h.day_of_week === today)
+                const timezoneAbbrev = getTimezoneAbbreviation(restaurantInfo?.timezone)
 
                 if (todayHours?.is_closed) {
                   // If closed today, show next open day
@@ -79,14 +80,14 @@ function PublicLandingPage() {
                   })
 
                   if (nextOpenDay && isValidOperatingTime(nextOpenDay.open_time)) {
-                    return `Hari ini Tutup - Buka ${dayNames[nextOpenDay.day_of_week]}: ${formatOperatingTime(nextOpenDay.open_time)} - ${formatOperatingTime(nextOpenDay.close_time)} WIB`
+                    return `Hari ini Tutup - Buka ${dayNames[nextOpenDay.day_of_week]}: ${formatOperatingTime(nextOpenDay.open_time)} - ${formatOperatingTime(nextOpenDay.close_time)} ${timezoneAbbrev}`
                   }
                   return 'Hari ini Tutup'
                 }
 
                 // Check if today's hours are valid before displaying
                 if (todayHours && isValidOperatingTime(todayHours.open_time) && isValidOperatingTime(todayHours.close_time)) {
-                  return `Hari ini: ${formatOperatingTime(todayHours.open_time)} - ${formatOperatingTime(todayHours.close_time)} WIB`
+                  return `Hari ini: ${formatOperatingTime(todayHours.open_time)} - ${formatOperatingTime(todayHours.close_time)} ${timezoneAbbrev}`
                 }
 
                 // Return undefined if no valid hours found (will trigger fallback in InfoCards)

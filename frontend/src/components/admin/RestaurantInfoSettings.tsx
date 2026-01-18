@@ -101,6 +101,7 @@ export function RestaurantInfoSettings() {
     twitter_url: undefined,
     logo_url: undefined,
     hero_image_url: undefined,
+    timezone: 'Asia/Jakarta',
   })
 
   // Initialize with default operating hours
@@ -137,6 +138,7 @@ export function RestaurantInfoSettings() {
         twitter_url: restaurantInfo.twitter_url || undefined,
         logo_url: restaurantInfo.logo_url || undefined,
         hero_image_url: restaurantInfo.hero_image_url || undefined,
+        timezone: restaurantInfo.timezone || 'Asia/Jakarta',
       })
 
       // Process operating hours from API
@@ -409,6 +411,19 @@ export function RestaurantInfoSettings() {
                 onChange={(e) => handleInputChange('country', e.target.value)}
                 placeholder="Indonesia"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="timezone">{t('admin.timezone')}</Label>
+              <select
+                id="timezone"
+                value={formData.timezone || 'Asia/Jakarta'}
+                onChange={(e) => handleInputChange('timezone', e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="Asia/Jakarta">WIB (Waktu Indonesia Barat) - UTC+7</option>
+                <option value="Asia/Makassar">WITA (Waktu Indonesia Tengah) - UTC+8</option>
+                <option value="Asia/Jayapura">WIT (Waktu Indonesia Timur) - UTC+9</option>
+              </select>
             </div>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
