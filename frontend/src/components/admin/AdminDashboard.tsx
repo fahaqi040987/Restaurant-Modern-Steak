@@ -5,24 +5,17 @@ import { useTranslation } from 'react-i18next'
 import apiClient from '@/api/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { 
-  DollarSign, 
-  ShoppingCart, 
-  Users, 
-  Table, 
+import {
+  DollarSign,
+  ShoppingCart,
+  Users,
+  Table,
   TrendingUp,
   Plus,
   Settings,
   BarChart3
 } from 'lucide-react'
-
-interface IncomeBreakdownItem {
-  period: string
-  orders: number
-  gross: number
-  tax: number
-  net: number
-}
+import type { IncomeBreakdownItem } from '@/types'
 
 export function AdminDashboard() {
   const { t } = useTranslation()

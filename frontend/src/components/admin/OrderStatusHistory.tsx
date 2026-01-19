@@ -63,7 +63,7 @@ export function OrderStatusHistory({ orderId }: OrderStatusHistoryProps) {
   const { data: history = [], isLoading } = useQuery<OrderStatusHistoryRecord[]>({
     queryKey: ['orderStatusHistory', orderId],
     queryFn: async () => {
-      const response = await apiClient.get(`/orders/${orderId}/status-history`)
+      const response = await apiClient.get<{ success: boolean; data: OrderStatusHistoryRecord[] }>(`/orders/${orderId}/status-history`)
       return response.data
     },
     enabled: !!orderId,

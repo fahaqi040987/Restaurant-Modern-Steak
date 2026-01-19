@@ -31,17 +31,17 @@ export function TableForm({ table, onSuccess, onCancel, mode = 'create' }: Table
 
   // Choose the appropriate schema and default values
   const schema = isEditing ? updateTableSchema : createTableSchema
-  const defaultValues: any = isEditing 
+  const defaultValues: Partial<UpdateTableData> = isEditing
     ? {
         id: table.id,
         table_number: table.table_number,
-        seats: table.seating_capacity,
+        seating_capacity: table.seating_capacity,
         status: table.is_occupied ? 'occupied' as const : 'available' as const,
         location: table.location || '',
       }
     : {
         table_number: '',
-        seats: 4,
+        seating_capacity: 4,
         status: 'available' as const,
         location: '',
       }
@@ -136,7 +136,7 @@ export function TableForm({ table, onSuccess, onCancel, mode = 'create' }: Table
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <NumberInputField
                 control={form.control}
-                name="seats"
+                name="seating_capacity"
                 label="Number of Seats"
                 min={1}
                 max={20}
