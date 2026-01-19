@@ -76,7 +76,7 @@ export default function ContactSubmissions() {
   // Update status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const response = await apiClient.put(`/admin/contacts/${id}/status`, { status })
+      const response = await apiClient.put<{ success: boolean; data: ContactSubmission }>(`/admin/contacts/${id}/status`, { status })
       return response.data
     },
     onSuccess: () => {

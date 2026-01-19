@@ -724,6 +724,27 @@ export interface TableByLocation {
 }
 
 /**
+ * Income report summary
+ */
+export interface IncomeReportSummary {
+  total_orders: number;
+  gross_income: number;
+  tax_collected: number;
+  net_income: number;
+}
+
+/**
+ * Income breakdown item
+ */
+export interface IncomeBreakdownItem {
+  period: string;
+  orders: number;
+  gross: number;
+  tax: number;
+  net: number;
+}
+
+/**
  * Income report response from admin reports
  */
 export interface IncomeReportResponse {
@@ -732,6 +753,8 @@ export interface IncomeReportResponse {
   total_orders: number;
   average_order_value: number;
   data: IncomeReportItem[];
+  summary: IncomeReportSummary;
+  breakdown: IncomeBreakdownItem[];
 }
 
 export interface IncomeReportItem {

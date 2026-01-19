@@ -93,7 +93,7 @@ export default function InventoryManagement() {
   const { data: inventory = [], isLoading } = useQuery<InventoryItem[]>({
     queryKey: ['inventory'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/inventory')
+      const response = await apiClient.get<{ success: boolean; data: InventoryItem[] }>('/admin/inventory')
       return response.data
     },
   })
@@ -102,7 +102,7 @@ export default function InventoryManagement() {
   useQuery<InventoryItem[]>({
     queryKey: ['lowStock'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/inventory/low-stock')
+      const response = await apiClient.get<{ success: boolean; data: InventoryItem[] }>('/admin/inventory/low-stock')
       return response.data
     },
   })
@@ -112,7 +112,7 @@ export default function InventoryManagement() {
     queryKey: ['inventoryHistory', selectedProduct?.product_id],
     queryFn: async () => {
       if (!selectedProduct) return []
-      const response = await apiClient.get(`/admin/inventory/history/${selectedProduct.product_id}`)
+      const response = await apiClient.get<{ success: boolean; data: HistoryRecord[] }>(`/admin/inventory/history/${selectedProduct.product_id}`)
       return response.data
     },
     enabled: !!selectedProduct && historyDialogOpen,
@@ -120,8 +120,8 @@ export default function InventoryManagement() {
 
   // Adjust stock mutation
   const adjustStockMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiClient.post('/admin/inventory/adjust', data)
+    mutationFn: async (data: { product_id: string; operation: string; quantity: number; reason: string; notes: string }) => {
+      const response = await apiClient.post<{ success: boolean; data: InventoryItem }>('/admin/inventory/adjust', data)
       return response.data
     },
     onSuccess: () => {

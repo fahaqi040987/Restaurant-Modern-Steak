@@ -106,7 +106,7 @@ export default function IngredientsManagement() {
   const { data: ingredients = [], isLoading } = useQuery<Ingredient[]>({
     queryKey: ['ingredients'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/ingredients')
+      const response = await apiClient.get<{ success: boolean; data: Ingredient[] }>('/admin/ingredients')
       return response.data
     },
   })
@@ -116,7 +116,7 @@ export default function IngredientsManagement() {
     queryKey: ['ingredientHistory', selectedIngredient?.id],
     queryFn: async () => {
       if (!selectedIngredient) return []
-      const response = await apiClient.get(`/admin/ingredients/${selectedIngredient.id}/history`)
+      const response = await apiClient.get<{ success: boolean; data: HistoryRecord[] }>(`/admin/ingredients/${selectedIngredient.id}/history`)
       return response.data
     },
     enabled: !!selectedIngredient && historyDialogOpen,
@@ -125,7 +125,7 @@ export default function IngredientsManagement() {
   // Create ingredient mutation
   const createMutation = useMutation({
     mutationFn: async (data: typeof createForm) => {
-      const response = await apiClient.post('/admin/ingredients', data)
+      const response = await apiClient.post<{ success: boolean; data: Ingredient }>('/admin/ingredients', data)
       return response.data
     },
     onSuccess: () => {
@@ -151,7 +151,7 @@ export default function IngredientsManagement() {
   // Update ingredient mutation
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<Ingredient>) => {
-      const response = await apiClient.put(`/admin/ingredients/${data.id}`, data)
+      const response = await apiClient.put<{ success: boolean; data: Ingredient }>(`/admin/ingredients/${data.id}`, data)
       return response.data
     },
     onSuccess: () => {
@@ -181,7 +181,7 @@ export default function IngredientsManagement() {
   // Restock ingredient mutation
   const restockMutation = useMutation({
     mutationFn: async (data: { ingredient_id: string; quantity: number; notes: string }) => {
-      const response = await apiClient.post('/admin/ingredients/restock', data)
+      const response = await apiClient.post<{ success: boolean; data: Ingredient }>('/admin/ingredients/restock', data)
       return response.data
     },
     onSuccess: () => {
