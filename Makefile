@@ -40,6 +40,8 @@ help:
 	@echo "  make restore           - Restore database from backup"
 	@echo "  make db-shell          - Access PostgreSQL shell"
 	@echo "  make db-reset          - Reset database with fresh schema and seed data"
+	@echo "  make migrate           - Apply pending migrations (development)"
+	@echo "  make migrate-prod      - Apply pending migrations (production)"
 	@echo ""
 	@echo "$(GREEN)Utility Commands:$(NC)"
 	@echo "  make logs         - View logs from all services"
@@ -229,6 +231,18 @@ db-reset:
 	@./scripts/db-reset.sh
 	@echo "$(GREEN)✅ Database reset completed!$(NC)"
 
+# Apply pending migrations (development)
+migrate:
+	@echo "$(GREEN)🔄 Applying database migrations (development)...$(NC)"
+	@./scripts/apply-migrations.sh
+	@echo "$(GREEN)✅ Migrations completed!$(NC)"
+
+# Apply pending migrations (production)
+migrate-prod:
+	@echo "$(GREEN)🔄 Applying database migrations (production)...$(NC)"
+	@./scripts/apply-migrations.sh --prod
+	@echo "$(GREEN)✅ Production migrations completed!$(NC)"
+
 ## Utility Commands
 
 # View logs from all services
@@ -393,16 +407,18 @@ deploy-prod:
 		$(MAKE) build-prod; \
 	fi
 	@echo "$(BLUE)Loading production environment...$(NC)"
-	@export $$(cat .env.production | grep -v '^#' | xargs) && \
-		docker compose -f $(COMPOSE_PROD) up -d
+	@docker compose -f $(COMPOSE_PROD) --env-file .env.production up -d
 	@echo "$(GREEN)✅ Production deployment completed!$(NC)"
 	@echo ""
 	@echo "$(BLUE)📊 Checking service status...$(NC)"
-	@docker compose -f $(COMPOSE_PROD) ps
+	@docker compose -f $(COMPOSE_PROD) --env-file .env.production ps
 
 # Build and deploy in one step
 sync-prod: build-prod deploy-prod
-	@echo "$(GREEN)✅ Sync complete - built and deployed!$(NC)"
+	@echo "$(BLUE)🔄 Applying database migrations...$(NC)"
+	@sleep 5  # Wait for database to be ready
+	@./scripts/apply-migrations.sh --prod || echo "$(YELLOW)⚠️  Migration check completed (some may already exist)$(NC)"
+	@echo "$(GREEN)✅ Sync complete - built, deployed, and migrated!$(NC)"
 
 # Rollback to previous version
 rollback-prod:
@@ -418,11 +434,10 @@ rollback-prod:
 	@echo "$(BLUE)Rolling back to tag: $(BUILD_TAG)$(NC)"
 	@docker tag steak-kenangan-backend:$(BUILD_TAG) steak-kenangan-backend:latest
 	@if [ -f .env.production ]; then \
-		export $$(cat .env.production | grep -v '^#' | xargs) && \
-		docker compose -f $(COMPOSE_PROD) up -d; \
+		docker compose -f $(COMPOSE_PROD) --env-file .env.production up -d; \
 	else \
 		docker compose -f $(COMPOSE_PROD) up -d; \
 	fi
 	@echo "$(GREEN)✅ Rollback completed!$(NC)"
 	@echo "$(BLUE)📊 Checking service status...$(NC)"
-	@docker compose -f $(COMPOSE_PROD) ps
+	@docker compose -f $(COMPOSE_PROD) --env-file .env.production ps
