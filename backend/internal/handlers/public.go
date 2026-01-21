@@ -143,6 +143,224 @@ func NewPublicHandler(db *sql.DB) *PublicHandler {
 	return &PublicHandler{db: db}
 }
 
+// GetOpenStatusDebug returns detailed debug information about restaurant open status
+// Endpoint: GET /api/v1/public/health/open-status
+// This is a debug endpoint to help diagnose timezone and opening hours issues
+func (h *PublicHandler) GetOpenStatusDebug(c *gin.Context) {
+	// Query restaurant info (singleton row)
+	infoQuery := `
+		SELECT id, name, timezone
+		FROM restaurant_info
+		LIMIT 1
+	`
+
+	var info struct {
+		ID       uuid.UUID `json:"id"`
+		Name     string    `json:"name"`
+		Timezone string    `json:"timezone"`
+	}
+
+	err := h.db.QueryRow(infoQuery).Scan(&info.ID, &info.Name, &info.Timezone)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Failed to fetch restaurant information",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+
+	// If timezone is empty, set default
+	if info.Timezone == "" {
+		info.Timezone = "Asia/Jakarta"
+	}
+
+	// Query operating hours
+	hoursQuery := `
+		SELECT id, restaurant_info_id, day_of_week, open_time, close_time, is_closed
+		FROM operating_hours
+		WHERE restaurant_info_id = $1
+		ORDER BY day_of_week ASC
+	`
+
+	rows, err := h.db.Query(hoursQuery, info.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Failed to fetch operating hours",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+	defer rows.Close()
+
+	var operatingHours []models.OperatingHours
+	for rows.Next() {
+		var oh models.OperatingHours
+		var openTimeStr, closeTimeStr string
+
+		err := rows.Scan(
+			&oh.ID,
+			&oh.RestaurantInfoID,
+			&oh.DayOfWeek,
+			&openTimeStr,
+			&closeTimeStr,
+			&oh.IsClosed,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.APIResponse{
+				Success: false,
+				Message: "Failed to scan operating hours",
+				Error:   stringPtr(err.Error()),
+			})
+			return
+		}
+
+		// Parse the time from database format
+		if len(openTimeStr) > 8 {
+			if idx := strings.Index(openTimeStr, "T"); idx != -1 {
+				timePart := openTimeStr[idx+1:]
+				if idx2 := strings.Index(timePart, "Z"); idx2 != -1 {
+					openTimeStr = timePart[:idx2]
+				} else if idx2 := strings.Index(timePart, "+"); idx2 != -1 {
+					openTimeStr = timePart[:idx2]
+				}
+			}
+		}
+
+		if len(closeTimeStr) > 8 {
+			if idx := strings.Index(closeTimeStr, "T"); idx != -1 {
+				timePart := closeTimeStr[idx+1:]
+				if idx2 := strings.Index(timePart, "Z"); idx2 != -1 {
+					closeTimeStr = timePart[:idx2]
+				} else if idx2 := strings.Index(timePart, "+"); idx2 != -1 {
+					closeTimeStr = timePart[:idx2]
+				}
+			}
+		}
+
+		oh.OpenTime = openTimeStr
+		oh.CloseTime = closeTimeStr
+
+		operatingHours = append(operatingHours, oh)
+	}
+
+	// Get current times
+	utcTime := time.Now().UTC()
+	timezoneLocation, err := time.LoadLocation(info.Timezone)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{
+			Success: false,
+			Message: "Invalid timezone configuration",
+			Error:   stringPtr(err.Error()),
+		})
+		return
+	}
+	currentTimeInTimezone := time.Now().In(timezoneLocation)
+
+	// Calculate if restaurant is open now
+	isOpenNow := models.CalculateIsOpenNow(operatingHours, currentTimeInTimezone)
+
+	// Build detailed debug response
+	type OperatingHourDebug struct {
+		DayOfWeek int    `json:"day_of_week"`
+		DayName   string `json:"day_name"`
+		OpenTime  string `json:"open_time"`
+		CloseTime string `json:"close_time"`
+		IsClosed  bool   `json:"is_closed"`
+	}
+
+	var debugHours []OperatingHourDebug
+	for _, oh := range operatingHours {
+		debugHours = append(debugHours, OperatingHourDebug{
+			DayOfWeek: oh.DayOfWeek,
+			DayName:   models.GetDayName(oh.DayOfWeek),
+			OpenTime:  oh.OpenTime,
+			CloseTime: oh.CloseTime,
+			IsClosed:  oh.IsClosed,
+		})
+	}
+
+	type TodayHoursDebug struct {
+		DayOfWeek   int    `json:"day_of_week"`
+		DayName     string `json:"day_name"`
+		OpenTime    string `json:"open_time"`
+		CloseTime   string `json:"close_time"`
+		IsClosed    bool   `json:"is_closed"`
+		CurrentHour int    `json:"current_hour"`
+		CurrentMin  int    `json:"current_min"`
+		CurrentSec  int    `json:"current_sec"`
+		OpenHour    int    `json:"open_hour"`
+		CloseHour   int    `json:"close_hour"`
+		IsOpen      bool   `json:"is_open"`
+		Reason      string `json:"reason"`
+	}
+
+	todayHours := TodayHoursDebug{}
+	currentDayOfWeek := int(currentTimeInTimezone.Weekday())
+	for _, oh := range operatingHours {
+		if oh.DayOfWeek == currentDayOfWeek {
+			// Parse times
+			openTime, _ := time.Parse("15:04:05", oh.OpenTime)
+			closeTime, _ := time.Parse("15:04:05", oh.CloseTime)
+
+			todayHours = TodayHoursDebug{
+				DayOfWeek:   oh.DayOfWeek,
+				DayName:     models.GetDayName(oh.DayOfWeek),
+				OpenTime:    oh.OpenTime,
+				CloseTime:   oh.CloseTime,
+				IsClosed:    oh.IsClosed,
+				CurrentHour: currentTimeInTimezone.Hour(),
+				CurrentMin:  currentTimeInTimezone.Minute(),
+				CurrentSec:  currentTimeInTimezone.Second(),
+				OpenHour:    openTime.Hour(),
+				CloseHour:   closeTime.Hour(),
+			}
+
+			if oh.IsClosed {
+				todayHours.IsOpen = false
+				todayHours.Reason = "Restaurant is closed on this day"
+			} else {
+				checkSeconds := currentTimeInTimezone.Hour()*3600 + currentTimeInTimezone.Minute()*60 + currentTimeInTimezone.Second()
+				openSeconds := openTime.Hour()*3600 + openTime.Minute()*60 + openTime.Second()
+				closeSeconds := closeTime.Hour()*3600 + closeTime.Minute()*60 + closeTime.Second()
+
+				todayHours.IsOpen = checkSeconds >= openSeconds && checkSeconds < closeSeconds
+				if checkSeconds < openSeconds {
+					todayHours.Reason = fmt.Sprintf("Too early (current: %02d:%02d:%02d, opens: %s)",
+						currentTimeInTimezone.Hour(), currentTimeInTimezone.Minute(), currentTimeInTimezone.Second(), oh.OpenTime)
+				} else if checkSeconds >= closeSeconds {
+					todayHours.Reason = fmt.Sprintf("Too late (current: %02d:%02d:%02d, closes: %s)",
+						currentTimeInTimezone.Hour(), currentTimeInTimezone.Minute(), currentTimeInTimezone.Second(), oh.CloseTime)
+				} else {
+					todayHours.Reason = fmt.Sprintf("Within business hours (current: %02d:%02d:%02d, open: %s, close: %s)",
+						currentTimeInTimezone.Hour(), currentTimeInTimezone.Minute(), currentTimeInTimezone.Second(), oh.OpenTime, oh.CloseTime)
+				}
+			}
+			break
+		}
+	}
+
+	debugResponse := gin.H{
+		"restaurant_timezone":      info.Timezone,
+		"current_utc_time":         utcTime.Format("2006-01-02 15:04:05 MST"),
+		"current_timezone_time":    currentTimeInTimezone.Format("2006-01-02 15:04:05 MST"),
+		"current_weekday":          int(currentTimeInTimezone.Weekday()),
+		"current_weekday_name":     models.GetDayName(int(currentTimeInTimezone.Weekday())),
+		"is_open_now":              isOpenNow,
+		"operating_hours":          debugHours,
+		"today_schedule":           todayHours,
+		"server_timezone":          time.Now().Zone(),
+		"server_location":          timezoneLocation.String(),
+	}
+
+	c.JSON(http.StatusOK, models.APIResponse{
+		Success: true,
+		Message: "Open status debug information",
+		Data:    debugResponse,
+	})
+}
+
 // GetPublicMenu returns active products with categories for the public menu
 // Endpoint: GET /api/v1/public/menu
 // Query params: category_id (optional), search (optional)
@@ -492,6 +710,7 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 
 	// Calculate is_open_now based on restaurant's timezone
 	// Load the restaurant's timezone location
+	log.Printf("OPEN_STATUS_DEBUG: Restaurant timezone from DB: '%s'", info.Timezone)
 	timezoneLocation, err := time.LoadLocation(info.Timezone)
 	if err != nil {
 		// Fallback to UTC if timezone is invalid
@@ -501,9 +720,25 @@ func (h *PublicHandler) GetRestaurantInfo(c *gin.Context) {
 
 	// Get current time in restaurant's timezone
 	currentTimeInTimezone := time.Now().In(timezoneLocation)
+	utcTime := time.Now().UTC()
+	log.Printf("OPEN_STATUS_DEBUG: Current UTC time: %s", utcTime.Format("2006-01-02 15:04:05 MST"))
+	log.Printf("OPEN_STATUS_DEBUG: Current time in restaurant timezone (%s): %s", info.Timezone, currentTimeInTimezone.Format("2006-01-02 15:04:05 MST"))
+	log.Printf("OPEN_STATUS_DEBUG: Weekday: %d (%s), Hour: %d, Minute: %d, Second: %d",
+		currentTimeInTimezone.Weekday(),
+		models.GetDayName(int(currentTimeInTimezone.Weekday())),
+		currentTimeInTimezone.Hour(),
+		currentTimeInTimezone.Minute(),
+		currentTimeInTimezone.Second())
+
+	// Log all operating hours for debugging
+	for i, oh := range operatingHours {
+		log.Printf("OPEN_STATUS_DEBUG: Operating hour[%d]: day=%d (%s), open=%s, close=%s, is_closed=%v",
+			i, oh.DayOfWeek, models.GetDayName(oh.DayOfWeek), oh.OpenTime, oh.CloseTime, oh.IsClosed)
+	}
 
 	// Calculate if restaurant is open now
 	isOpenNow := models.CalculateIsOpenNow(operatingHours, currentTimeInTimezone)
+	log.Printf("OPEN_STATUS_DEBUG: FINAL RESULT: is_open_now = %v", isOpenNow)
 
 	// Build response DTO
 	response := models.RestaurantInfoResponse{

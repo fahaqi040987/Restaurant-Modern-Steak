@@ -185,3 +185,124 @@ func TestCalculateIsOpenNowWithTimezone(t *testing.T) {
 		t.Errorf("expected closed at 10:00 WIB (03:00 UTC)")
 	}
 }
+
+// TestCalculateIsOpenNowEdgeCases tests edge cases for opening hours calculation
+func TestCalculateIsOpenNowEdgeCases(t *testing.T) {
+	// Test Wednesday hours: 11:00 - 22:00
+	hours := []OperatingHours{
+		{DayOfWeek: 0, OpenTime: "10:00:00", CloseTime: "20:00:00", IsClosed: true},  // Sunday - closed
+		{DayOfWeek: 1, OpenTime: "11:00:00", CloseTime: "22:00:00", IsClosed: false}, // Monday
+		{DayOfWeek: 2, OpenTime: "11:00:00", CloseTime: "22:00:00", IsClosed: false}, // Tuesday
+		{DayOfWeek: 3, OpenTime: "11:00:00", CloseTime: "22:00:00", IsClosed: false}, // Wednesday
+		{DayOfWeek: 4, OpenTime: "11:00:00", CloseTime: "22:00:00", IsClosed: false}, // Thursday
+		{DayOfWeek: 5, OpenTime: "11:00:00", CloseTime: "23:00:00", IsClosed: false}, // Friday
+		{DayOfWeek: 6, OpenTime: "10:00:00", CloseTime: "23:00:00", IsClosed: false}, // Saturday
+	}
+
+	jakartaLocation, _ := time.LoadLocation("Asia/Jakarta")
+
+	tests := []struct {
+		name          string
+		year          int
+		month         time.Month
+		day           int
+		hour          int
+		minute        int
+		second        int
+		expectedOpen  bool
+		description   string
+	}{
+		{
+			name:         "Wednesday 22:31 WIB - after close",
+			year:         2026, month: time.January, day: 21,
+			hour: 22, minute: 31, second: 6,
+			expectedOpen: false,
+			description:  "Production issue: Wednesday 22:31 WIB should be CLOSED (closes at 22:00)",
+		},
+		{
+			name:         "Wednesday 22:00:00 WIB - exactly close time",
+			year:         2026, month: time.January, day: 21,
+			hour: 22, minute: 0, second: 0,
+			expectedOpen: false,
+			description:  "At close time (22:00:00) should be CLOSED",
+		},
+		{
+			name:         "Wednesday 21:59:59 WIB - one second before close",
+			year:         2026, month: time.January, day: 21,
+			hour: 21, minute: 59, second: 59,
+			expectedOpen: true,
+			description:  "One second before close should be OPEN",
+		},
+		{
+			name:         "Wednesday 11:00:00 WIB - exactly open time",
+			year:         2026, month: time.January, day: 21,
+			hour: 11, minute: 0, second: 0,
+			expectedOpen: true,
+			description:  "At open time (11:00:00) should be OPEN",
+		},
+		{
+			name:         "Wednesday 10:59:59 WIB - one second before open",
+			year:         2026, month: time.January, day: 21,
+			hour: 10, minute: 59, second: 59,
+			expectedOpen: false,
+			description:  "One second before open should be CLOSED",
+		},
+		{
+			name:         "Wednesday 15:00:00 WIB - midday",
+			year:         2026, month: time.January, day: 21,
+			hour: 15, minute: 0, second: 0,
+			expectedOpen: true,
+			description:  "Midday Wednesday should be OPEN",
+		},
+		{
+			name:         "Sunday 14:00:00 WIB - closed day",
+			year:         2026, month: time.January, day: 18,
+			hour: 14, minute: 0, second: 0,
+			expectedOpen: false,
+			description:  "Sunday should be CLOSED regardless of time",
+		},
+		{
+			name:         "Friday 22:30:00 WIB - before extended close",
+			year:         2026, month: time.January, day: 23,
+			hour: 22, minute: 30, second: 0,
+			expectedOpen: true,
+			description:  "Friday 22:30 should be OPEN (closes at 23:00)",
+		},
+		{
+			name:         "Friday 23:00:00 WIB - Friday extended close",
+			year:         2026, month: time.January, day: 23,
+			hour: 23, minute: 0, second: 0,
+			expectedOpen: false,
+			description:  "Friday 23:00 should be CLOSED",
+		},
+		{
+			name:         "Saturday 09:59:59 WIB - before early opening",
+			year:         2026, month: time.January, day: 24,
+			hour: 9, minute: 59, second: 59,
+			expectedOpen: false,
+			description:  "Saturday before 10:00 should be CLOSED",
+		},
+		{
+			name:         "Saturday 10:00:00 WIB - early opening",
+			year:         2026, month: time.January, day: 24,
+			hour: 10, minute: 0, second: 0,
+			expectedOpen: true,
+			description:  "Saturday 10:00 should be OPEN (opens early at 10:00)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testTime := time.Date(tt.year, tt.month, tt.day, tt.hour, tt.minute, tt.second, 0, jakartaLocation)
+			result := CalculateIsOpenNow(hours, testTime)
+
+			if result != tt.expectedOpen {
+				t.Errorf("%s: got %v, want %v. %s",
+					tt.name,
+					result,
+					tt.expectedOpen,
+					tt.description)
+			}
+		})
+	}
+}

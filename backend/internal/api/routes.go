@@ -54,6 +54,8 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 		publicAPI.GET("/menu", publicHandler.GetPublicMenu)
 		publicAPI.GET("/categories", publicHandler.GetPublicCategories)
 		publicAPI.GET("/restaurant", publicHandler.GetRestaurantInfo)
+		// Debug endpoint for opening hours troubleshooting
+		publicAPI.GET("/health/open-status", publicHandler.GetOpenStatusDebug)
 		// Contact form has stricter limit (3/5min) to prevent spam
 		publicAPI.POST("/contact", contactFormLimiter, publicHandler.SubmitContactForm)
 		// Reservation submission (uses contact form rate limiter + CSRF protection)
