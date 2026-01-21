@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -350,7 +351,7 @@ func (h *PublicHandler) GetOpenStatusDebug(c *gin.Context) {
 		"is_open_now":              isOpenNow,
 		"operating_hours":          debugHours,
 		"today_schedule":           todayHours,
-		"server_timezone":          time.Now().Zone(),
+		"server_timezone":          time.Now().Format("MST"),
 		"server_location":          timezoneLocation.String(),
 	}
 
