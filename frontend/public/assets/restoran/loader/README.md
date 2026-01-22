@@ -1,26 +1,90 @@
-# Loading Screen Video Assets
+# Loading Screen Assets
 
-This directory contains the loading screen video and supporting assets.
+This directory contains the loading screen assets. Currently using CSS animation mode.
+
+## Current Mode
+
+**CSS Animation Mode** (Active)
+- Animated fork and knife utensils with flame effects
+- Sizzling steak icon with steam animation
+- Professional restaurant-themed design
+- No external assets required
+- Fast loading
 
 ## Files
 
-- **Food Carousel.webm** (86KB) - Main loading screen video
+- **Food Carousel.webm** (86KB) - Video asset (NOT CURRENTLY USED)
   - Duration: 4.5 seconds
   - Format: WebM (VP8 codec)
-  - Used as background animation during page load
+  - Status: Available but not active
+  - Can be re-enabled by adding `useVideo={true}` to Loader component
 
-- **poster.jpg** (TODO) - Poster image for video
-  - Should be a frame extracted from Food Carousel.webm
-  - Format: JPEG, quality 80-85
-  - Size: ~10-20KB
-  - Purpose: Display while video loads
+## Switching to GIF Mode
 
-## Video Optimization
+To use a custom steak dinner GIF instead of CSS animations:
 
-The video file is already well-optimized:
-- File size: 86KB ✅ (Excellent for web)
-- Format: WebM with VP8 codec ✅
-- Duration: 4.5 seconds (seamless loop)
+### 1. Create Your GIF
+
+**GIF Requirements:**
+- Content: Steak on plate with fork, spoon, vegetables, french fries
+- Style: Appetizing, professional restaurant quality
+- Animation: Subtle motion (steam, glow, or sizzling effect)
+- Size: <500KB (ideal: <200KB)
+- Duration: 2-3 seconds seamless loop
+
+**Creation Options:**
+
+**Option A: Stock Photos (Free, Fast)**
+1. Visit: https://unsplash.com/s/photos/steak-dinner
+2. Download high-quality steak dinner photo
+3. Create GIF at: https://ezgif.com/video-to-gif
+4. Add subtle zoom or steam effect
+5. Optimize and download
+
+**Option B: AI Generation (Best Quality)**
+- DALL-E 3 (ChatGPT Plus): Generate custom image
+- Midjourney: Best photorealistic quality
+- Leonardo.ai: Free tier available
+- Prompt: "Photorealistic premium steak dinner plate with fork and knife, french fries, grilled vegetables, steam rising, restaurant food photography"
+
+**Option C: Hire Freelancer (Custom Work)**
+- Fiverr: $20-50 USD, 2-3 days
+- Upwork: $50-100 USD, 3-5 days
+- Search for: "Food photography GIF animation"
+
+### 2. Add GIF to Project
+
+Save your GIF as:
+```
+frontend/public/assets/restoran/images/loader-fallback.gif
+```
+
+### 3. Verify
+
+The loader will automatically use your GIF if:
+- File exists at correct path
+- File size is reasonable (<500KB)
+- GIF format is valid
+
+## Current Fallback Chain
+
+1. **GIF** (loader-fallback.gif) - If file exists
+2. **CSS Animation** (current default) - Professional utensils and steak icon
+3. **Video** (Food Carousel.webm) - Can be enabled with `useVideo={true}`
+
+## Enabling Video Mode (Optional)
+
+To use the video instead of CSS/GIF:
+
+In `frontend/src/components/public/PublicLayout.tsx`:
+```tsx
+<Loader
+  show={isLoading}
+  duration={loaderDuration}
+  useVideo={true}  // Add this line
+  onComplete={handleLoaderComplete}
+/>
+```
 
 ## Creating a Poster Image
 

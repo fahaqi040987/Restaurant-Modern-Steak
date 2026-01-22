@@ -74,7 +74,6 @@ export function PublicLayout({
         <Loader
           show={isLoading}
           duration={loaderDuration}
-          useVideo={true}
           onComplete={handleLoaderComplete}
         />
       )}
