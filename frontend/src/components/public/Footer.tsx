@@ -37,10 +37,15 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
       return <span className="text-[var(--public-text-muted)]">{t('public.hoursNotAvailable')}</span>
     }
 
+    // Day names array must match database convention: 0=Sunday, 1=Monday, ..., 6=Saturday
     const dayNames = [
-      t('public.monday'), t('public.tuesday'), t('public.wednesday'),
-      t('public.thursday'), t('public.friday'), t('public.saturday'),
-      t('public.sunday')
+      t('public.sunday'),    // index 0 (day_of_week 0)
+      t('public.monday'),    // index 1 (day_of_week 1)
+      t('public.tuesday'),   // index 2 (day_of_week 2)
+      t('public.wednesday'), // index 3 (day_of_week 3)
+      t('public.thursday'),  // index 4 (day_of_week 4)
+      t('public.friday'),    // index 5 (day_of_week 5)
+      t('public.saturday')   // index 6 (day_of_week 6)
     ]
 
     const formatTime = (time: string): string => {
@@ -121,10 +126,10 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
             time: `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)} ${timezoneAbbrev}`
           })
         }
-        currentGroup = [dayNames[hour.day_of_week - 1]]
+        currentGroup = [dayNames[hour.day_of_week]]
         currentHours = hour
       } else {
-        currentGroup.push(dayNames[hour.day_of_week - 1])
+        currentGroup.push(dayNames[hour.day_of_week])
       }
 
       if (!nextHour || nextHour.is_closed || nextHour.open_time !== hour.open_time || nextHour.close_time !== hour.close_time) {
