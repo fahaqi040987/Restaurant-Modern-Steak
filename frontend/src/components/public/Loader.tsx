@@ -89,7 +89,9 @@ export function Loader({
             muted
             playsInline
             loop
-            className="w-full h-full object-cover opacity-40"
+            preload="auto"
+            className="w-full h-full object-cover opacity-60"
+            poster="/assets/restoran/loader/poster.jpg"
             onError={() => {
               console.warn('Video failed to load, falling back to CSS animation')
               // Optionally trigger fallback to CSS mode
