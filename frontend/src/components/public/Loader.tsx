@@ -90,17 +90,15 @@ export function Loader({
             playsInline
             loop
             className="w-full h-full object-cover opacity-40"
-            poster="/assets/restoran/images/loader-poster.jpg"
             onError={() => {
               console.warn('Video failed to load, falling back to CSS animation')
               // Optionally trigger fallback to CSS mode
             }}
           >
-            <source src="/assets/restoran/videos/steak-loader.mp4" type="video/mp4" />
-            <source src="/assets/restoran/videos/steak-loader.webm" type="video/webm" />
+            <source src="/assets/restoran/loader/Food Carousel.webm" type="video/webm" />
             {/* Fallback to GIF if video not supported */}
-            <img 
-              src="/assets/restoran/images/loader-fallback.gif" 
+            <img
+              src="/assets/restoran/images/loader-fallback.gif"
               alt="Loading animation"
               className="w-full h-full object-cover"
             />

@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      /* 1. Container Styles - The "Steak Kenangan" Vibe */
+      body {
+        background-color: #3d1c00; /* Dark brown background from the logo outline */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family:
+          "Brush Script MT", cursive; /* A script font to match the logo vibe */
+      }
+
+      /* 2. The Carousel Container */
+      .loader-container {
+        position: relative;
+        width: 180px;
+        height: 180px;
+      }
+
+      /* Defining the brand gradient */
+      :root {
+        --brand-gradient: linear-gradient(to bottom, #ffcc00, #ff7b00, #ff3c00);
+        --brand-yellow: #ffcc00;
+        --brand-orange: #ff7b00;
+        --brand-red: #ff3c00;
+        --brand-dark: #3d1c00;
+      }
+
+      /* 3. The Central Grill (Static) */
+      .grill-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90px;
+        height: 90px;
+        border: 5px solid var(--brand-yellow);
+        border-radius: 50%;
+        box-shadow:
+          0 0 20px var(--brand-red),
+          inset 0 0 10px var(--brand-orange);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        background: radial-gradient(
+          circle,
+          var(--brand-orange) 0%,
+          var(--brand-red) 100%
+        );
+      }
+
+      /* Grill bars */
+      .grill-center::before {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 12px,
+          var(--brand-dark) 12px,
+          var(--brand-dark) 15px
+        );
+        opacity: 0.6;
+      }
+
+      /* 4. The Rotating Carousel Ring */
+      .carousel-ring {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        animation: rotate 4s linear infinite;
+      }
+
+      /* 5. The Icons (Items on the carousel) */
+      .icon {
+        position: absolute;
+        font-size: 32px;
+        left: 50%;
+        top: 0;
+        transform-origin: 0 90px; /* Radius of the circle */
+        /* Applying the fiery brand color to the icons with a text shadow for outline effect */
+        background: var(--brand-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(1px 1px 0px var(--brand-dark));
+      }
+
+      /* Specific positions for 4 items */
+      .icon:nth-child(1) {
+        transform: rotate(0deg) translate(-50%, 0);
+      }
+      .icon:nth-child(2) {
+        transform: rotate(90deg) translate(-50%, 0);
+      }
+      .icon:nth-child(3) {
+        transform: rotate(180deg) translate(-50%, 0);
+      }
+      .icon:nth-child(4) {
+        transform: rotate(270deg) translate(-50%, 0);
+      }
+
+      /* Counter-rotate icons so they stay upright */
+      .icon span {
+        display: block;
+        animation: counter-rotate 4s linear infinite;
+      }
+
+      /* 6. Loading Text */
+      .loading-text {
+        position: absolute;
+        bottom: -50px;
+        width: 100%;
+        text-align: center;
+        font-weight: bold;
+        font-size: 24px;
+        background: var(--brand-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(1px 1px 1px var(--brand-dark));
+        animation: fade 1.5s ease-in-out infinite alternate;
+      }
+
+      /* 7. Keyframes */
+      @keyframes rotate {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes counter-rotate {
+        100% {
+          transform: rotate(-360deg);
+        }
+      }
+
+      @keyframes fade {
+        0% {
+          opacity: 0.6;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loader-container">
+      <div class="grill-center"></div>
+
+      <div class="carousel-ring">
+        <div class="icon"><span>🥩</span></div>
+        <div class="icon"><span>🔥</span></div>
+        <div class="icon"><span>🍟</span></div>
+        <div class="icon"><span>🍴</span></div>
+      </div>
+
+      <div class="loading-text">Sizzling...</div>
+    </div>
+  </body>
+</html>
