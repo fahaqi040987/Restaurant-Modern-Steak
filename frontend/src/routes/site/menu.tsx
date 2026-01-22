@@ -114,8 +114,8 @@ function PublicMenuPage() {
         </div>
       </section>
 
-      {/* Filters Section - Sticky */}
-      <section className="py-6 border-b border-[var(--public-border)] sticky top-16 z-40 bg-[var(--public-bg-primary)]/95 backdrop-blur-md">
+      {/* Filters Section - Static (non-sticky) */}
+      <section className="py-6 border-b border-[var(--public-border)] bg-[var(--public-bg-primary)]">
         <div className="public-container">
           {/* Search Input */}
           <div className="relative mb-4">
