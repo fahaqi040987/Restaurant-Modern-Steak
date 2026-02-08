@@ -394,7 +394,7 @@ class ReceiptPrinterService {
       }, 1000);
 
       return true;
-    } catch (_error) {
+    } catch {
       return false;
     }
   }
@@ -416,7 +416,7 @@ class ReceiptPrinterService {
       URL.revokeObjectURL(url);
 
       return true;
-    } catch (_error) {
+    } catch {
       return false;
     }
   }
@@ -441,7 +441,7 @@ class ReceiptPrinterService {
     // Check for USB printer support
     if ('usb' in navigator) {
       try {
-        const devices = await (navigator as any).usb.getDevices();
+        const devices = await (navigator as Navigator & { usb: { getDevices: () => Promise<unknown[]> } }).usb.getDevices();
         return devices.length > 0;
       } catch {
         return false;
@@ -527,7 +527,7 @@ class ReceiptPrinterService {
         );
       }
       return true;
-    } catch (_error) {
+    } catch {
       throw new PrintError(
         PrinterError.PRINT_FAILED,
         'Test print gagal. Periksa koneksi printer.'

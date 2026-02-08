@@ -50,7 +50,6 @@ function PublicMenuPage() {
   const {
     data: categories,
     isLoading: isLoadingCategories,
-    error: _categoriesError,
   } = useQuery({
     queryKey: ["publicCategories"],
     queryFn: () => apiClient.getPublicCategories(),

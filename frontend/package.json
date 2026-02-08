@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3000 --host 0.0.0.0",
+    "dev": "vite --port 4000 --host 0.0.0.0",
     "build": "tsc && vite build",
     "build:prod": "vite build",
     "preview": "vite preview",
@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
+    "@lottiefiles/react-lottie-player": "^3.6.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

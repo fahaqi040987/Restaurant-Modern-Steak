@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/api/client'
 import { Header } from './Header'
 import { Footer } from './Footer'
-import { Loader } from './Loader'
+import { LottieLoader } from './LottieLoader'
 import '@/styles/public-theme.css'
 
 interface PublicLayoutProps {
@@ -71,7 +71,7 @@ export function PublicLayout({
     <div className="public-theme min-h-screen flex flex-col">
       {/* Page Loader */}
       {showLoader && (
-        <Loader
+        <LottieLoader
           show={isLoading}
           duration={loaderDuration}
           onComplete={handleLoaderComplete}

@@ -2,11 +2,11 @@
  * T044: E2E test for Kitchen Display in Indonesian
  * Tests: Kitchen interface i18n, Indonesian translations, kitchen workflow in Indonesian language
  */
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 test.describe('Kitchen Display Indonesian i18n', () => {
   // Helper to login as kitchen staff with Indonesian language
-  async function loginAsKitchenWithIndonesian(page: any) {
+  async function loginAsKitchenWithIndonesian(page: Page) {
     await page.goto('/login')
     await page.evaluate(() => localStorage.setItem('i18nextLng', 'id-ID'))
     await page.reload()

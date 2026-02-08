@@ -654,6 +654,7 @@ describe('KitchenOrderCard', () => {
     });
 
     it('should handle unknown order status', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const order = createMockOrder({ status: 'unknown' as any });
       render(
         <KitchenOrderCard

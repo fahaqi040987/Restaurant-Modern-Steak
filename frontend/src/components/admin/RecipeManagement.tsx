@@ -123,7 +123,7 @@ export function RecipeManagement({ productId }: RecipeManagementProps) {
         description: t('admin.recipe.ingredientAddedDesc'),
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error & { response?: { data?: { error?: string } } }) => {
       toast({
         title: t('common.error'),
         description: error.response?.data?.error || t('admin.recipe.addIngredientError'),
@@ -149,7 +149,7 @@ export function RecipeManagement({ productId }: RecipeManagementProps) {
         description: t('admin.recipe.ingredientUpdatedDesc'),
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error & { response?: { data?: { error?: string } } }) => {
       toast({
         title: t('common.error'),
         description: error.response?.data?.error || t('admin.recipe.updateIngredientError'),
@@ -169,7 +169,7 @@ export function RecipeManagement({ productId }: RecipeManagementProps) {
         description: t('admin.recipe.ingredientRemovedDesc'),
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error & { response?: { data?: { error?: string } } }) => {
       toast({
         title: t('common.error'),
         description: error.response?.data?.error || t('admin.recipe.removeIngredientError'),

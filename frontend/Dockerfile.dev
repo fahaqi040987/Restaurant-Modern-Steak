@@ -13,8 +13,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Expose port 3000 and Vite HMR port
-EXPOSE 3000 5173
+# Expose port 4000 and Vite HMR port
+EXPOSE 4000 5173
 
 # Start development server
 CMD ["npm", "run", "dev"]

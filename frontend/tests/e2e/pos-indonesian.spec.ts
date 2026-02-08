@@ -2,11 +2,11 @@
  * T029: E2E test for POS order flow in Indonesian
  * Tests: POS interface i18n, Indonesian translations, order flow in Indonesian language
  */
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 test.describe('POS Interface Indonesian i18n', () => {
   // Helper to login as counter staff with Indonesian language
-  async function loginAsCounterWithIndonesian(page: any) {
+  async function loginAsCounterWithIndonesian(page: Page) {
     await page.goto('/login')
     await page.evaluate(() => localStorage.setItem('i18nextLng', 'id-ID'))
     await page.reload()
@@ -17,7 +17,7 @@ test.describe('POS Interface Indonesian i18n', () => {
   }
 
   // Helper to login as server with Indonesian language
-  async function loginAsServerWithIndonesian(page: any) {
+  async function loginAsServerWithIndonesian(page: Page) {
     await page.goto('/login')
     await page.evaluate(() => localStorage.setItem('i18nextLng', 'id-ID'))
     await page.reload()

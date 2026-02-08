@@ -81,7 +81,7 @@ func main() {
 	router.Use(middleware.SecurityHeaders())
 
 	// CORS configuration - load allowed origins from environment for production
-	allowedOrigins := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001,http://localhost:5173")
+	allowedOrigins := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:4000,http://localhost:3001,http://localhost:5173")
 	origins := strings.Split(allowedOrigins, ",")
 
 	router.Use(cors.New(cors.Config{

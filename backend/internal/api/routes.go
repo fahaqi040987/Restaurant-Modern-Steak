@@ -125,17 +125,19 @@ func SetupRoutes(router *gin.RouterGroup, db *sql.DB, authMiddleware gin.Handler
 	}
 
 	// Server routes (server role - dine-in orders only)
+	// Also allows admin/manager to use server interface
 	server := router.Group("/server")
 	server.Use(authMiddleware)
-	server.Use(middleware.RequireRole("server"))
+	server.Use(middleware.RequireRoles([]string{"server", "admin", "manager"}))
 	{
 		server.POST("/orders", createDineInOrder(db)) // Only dine-in orders
 	}
 
 	// Counter routes (counter role - all order types and payments)
+	// Also allows admin/manager to use counter interface
 	counter := router.Group("/counter")
 	counter.Use(authMiddleware)
-	counter.Use(middleware.RequireRole("counter"))
+	counter.Use(middleware.RequireRoles([]string{"counter", "admin", "manager"}))
 	{
 		counter.POST("/orders", orderHandler.CreateOrder)                   // All order types
 		counter.POST("/orders/:id/payments", paymentHandler.ProcessPayment) // Process payments
@@ -438,13 +440,14 @@ func getKitchenOrders(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		status := c.DefaultQuery("status", "all")
 
+		// Cast UUIDs to text for proper JSON serialization
 		query := `
-			SELECT DISTINCT o.id, o.order_number, o.table_id, o.order_type, o.status,
+			SELECT DISTINCT o.id::text, o.order_number, o.table_id::text, o.order_type, o.status,
 			       o.created_at, o.customer_name,
 			       t.table_number
 			FROM orders o
 			LEFT JOIN dining_tables t ON o.table_id = t.id
-			WHERE o.status IN ('confirmed', 'preparing', 'ready')
+			WHERE o.status IN ('pending', 'confirmed', 'preparing', 'ready')
 		`
 
 		if status != "all" {
@@ -466,7 +469,8 @@ func getKitchenOrders(db *sql.DB) gin.HandlerFunc {
 
 		var orders []map[string]interface{}
 		for rows.Next() {
-			var orderID, tableID interface{}
+			var orderID string
+			var tableID sql.NullString
 			var orderNumber, orderType, orderStatus, customerName, tableNumber sql.NullString
 			var createdAt interface{}
 
@@ -481,15 +485,74 @@ func getKitchenOrders(db *sql.DB) gin.HandlerFunc {
 				return
 			}
 
+			// Fetch order items for this order
+			itemsQuery := `
+				SELECT oi.id, oi.product_id, oi.quantity, oi.special_instructions, oi.status,
+				       p.name as product_name, p.description as product_description
+				FROM order_items oi
+				LEFT JOIN products p ON oi.product_id = p.id
+				WHERE oi.order_id = $1
+				ORDER BY oi.created_at ASC
+			`
+			itemRows, err := db.Query(itemsQuery, orderID)
+			if err != nil {
+				c.JSON(500, gin.H{
+					"success": false,
+					"message": "Failed to fetch order items",
+					"error":   err.Error(),
+				})
+				return
+			}
+
+			var items []map[string]interface{}
+			for itemRows.Next() {
+				var itemID, productID string
+				var quantity int
+				var specialInstructions, itemStatus, productName, productDescription sql.NullString
+
+				err := itemRows.Scan(&itemID, &productID, &quantity, &specialInstructions, &itemStatus,
+					&productName, &productDescription)
+				if err != nil {
+					itemRows.Close()
+					c.JSON(500, gin.H{
+						"success": false,
+						"message": "Failed to scan order item",
+						"error":   err.Error(),
+					})
+					return
+				}
+
+				item := map[string]interface{}{
+					"id":                   itemID,
+					"product_id":           productID,
+					"quantity":             quantity,
+					"special_instructions": specialInstructions.String,
+					"status":               itemStatus.String,
+					"product_name":         productName.String,
+					"product_description":  productDescription.String,
+				}
+				items = append(items, item)
+			}
+			itemRows.Close()
+
+			// Handle nullable table_id
+			var tableIDValue interface{}
+			if tableID.Valid {
+				tableIDValue = tableID.String
+			} else {
+				tableIDValue = nil
+			}
+
 			order := map[string]interface{}{
 				"id":            orderID,
 				"order_number":  orderNumber.String,
-				"table_id":      tableID,
+				"table_id":      tableIDValue,
 				"table_number":  tableNumber.String,
 				"order_type":    orderType.String,
 				"status":        orderStatus.String,
 				"customer_name": customerName.String,
 				"created_at":    createdAt,
+				"items":         items,
 			}
 
 			orders = append(orders, order)

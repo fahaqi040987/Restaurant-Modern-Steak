@@ -108,7 +108,7 @@ export function EnhancedKitchenLayout({ user }: EnhancedKitchenLayoutProps) {
     // Optimistically update the UI immediately
     const previousOrders = queryClient.getQueryData(['enhancedKitchenOrders']);
 
-    queryClient.setQueryData(['enhancedKitchenOrders'], (old: any) => {
+    queryClient.setQueryData(['enhancedKitchenOrders'], (old: Order[] | { data: Order[] } | undefined) => {
       // Handle both direct array response and { data: [] } response structure
       if (Array.isArray(old)) {
         return old.map((order: Order) =>
@@ -125,7 +125,7 @@ export function EnhancedKitchenLayout({ user }: EnhancedKitchenLayoutProps) {
     });
 
     try {
-      await apiClient.updateOrderStatus(orderId, newStatus as any);
+      await apiClient.updateOrderStatus(orderId, newStatus as Order['status']);
       // Invalidate and refetch to ensure cache consistency
       await queryClient.invalidateQueries({ queryKey: ['enhancedKitchenOrders'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -141,7 +141,7 @@ export function EnhancedKitchenLayout({ user }: EnhancedKitchenLayoutProps) {
     // Optimistically update the UI immediately
     const previousOrders = queryClient.getQueryData(['enhancedKitchenOrders']);
 
-    queryClient.setQueryData(['enhancedKitchenOrders'], (old: any) => {
+    queryClient.setQueryData(['enhancedKitchenOrders'], (old: Order[] | { data: Order[] } | undefined) => {
       // Helper to update order items
       const updateOrderItems = (order: Order) =>
         order.id === orderId

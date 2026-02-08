@@ -42,7 +42,7 @@ export function POSHeader({
   const handleLogout = async () => {
     try {
       await apiClient.logout()
-    } catch (_error) {
+    } catch {
       // Even if logout fails, clear local auth
     } finally {
       apiClient.clearAuth()

@@ -169,7 +169,7 @@ export function EnhancedKitchenOrderCard({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold">#{order.order_number}</h3>
-              <Badge variant={statusStyling.badge as any} className="text-xs">
+              <Badge variant={statusStyling.badge as 'default' | 'secondary' | 'destructive' | 'outline'} className="text-xs">
                 {order.status}
               </Badge>
             </div>
@@ -268,7 +268,7 @@ export function EnhancedKitchenOrderCard({
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-lg font-semibold">#{order.order_number}</h3>
-              <Badge variant={statusStyling.badge as any}>
+              <Badge variant={statusStyling.badge as 'default' | 'secondary' | 'destructive' | 'outline'}>
                 {order.status}
               </Badge>
               {order.status === 'preparing' && progressPercentage === 100 && (

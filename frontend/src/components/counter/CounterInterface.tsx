@@ -109,7 +109,7 @@ export function CounterInterface() {
       queryClient.invalidateQueries({ queryKey: ['tables'] })
       toastHelpers.success('Order Created', 'Your order has been submitted successfully.')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toastHelpers.apiError('Create order', error)
     }
   })

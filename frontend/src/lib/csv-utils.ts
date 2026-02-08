@@ -8,6 +8,7 @@
  * @param columns Optional column configuration
  * @returns CSV string
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function jsonToCSV<T extends Record<string, any>>(
   data: T[],
   columns?: { key: keyof T; label: string }[]
@@ -69,7 +70,7 @@ export function downloadCSV(csvString: string, filename: string): void {
  * @param headers Optional header mapping
  * @returns Promise<array of objects>
  */
-export function parseCSV<T extends Record<string, any>>(
+export function parseCSV<T extends Record<string, unknown>>(
   file: File,
   headers?: string[]
 ): Promise<T[]> {
@@ -93,7 +94,7 @@ export function parseCSV<T extends Record<string, any>>(
         // Parse data rows
         const data = lines.slice(1).map(line => {
           const values = parseCSVLine(line);
-          const obj: any = {};
+          const obj: Record<string, string> = {};
           
           csvHeaders.forEach((header, index) => {
             obj[header] = values[index] || '';
@@ -160,7 +161,7 @@ function parseCSVLine(line: string): string[] {
  * @param requiredFields Required field names
  * @returns Validation result with errors
  */
-export function validateCSVData<T extends Record<string, any>>(
+export function validateCSVData<T extends Record<string, unknown>>(
   data: T[],
   requiredFields: (keyof T)[]
 ): { valid: boolean; errors: string[] } {

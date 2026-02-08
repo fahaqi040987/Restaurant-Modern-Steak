@@ -8,6 +8,7 @@ global.IntersectionObserver = class IntersectionObserver {
 
   constructor(
     callback: IntersectionObserverCallback,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options?: IntersectionObserverInit
   ) {
     // Immediately trigger callback with isIntersecting: true

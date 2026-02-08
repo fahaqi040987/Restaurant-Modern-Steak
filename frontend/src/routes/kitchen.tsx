@@ -21,7 +21,7 @@ function KitchenPage() {
         try {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-        } catch (_error) {
+        } catch {
           console.error('❌ Invalid stored auth data, clearing');
           apiClient.clearAuth();
         }

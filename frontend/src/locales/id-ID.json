@@ -346,6 +346,7 @@
     "showMoreItems": "Tampilkan {{count}} item lagi",
     "completeAllItems": "Selesaikan semua item sebelum menandai pesanan siap",
     "completeAllItemsHint": "Selesaikan semua item sebelum menandai pesanan siap",
+    "confirmOrder": "Konfirmasi Pesanan",
     "startCooking": "Mulai Memasak",
     "markAllReady": "Tandai Semua Siap",
     "orderComplete": "Pesanan Selesai!",

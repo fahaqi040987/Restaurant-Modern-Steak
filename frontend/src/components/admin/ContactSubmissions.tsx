@@ -141,7 +141,7 @@ export default function ContactSubmissions() {
   const handleUpdateStatus = (status: string) => {
     if (selectedContact) {
       updateStatusMutation.mutate({ id: selectedContact.id, status })
-      setSelectedContact({ ...selectedContact, status: status as any })
+      setSelectedContact({ ...selectedContact, status: status as 'new' | 'in_progress' | 'resolved' | 'spam' })
     }
   }
 

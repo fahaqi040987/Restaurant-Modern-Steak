@@ -59,7 +59,7 @@ func CSRFProtection() gin.HandlerFunc {
 
 		// Get allowed origins from environment (comma-separated)
 		allowedOriginsEnv := os.Getenv("ALLOWED_ORIGINS")
-		allowedOrigins := []string{"http://localhost:5173", "http://localhost:3000"}
+		allowedOrigins := []string{"http://localhost:5173", "http://localhost:4000"}
 		if allowedOriginsEnv != "" {
 			allowedOrigins = strings.Split(allowedOriginsEnv, ",")
 		}

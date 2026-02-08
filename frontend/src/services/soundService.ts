@@ -96,7 +96,7 @@ class KitchenSoundService {
         const audioBuffer =
           await this.audioContext!.decodeAudioData(arrayBuffer);
         this.soundCache.set(key, audioBuffer);
-      } catch (_error) {
+      } catch {
         console.warn(`Failed to load sound ${key}, using generated sound`);
         const buffer = await this.generateSound(key as keyof typeof sounds);
         this.soundCache.set(key, buffer);

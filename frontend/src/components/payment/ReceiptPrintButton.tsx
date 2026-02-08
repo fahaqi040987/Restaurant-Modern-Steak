@@ -102,7 +102,7 @@ export function ReceiptPrintButton({
       if (success) {
         toastHelpers.success(t('common.export', 'Receipt downloaded'));
       }
-    } catch (_error) {
+    } catch {
       toastHelpers.error(t('errors.generic', 'Failed to download receipt'));
     }
   };

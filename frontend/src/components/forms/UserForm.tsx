@@ -41,14 +41,14 @@ export function UserForm({ user, onSuccess, onCancel, mode = 'create' }: UserFor
 
   // Choose the appropriate schema and default values
   const schema = isEditing ? updateUserSchema : createUserSchema
-  const defaultValues = isEditing 
+  const defaultValues = isEditing
     ? {
         id: user.id,
         username: user.username,
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
-        role: user.role as any,
+        role: user.role as 'admin' | 'manager' | 'kitchen' | 'server' | 'counter',
         password: '', // Don't pre-fill password for editing
       }
     : {

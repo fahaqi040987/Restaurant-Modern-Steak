@@ -179,7 +179,7 @@ export function AdminReports() {
       </div>
 
       {/* Reports Tabs */}
-      <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
+      <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as 'sales' | 'orders' | 'analytics')}>
         <TabsList>
           <TabsTrigger value="sales">{t('admin.salesReport')}</TabsTrigger>
           <TabsTrigger value="orders">{t('admin.orderReport')}</TabsTrigger>
@@ -200,7 +200,7 @@ export function AdminReports() {
                 <LoadingState />
               ) : salesError ? (
                 <div className="text-center py-8 text-red-600">
-                  {t('common.error')}: {(salesError as any).message}
+                  {t('common.error')}: {salesError instanceof Error ? salesError.message : 'Unknown error'}
                 </div>
               ) : salesData && salesData.length > 0 ? (
                 <div className="space-y-4">
@@ -246,7 +246,7 @@ export function AdminReports() {
                 <LoadingState />
               ) : ordersError ? (
                 <div className="text-center py-8 text-red-600">
-                  {t('common.error')}: {(ordersError as any).message}
+                  {t('common.error')}: {ordersError instanceof Error ? ordersError.message : 'Unknown error'}
                 </div>
               ) : ordersData && ordersData.length > 0 ? (
                 <div className="space-y-4">
@@ -332,7 +332,7 @@ export function AdminReports() {
                         <div className="text-center">{t('admin.tax')}</div>
                         <div className="text-center">{t('admin.net')}</div>
                       </div>
-                      {incomeData.breakdown.slice(0, 10).map((item: any, index: number) => (
+                      {incomeData.breakdown.slice(0, 10).map((item: { period: string; orders: number; gross: number; tax: number; net: number }, index: number) => (
                         <div key={index} className="grid grid-cols-5 gap-4 p-4 border-t text-sm">
                           <div className="font-medium">
                             {new Date(item.period).toLocaleDateString()}

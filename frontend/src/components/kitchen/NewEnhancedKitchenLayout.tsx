@@ -59,12 +59,16 @@ export function NewEnhancedKitchenLayout({
 
   // Filter orders to only show kitchen-relevant statuses
   // Orders disappear when served/completed by server staff
+  // Include 'pending' so kitchen can see new orders immediately
   const kitchenRelevantOrders = orders.filter((order: Order) =>
-    ["confirmed", "preparing", "ready"].includes(order.status),
+    ["pending", "confirmed", "preparing", "ready"].includes(order.status),
   );
 
   // Group orders by status
   const ordersByStatus = {
+    pending: kitchenRelevantOrders.filter(
+      (order: Order) => order.status === "pending",
+    ),
     confirmed: kitchenRelevantOrders.filter(
       (order: Order) => order.status === "confirmed",
     ),
@@ -79,7 +83,7 @@ export function NewEnhancedKitchenLayout({
   // Calculate statistics based on kitchen-relevant orders only
   const stats = {
     total: kitchenRelevantOrders.length,
-    newOrders: ordersByStatus.confirmed.length,
+    newOrders: ordersByStatus.pending.length + ordersByStatus.confirmed.length,
     preparing: ordersByStatus.preparing.length,
     ready: ordersByStatus.ready.length,
     urgent: kitchenRelevantOrders.filter((order: Order) => {
@@ -296,15 +300,17 @@ export function NewEnhancedKitchenLayout({
             </CardTitle>
             <Badge
               variant={
-                order.status === "confirmed"
-                  ? "secondary"
-                  : order.status === "preparing"
-                    ? "default"
-                    : "outline"
+                order.status === "pending"
+                  ? "destructive"
+                  : order.status === "confirmed"
+                    ? "secondary"
+                    : order.status === "preparing"
+                      ? "default"
+                      : "outline"
               }
               className="text-sm px-3 py-1"
             >
-              {order.status.toUpperCase()}
+              {order.status === "pending" ? "NEW ORDER" : order.status.toUpperCase()}
             </Badge>
           </div>
 
@@ -386,7 +392,7 @@ export function NewEnhancedKitchenLayout({
                       )}
                     >
                       {item.quantity}x{" "}
-                      {item.product?.name || `Item ${index + 1}`}
+                      {(item as Record<string, unknown>).product_name as string || item.product?.name || `Item ${index + 1}`}
                       {isServed && (
                         <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
                           SERVED
@@ -451,6 +457,17 @@ export function NewEnhancedKitchenLayout({
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
+            {order.status === "pending" && (
+              <Button
+                onClick={() => handleOrderStatusUpdate(order.id, "confirmed")}
+                className="flex-1 bg-yellow-600 hover:bg-yellow-700 h-12 text-lg"
+                size="lg"
+              >
+                <CheckCircle className="w-5 h-5 mr-2" />
+                {t("kitchen.confirmOrder")}
+              </Button>
+            )}
+
             {order.status === "confirmed" && (
               <Button
                 onClick={() => handleOrderStatusUpdate(order.id, "preparing")}
@@ -582,7 +599,7 @@ export function NewEnhancedKitchenLayout({
                 <div className="mt-2">
                   {order.items?.map((item) => (
                     <div key={item.id} className="text-sm">
-                      {item.quantity}x {item.product?.name}
+                      {item.quantity}x {(item as Record<string, unknown>).product_name as string || item.product?.name}
                     </div>
                   ))}
                 </div>

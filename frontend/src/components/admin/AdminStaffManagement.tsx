@@ -67,12 +67,13 @@ export function AdminStaffManagement() {
       page: pagination.page,
       limit: pagination.pageSize,
       search: debouncedSearch || undefined
-    }).then((res: any) => res.data)
+    }).then((res) => res.data)
   })
 
-  // Extract data and pagination info
-  const users = Array.isArray(usersData) ? usersData : (usersData as any)?.data || []
-  const paginationInfo = (usersData as any)?.pagination || { total: 0 }
+  // Extract data and pagination info - handle both array and paginated response formats
+  const usersDataTyped = usersData as User[] | { data: User[]; pagination: { total: number } } | undefined
+  const users = Array.isArray(usersDataTyped) ? usersDataTyped : (usersDataTyped as { data: User[]; pagination: { total: number } } | undefined)?.data || []
+  const paginationInfo = (usersDataTyped as { data: User[]; pagination: { total: number } } | undefined)?.pagination || { total: 0 }
 
   // Delete user mutation (keep existing functionality)  
   const deleteUserMutation = useMutation({
@@ -81,7 +82,7 @@ export function AdminStaffManagement() {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toastHelpers.userDeleted(deletedUsername)
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toastHelpers.apiError('Delete user', error)
     }
   })
