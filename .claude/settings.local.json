@@ -67,7 +67,29 @@
       "Bash(export TOKEN=:*)",
       "Bash(docker-compose:*)",
       "Bash(npx tsc:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Skill(ccs)",
+      "Bash(ccs zhai:*)",
+      "Bash(lsof:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker system prune:*)",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n\\\\n=== Tables ===\")",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n\\\\n=== Users ===\")",
+      "Bash(npx playwright:*)",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n=== All Orders \\(to see status distribution\\) ===\")",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n=== Kitchen Orders \\(status=all\\) ===\")",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n=== Step 2: Update to confirmed ===\")",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n=== Step 3: Update to preparing ===\")",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n=== Step 4: Update to ready ===\")",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n=== Step 5: Update to completed \\(served\\) ===\")",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n=== Final: Verify order is completed ===\")",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n=== Step 2: Start preparing ===\")",
+      "Bash(__NEW_LINE__ echo -e \"\\\\n=== Step 3: Mark ready ===\")",
+      "Bash(fi)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(export:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiN2IwYzQyY2EtN2VjNi00ZTFkLWIzZmMtMzZmMDQwNDAxYzJlIiwidXNlcm5hbWUiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3MDY2MTM4OSwiZXhwIjoxNzcwNzQ3Nzg5LCJpc3MiOiJwb3Mtc3lzdGVtIn0.Z0pKD-5xDaEAScJ-WdNI17cgU_CrUnZ3U8byKaLIXsM\")"
     ]
   }
 }

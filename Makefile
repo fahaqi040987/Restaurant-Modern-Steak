@@ -314,7 +314,7 @@ status:
 test:
 	@echo "$(GREEN)🧪 Running tests...$(NC)"
 	@echo "$(YELLOW)Backend tests:$(NC)"
-	@docker compose -f $(COMPOSE_DEV) exec backend go test ./... || true
+	@docker compose -f $(COMPOSE_DEV) exec backend npm test || true
 	@echo ""
 	@echo "$(YELLOW)Frontend tests:$(NC)"
 	@docker compose -f $(COMPOSE_DEV) exec frontend npm run test -- --run || true
@@ -322,9 +322,8 @@ test:
 # Run tests with coverage reports
 test-coverage:
 	@echo "$(GREEN)📊 Running tests with coverage...$(NC)"
-	@echo "$(YELLOW)Backend coverage:$(NC)"
-	@docker compose -f $(COMPOSE_DEV) exec backend go test ./... -coverprofile=coverage.out || true
-	@docker compose -f $(COMPOSE_DEV) exec backend go tool cover -func=coverage.out | tail -1 || true
+	@echo "$(YELLOW)Backend type-check:$(NC)"
+	@docker compose -f $(COMPOSE_DEV) exec backend npm run typecheck || true
 	@echo ""
 	@echo "$(YELLOW)Frontend coverage:$(NC)"
 	@docker compose -f $(COMPOSE_DEV) exec frontend npm run test:coverage || true
@@ -341,8 +340,8 @@ test-e2e:
 # Run linting checks
 lint:
 	@echo "$(GREEN)🔍 Running linting checks...$(NC)"
-	@echo "$(YELLOW)Backend linting (golangci-lint):$(NC)"
-	@docker compose -f $(COMPOSE_DEV) exec backend golangci-lint run || echo "golangci-lint not installed"
+	@echo "$(YELLOW)Backend linting (TypeScript):$(NC)"
+	@docker compose -f $(COMPOSE_DEV) exec backend npm run typecheck || true
 	@echo ""
 	@echo "$(YELLOW)Frontend linting (ESLint):$(NC)"
 	@docker compose -f $(COMPOSE_DEV) exec frontend npm run lint || true
@@ -350,9 +349,6 @@ lint:
 # Format code
 format:
 	@echo "$(GREEN)✨ Formatting code...$(NC)"
-	@echo "$(YELLOW)Backend formatting (gofmt):$(NC)"
-	@docker compose -f $(COMPOSE_DEV) exec backend gofmt -w . || true
-	@echo ""
 	@echo "$(YELLOW)Frontend formatting (Prettier):$(NC)"
 	@docker compose -f $(COMPOSE_DEV) exec frontend npm run lint:fix || true
 
@@ -360,7 +356,7 @@ format:
 deps:
 	@echo "$(GREEN)📦 Installing/updating dependencies...$(NC)"
 	@echo "$(YELLOW)Backend dependencies:$(NC)"
-	@docker compose -f $(COMPOSE_DEV) exec backend go mod tidy || true
+	@docker compose -f $(COMPOSE_DEV) exec backend npm install || true
 	@echo ""
 	@echo "$(YELLOW)Frontend dependencies:$(NC)"
 	@docker compose -f $(COMPOSE_DEV) exec frontend npm update || true
