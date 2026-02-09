@@ -351,6 +351,7 @@
     "markAllReady": "Mark All Ready",
     "orderComplete": "Order Complete!",
     "readyForPickupServing": "Ready for pickup/serving",
+    "markAsPickedUp": "Mark as Picked Up",
     "foodItems": "Food Items:",
     "served": "Served",
     "cooking": "Cooking",

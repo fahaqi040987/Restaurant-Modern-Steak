@@ -80,7 +80,7 @@ dev:
 	fi
 	@docker compose -f $(COMPOSE_DEV) up --build
 	@echo "$(GREEN)✅ Development environment started!$(NC)"
-	@echo "$(BLUE)📱 Frontend: http://localhost:3000$(NC)"
+	@echo "$(BLUE)📱 Frontend: http://localhost:4000$(NC)"
 	@echo "$(BLUE)🔧 Backend API: http://localhost:8080$(NC)"
 	@echo "$(BLUE)🗄️  Database: localhost:5432$(NC)"
 
@@ -103,7 +103,7 @@ local-test:
 	fi
 	@docker compose -f $(COMPOSE_PROD) -f $(COMPOSE_TEST_PROD) --env-file .env up -d --build
 	@echo "$(GREEN)✅ Local test environment started!$(NC)"
-	@echo "$(BLUE)📱 Frontend: http://localhost:3000$(NC)"
+	@echo "$(BLUE)📱 Frontend: http://localhost:4000$(NC)"
 	@echo "$(BLUE)🔧 Backend API: http://localhost:8080$(NC)"
 	@echo "$(BLUE)🗄️  Database: localhost:5432$(NC)"
 
@@ -150,7 +150,7 @@ create-demo-users:
 	@echo ""
 	@echo "$(BLUE)🎭 Demo Accounts Available:$(NC)"
 	@echo "$(YELLOW)👑 Admin:$(NC) admin / admin123"
-	@echo "$(YELLOW)📊 Manager:$(NC) manager1 / admin123" 
+	@echo "$(YELLOW)📊 Manager:$(NC) manager1 / admin123"
 	@echo "$(YELLOW)🍽️ Servers:$(NC) server1, server2 / admin123"
 	@echo "$(YELLOW)💰 Counter:$(NC) counter1, counter2 / admin123"
 	@echo "$(YELLOW)👨‍🍳 Kitchen:$(NC) kitchen1 / admin123"
@@ -255,7 +255,7 @@ logs-backend:
 	@echo "$(GREEN)📋 Viewing backend logs...$(NC)"
 	@docker compose -f $(COMPOSE_DEV) logs -f backend
 
-# View frontend logs only  
+# View frontend logs only
 logs-frontend:
 	@echo "$(GREEN)📋 Viewing frontend logs...$(NC)"
 	@docker compose -f $(COMPOSE_DEV) logs -f frontend
@@ -288,7 +288,7 @@ status:
 	@echo "$(BLUE)Docker Containers:$(NC)"
 	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" -f name=pos || echo "No POS containers running"
 	@echo ""
-	@echo "$(BLUE)Docker Volumes:$(NC)" 
+	@echo "$(BLUE)Docker Volumes:$(NC)"
 	@docker volume ls -f name=pos || echo "No POS volumes found"
 	@echo ""
 	@echo "$(BLUE)Network Connectivity:$(NC)"
