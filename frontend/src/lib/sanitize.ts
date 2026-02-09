@@ -34,15 +34,15 @@ export function stripHTMLTags(input: string): string {
  * @param data - Form data object
  * @returns Sanitized form data
  */
-export function sanitizeReservationData<T extends Record<string, any>>(data: T): T {
-  const sanitized = { ...data }
-  
+export function sanitizeReservationData<T extends Record<string, unknown>>(data: T): T {
+  const sanitized = { ...data } as Record<string, unknown>
+
   // Sanitize string fields
   for (const key in sanitized) {
     if (typeof sanitized[key] === 'string') {
-      (sanitized as any)[key] = stripHTMLTags(sanitized[key] as string)
+      sanitized[key] = stripHTMLTags(sanitized[key] as string)
     }
   }
-  
-  return sanitized
+
+  return sanitized as T
 }

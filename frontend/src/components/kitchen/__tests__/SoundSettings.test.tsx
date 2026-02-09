@@ -143,6 +143,7 @@ describe('SoundSettings', () => {
     });
 
     it('should use default settings when service returns null', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(kitchenSoundService.getSettings).mockReturnValue(null as any);
       render(<SoundSettings />);
       // Should still render without errors

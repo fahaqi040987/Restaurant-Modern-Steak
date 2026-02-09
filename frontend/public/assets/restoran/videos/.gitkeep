@@ -1,0 +1,84 @@
+# Loader Video Assets
+
+This directory contains video assets for the loading screen animation.
+
+## Required Files
+
+### Main Video (Required)
+- **steak-loader.mp4** - Main loading video (H.264 codec)
+  - Resolution: 1280x720 or 1920x1080
+  - Duration: 2-3 seconds (seamless loop)
+  - Frame rate: 30fps
+  - Bitrate: 1-2 Mbps
+  - File size: <500KB
+
+### Alternative Format (Optional)
+- **steak-loader.webm** - WebM format (VP9 codec)
+  - Same specifications as MP4
+  - Provides better compression for some browsers
+
+## Suggested Video Content
+
+The video should showcase:
+1. Sizzling steak on grill with flames
+2. Premium steak being cooked
+3. Chef plating a steak dish
+4. Restaurant ambiance and elegance
+5. Brand elements (logo, name)
+
+## Creating the Video
+
+### Option 1: Professional Creation
+- Hire on Fiverr, Upwork, or 99designs
+- Expect to pay: $50-$200 USD
+- Timeline: 2-5 days
+
+### Option 2: Stock Footage
+- Free sites: Pexels, Pixabay, Videvo
+- Keywords: "steak cooking", "grilling", "flame"
+- Premium sites: Shutterstock, Adobe Stock, Getty Images
+
+### Option 3: AI Generation
+- Tools: Runway, Kaiber, Synthesia
+- Prompt: "Premium steak sizzling on grill, elegant restaurant, cinematic lighting"
+
+### Option 4: Use Existing Assets
+- Extract from existing promotional videos
+- Animate restaurant photos
+- Create slideshow-style animation
+
+## Conversion Commands
+
+### Convert video to MP4 (H.264):
+```bash
+ffmpeg -i input.mov -c:v libx264 -preset slow -crf 22 -c:a aac -b:a 128k \
+  -movflags +faststart steak-loader.mp4
+```
+
+### Convert to WebM (VP9):
+```bash
+ffmpeg -i input.mov -c:v libvpx-vp9 -crf 30 -b:v 0 -c:a libopus \
+  steak-loader.webm
+```
+
+### Optimize for web:
+```bash
+ffmpeg -i input.mp4 -vf "scale=1280:-1" -c:v libx264 -preset veryslow \
+  -crf 28 -tune animation steak-loader-optimized.mp4
+```
+
+## Testing
+
+Test video before deployment:
+1. Check file size (<500KB recommended)
+2. Test in multiple browsers
+3. Verify smooth looping
+4. Check load time
+5. Test on mobile devices
+
+## Fallback
+
+If video fails to load, the system will:
+1. Try WebM format
+2. Fall back to GIF if available
+3. Use enhanced CSS animation as last resort

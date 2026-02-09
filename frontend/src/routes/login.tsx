@@ -83,7 +83,7 @@ function LoginPage() {
         setError(data.message || 'Login failed. Please check your credentials.')
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       setError(error.message || 'Login failed. Please try again.')
     },
   })

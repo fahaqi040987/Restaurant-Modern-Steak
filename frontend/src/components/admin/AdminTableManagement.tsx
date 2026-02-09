@@ -101,9 +101,16 @@ export function AdminTableManagement() {
     queryFn: () => apiClient.getTables().then(res => res.data)
   })
 
-  // Extract data and pagination info
-  const tables = Array.isArray(tablesData) ? tablesData : (tablesData as any)?.data || []
-  const paginationInfo = (tablesData as any)?.pagination || { total: 0 }
+  // Define types for table data with status
+  interface TableWithStatus extends DiningTable {
+    status?: 'available' | 'occupied' | 'reserved' | 'maintenance';
+    location_notes?: string;
+  }
+
+  // Extract data and pagination info - handle both array and paginated response formats
+  const tablesDataTyped = tablesData as TableWithStatus[] | { data: TableWithStatus[]; pagination: { total: number } } | undefined
+  const tables: TableWithStatus[] = Array.isArray(tablesDataTyped) ? tablesDataTyped : tablesDataTyped?.data || []
+  const paginationInfo = !Array.isArray(tablesDataTyped) ? tablesDataTyped?.pagination || { total: 0 } : { total: 0 }
 
   // Update pagination total
   useEffect(() => {
@@ -121,7 +128,7 @@ export function AdminTableManagement() {
       queryClient.invalidateQueries({ queryKey: ['tables-summary'] })
       toastHelpers.apiSuccess('Delete', `Table ${tableNumber}`)
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toastHelpers.apiError('Delete table', error)
     }
   })
@@ -138,9 +145,9 @@ export function AdminTableManagement() {
   }
 
   // Delete handler
-  const handleDeleteTable = (table: DiningTable) => {
+  const handleDeleteTable = (table: TableWithStatus) => {
     // Note: DiningTable type may need to be updated to include status field
-    const tableStatus = (table as any).status
+    const tableStatus = table.status
     if (tableStatus === 'occupied') {
       toastHelpers.warning(
         t('admin.cannotDeleteTable'),
@@ -260,10 +267,10 @@ export function AdminTableManagement() {
   // Calculate stats from all tables (for accurate totals)
   const stats = {
     total: allTables.length,
-    available: allTables.filter(t => (t as any).status === 'available').length,
-    occupied: allTables.filter(t => (t as any).status === 'occupied').length,
-    reserved: allTables.filter(t => (t as any).status === 'reserved').length,
-    maintenance: allTables.filter(t => (t as any).status === 'maintenance').length,
+    available: allTables.filter(t => (t as TableWithStatus).status === 'available').length,
+    occupied: allTables.filter(t => (t as TableWithStatus).status === 'occupied').length,
+    reserved: allTables.filter(t => (t as TableWithStatus).status === 'reserved').length,
+    maintenance: allTables.filter(t => (t as TableWithStatus).status === 'maintenance').length,
   }
 
   // Show form
@@ -454,8 +461,8 @@ export function AdminTableManagement() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredTables.map((table: any) => {
-            const statusBadge = getStatusBadge(table.status)
+          {filteredTables.map((table: TableWithStatus) => {
+            const statusBadge = getStatusBadge(table.status || 'available')
             // Translate status for display
             const getStatusLabel = (status: string) => {
               switch (status) {
@@ -475,7 +482,7 @@ export function AdminTableManagement() {
                       <div className="flex items-center gap-2 mt-1">
                         <Badge className={`gap-1 ${statusBadge.className}`}>
                           {statusBadge.icon}
-                          {getStatusLabel(table.status)}
+                          {getStatusLabel(table.status || 'available')}
                         </Badge>
                       </div>
                     </div>

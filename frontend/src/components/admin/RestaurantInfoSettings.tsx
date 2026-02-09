@@ -187,7 +187,7 @@ export function RestaurantInfoSettings() {
   const updateHoursMutation = useMutation({
     mutationFn: (hours: OperatingHourUpdate[]) =>
       apiClient.updateOperatingHours({ hours }),
-    onSuccess: async (_, _savedHours) => {
+    onSuccess: async () => {
       // Keep of local state - don't reset it
       // The saved hours are already valid, just refresh from server
       await queryClient.invalidateQueries({ queryKey: ['restaurantInfo'] })

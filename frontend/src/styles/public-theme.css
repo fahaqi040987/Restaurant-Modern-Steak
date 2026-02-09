@@ -444,3 +444,171 @@
 .header-fixed:not(.scrolled) {
   background-color: transparent;
 }
+
+/* ============================================
+   LOADER ANIMATIONS
+   Enhanced loading animations with flame effects
+   ============================================ */
+
+/* Utensils sway animation */
+@keyframes utensils-sway {
+  0%, 100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+.loader-utensils-animation {
+  animation: utensils-sway 2s ease-in-out infinite;
+}
+
+/* Loading dots pulse */
+@keyframes dot-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.loader-dot {
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+
+/* Flame effect under utensils */
+@keyframes flame-flicker {
+  0%, 100% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 0.8;
+  }
+  25% {
+    transform: scaleY(1.1) scaleX(0.9);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleY(0.9) scaleX(1.1);
+    opacity: 0.9;
+  }
+  75% {
+    transform: scaleY(1.05) scaleX(0.95);
+    opacity: 1;
+  }
+}
+
+.flame-effect {
+  position: relative;
+  width: 40px;
+  height: 30px;
+}
+
+.flame {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50% 50% 20% 20%;
+  filter: blur(1px);
+}
+
+.flame-main {
+  background: linear-gradient(to top, #ff6b35 0%, #ffa500 50%, #ffcc00 100%);
+  animation: flame-flicker 0.8s ease-in-out infinite;
+}
+
+.flame-secondary {
+  background: linear-gradient(to top, #ff4500 0%, #ff6b35 50%, #ffa500 100%);
+  animation: flame-flicker 0.8s ease-in-out infinite reverse;
+  opacity: 0.7;
+}
+
+/* Steak icon animation */
+@keyframes steak-sizzle {
+  0%, 100% {
+    transform: scale(1) rotate(-2deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(2deg);
+  }
+}
+
+.loader-steak-animation {
+  animation: steak-sizzle 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.5));
+}
+
+/* Steam/sizzle effect */
+@keyframes steam-rise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateY(-20px) scale(1.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(2);
+  }
+}
+
+.steam-effect {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 40px;
+}
+
+.steam {
+  position: absolute;
+  bottom: 0;
+  width: 8px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  filter: blur(2px);
+  animation: steam-rise 2s ease-out infinite;
+}
+
+.steam-1 {
+  left: 30%;
+  animation-delay: 0s;
+}
+
+.steam-2 {
+  left: 50%;
+  animation-delay: 0.5s;
+}
+
+.steam-3 {
+  left: 70%;
+  animation-delay: 1s;
+}
+
+/* Text fade-in animation */
+@keyframes text-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loader-text-animation {
+  animation: text-fade-in 1s ease-out 0.5s both;
+}

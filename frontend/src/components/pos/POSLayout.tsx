@@ -12,6 +12,7 @@ interface POSLayoutProps {
   user: User;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function POSLayout({ user: _user }: POSLayoutProps) {
   const { t } = useTranslation();
 

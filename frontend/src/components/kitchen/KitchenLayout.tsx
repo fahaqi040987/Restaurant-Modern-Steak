@@ -47,7 +47,7 @@ export function KitchenLayout({ user }: KitchenLayoutProps) {
   // Handle order status update
   const handleOrderStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      await apiClient.updateOrderStatus(orderId, newStatus as any)
+      await apiClient.updateOrderStatus(orderId, newStatus as Order['status'])
       refetch() // Refresh the orders list
     } catch (error) {
       console.error('Failed to update order status:', error)

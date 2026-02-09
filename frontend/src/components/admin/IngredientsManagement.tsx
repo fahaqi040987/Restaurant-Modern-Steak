@@ -195,6 +195,7 @@ export default function IngredientsManagement() {
     },
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getStatusBadge = (status: string, _currentStock: number, _minStock: number) => {
     if (status === 'out') {
       return (

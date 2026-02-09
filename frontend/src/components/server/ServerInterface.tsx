@@ -130,7 +130,7 @@ export function ServerInterface() {
       
       toastHelpers.orderCreated(orderNumber)
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toastHelpers.apiError('Create order', error)
     }
   })

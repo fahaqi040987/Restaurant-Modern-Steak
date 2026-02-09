@@ -2,11 +2,11 @@
  * T013: E2E test for admin language switching and persistence
  * Tests: Language switch functionality, persistence across navigation and page reload
  */
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 test.describe('Admin Language Settings', () => {
   // Helper to login as admin
-  async function loginAsAdmin(page: any) {
+  async function loginAsAdmin(page: Page) {
     await page.goto('/login')
     await page.fill('input[id="username"]', 'admin')
     await page.fill('input[id="password"]', 'admin123')

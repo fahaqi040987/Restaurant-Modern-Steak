@@ -45,8 +45,8 @@ export const toastHelpers = {
     )
   },
 
-  apiError: (action: string, error?: any, entity?: string) => {
-    const errorMessage = error?.message || error?.toString() || 'An unexpected error occurred'
+  apiError: (action: string, error?: Error | { message?: string } | string, entity?: string) => {
+    const errorMessage = (error instanceof Error ? error.message : typeof error === 'string' ? error : error?.message) || 'An unexpected error occurred'
     return toastHelpers.error(
       `${action} failed`,
       entity ? `Failed to ${action.toLowerCase()} ${entity}. ${errorMessage}` : errorMessage

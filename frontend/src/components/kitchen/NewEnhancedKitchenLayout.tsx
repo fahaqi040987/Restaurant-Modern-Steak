@@ -59,12 +59,16 @@ export function NewEnhancedKitchenLayout({
 
   // Filter orders to only show kitchen-relevant statuses
   // Orders disappear when served/completed by server staff
+  // Include 'pending' so kitchen can see new orders immediately
   const kitchenRelevantOrders = orders.filter((order: Order) =>
-    ["confirmed", "preparing", "ready"].includes(order.status),
+    ["pending", "confirmed", "preparing", "ready"].includes(order.status),
   );
 
   // Group orders by status
   const ordersByStatus = {
+    pending: kitchenRelevantOrders.filter(
+      (order: Order) => order.status === "pending",
+    ),
     confirmed: kitchenRelevantOrders.filter(
       (order: Order) => order.status === "confirmed",
     ),
@@ -79,7 +83,7 @@ export function NewEnhancedKitchenLayout({
   // Calculate statistics based on kitchen-relevant orders only
   const stats = {
     total: kitchenRelevantOrders.length,
-    newOrders: ordersByStatus.confirmed.length,
+    newOrders: ordersByStatus.pending.length + ordersByStatus.confirmed.length,
     preparing: ordersByStatus.preparing.length,
     ready: ordersByStatus.ready.length,
     urgent: kitchenRelevantOrders.filter((order: Order) => {
@@ -161,7 +165,9 @@ export function NewEnhancedKitchenLayout({
 
   // Enhanced Order Card Component
   const EnhancedOrderCard = ({ order }: { order: Order }) => {
-    const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+    const [checkedItems, setCheckedItems] = useState<Set<string>>(
+      new Set(order.items?.filter(item => item.status === "ready").map(item => item.id) || [])
+    );
 
     const toggleItem = (itemId: string) => {
       const newChecked = new Set(checkedItems);
@@ -191,9 +197,9 @@ export function NewEnhancedKitchenLayout({
         (now.getTime() - created.getTime()) / 1000 / 60,
       );
 
-      if (minutesWaiting > 20) return "border-red-500 bg-red-50";
-      if (minutesWaiting > 10) return "border-orange-500 bg-orange-50";
-      return "border-blue-500 bg-blue-50";
+      if (minutesWaiting > 20) return "border-red-500 bg-red-500/10 dark:bg-red-500/20";
+      if (minutesWaiting > 10) return "border-orange-500 bg-orange-500/10 dark:bg-orange-500/20";
+      return "border-blue-500 bg-blue-500/10 dark:bg-blue-500/20";
     };
 
     const waitTime = Math.floor(
@@ -216,6 +222,7 @@ export function NewEnhancedKitchenLayout({
               status: "preparing" as const,
               created_at: order.created_at,
               updated_at: order.updated_at,
+              product_name: "Cheeseburger",
               product: {
                 id: "p1b2c3d4-e5f6-7890-abcd-ef1234567890",
                 name: "Cheeseburger",
@@ -238,6 +245,7 @@ export function NewEnhancedKitchenLayout({
               status: "preparing" as const,
               created_at: order.created_at,
               updated_at: order.updated_at,
+              product_name: "French Fries",
               product: {
                 id: "p2c3d4e5-f6g7-8901-bcde-f23456789012",
                 name: "French Fries",
@@ -260,6 +268,7 @@ export function NewEnhancedKitchenLayout({
               status: "preparing" as const,
               created_at: order.created_at,
               updated_at: order.updated_at,
+              product_name: "Coca Cola",
               product: {
                 id: "p3d4e5f6-g7h8-9012-cdef-345678901234",
                 name: "Coca Cola",
@@ -275,7 +284,9 @@ export function NewEnhancedKitchenLayout({
 
     // Calculate progress including served items
     const totalItems = displayItems.length;
-    const readyItems = checkedItems.size;
+    const readyItems = displayItems.filter(
+      (item) => item.status === "ready" || checkedItems.has(item.id)
+    ).length;
     const servedItems = displayItems.filter(
       (item) => item.status === "served",
     ).length;
@@ -296,15 +307,17 @@ export function NewEnhancedKitchenLayout({
             </CardTitle>
             <Badge
               variant={
-                order.status === "confirmed"
-                  ? "secondary"
-                  : order.status === "preparing"
-                    ? "default"
-                    : "outline"
+                order.status === "pending"
+                  ? "destructive"
+                  : order.status === "confirmed"
+                    ? "secondary"
+                    : order.status === "preparing"
+                      ? "default"
+                      : "outline"
               }
               className="text-sm px-3 py-1"
             >
-              {order.status.toUpperCase()}
+              {order.status === "pending" ? "NEW ORDER" : order.status.toUpperCase()}
             </Badge>
           </div>
 
@@ -323,13 +336,13 @@ export function NewEnhancedKitchenLayout({
           )}
 
           {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-3 mt-3">
+          <div className="w-full bg-muted dark:bg-muted/50 rounded-full h-3 mt-3">
             <div
               className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="text-sm text-muted-foreground mt-2 font-medium">
+          <div className="text-sm text-muted-foreground mt-2 font-medium truncate" title={`${readyItems} ${t("kitchen.ready")} • ${servedItems} ${t("kitchen.served")} • ${totalItems - readyItems - servedItems} ${t("kitchen.cooking")} (${Math.round(progress)}% ${t("kitchen.completed")})`}>
             {readyItems} {t("kitchen.ready")} • {servedItems}{" "}
             {t("kitchen.served")} • {totalItems - readyItems - servedItems}{" "}
             {t("kitchen.cooking")} ({Math.round(progress)}%{" "}
@@ -340,14 +353,14 @@ export function NewEnhancedKitchenLayout({
         <CardContent className="space-y-4">
           {/* Order Items with Checkboxes */}
           <div className="space-y-3">
-            <h4 className="font-semibold text-gray-900 flex items-center">
+            <h4 className="font-semibold text-foreground flex items-center">
               <Package className="w-4 h-4 mr-2" />
               {t("kitchen.foodItems")}
             </h4>
 
             {displayItems.map((item, index) => {
               const isServed = item.status === "served";
-              const isReady = checkedItems.has(item.id);
+              const isReady = checkedItems.has(item.id) || item.status === "ready";
 
               return (
                 <div
@@ -355,8 +368,8 @@ export function NewEnhancedKitchenLayout({
                   className={cn(
                     "flex items-start space-x-4 p-4 rounded-lg border-2 transition-colors",
                     isServed
-                      ? "bg-gray-50 border-gray-300 opacity-75"
-                      : "bg-white hover:border-blue-200",
+                      ? "bg-muted/50 border-border opacity-75"
+                      : "bg-card hover:border-blue-500/50",
                   )}
                 >
                   <button
@@ -365,10 +378,10 @@ export function NewEnhancedKitchenLayout({
                     className={cn(
                       "w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all mt-1 flex-shrink-0",
                       isServed
-                        ? "bg-gray-400 border-gray-400 text-white cursor-not-allowed"
+                        ? "bg-muted border-muted text-foreground cursor-not-allowed"
                         : isReady
                           ? "bg-green-500 border-green-500 text-white shadow-lg"
-                          : "border-gray-300 hover:border-green-400 hover:bg-green-50",
+                          : "border-border hover:border-green-400 hover:bg-green-500/10",
                     )}
                   >
                     {(isReady || isServed) && (
@@ -381,21 +394,21 @@ export function NewEnhancedKitchenLayout({
                       className={cn(
                         "font-semibold text-lg mb-2",
                         isServed
-                          ? "line-through text-gray-500"
+                          ? "line-through text-muted-foreground"
                           : isReady && "line-through text-muted-foreground",
                       )}
                     >
                       {item.quantity}x{" "}
-                      {item.product?.name || `Item ${index + 1}`}
+                      {item.product_name || item.product?.name || `Item ${index + 1}`}
                       {isServed && (
-                        <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                        <span className="ml-2 text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
                           SERVED
                         </span>
                       )}
                     </div>
 
                     {item.special_instructions && (
-                      <div className="text-sm bg-yellow-50 border border-yellow-200 rounded p-2 text-yellow-800">
+                      <div className="text-sm bg-yellow-500/10 border border-yellow-500/20 rounded p-2 text-yellow-700 dark:text-yellow-400">
                         <strong>Special:</strong> {item.special_instructions}
                       </div>
                     )}
@@ -405,10 +418,10 @@ export function NewEnhancedKitchenLayout({
                         className={cn(
                           "text-xs font-medium px-2 py-1 rounded-full",
                           isServed
-                            ? "bg-gray-100 text-gray-600"
+                            ? "bg-muted text-muted-foreground"
                             : isReady
-                              ? "bg-green-100 text-green-800"
-                              : "bg-orange-100 text-orange-800",
+                              ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                              : "bg-orange-500/10 text-orange-700 dark:text-orange-400",
                         )}
                       >
                         {isServed
@@ -423,7 +436,7 @@ export function NewEnhancedKitchenLayout({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-6 px-2 text-xs bg-blue-50 hover:bg-blue-100 border-blue-300"
+                          className="h-6 px-2 text-xs bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleItemServe(order.id, item.id);
@@ -441,16 +454,27 @@ export function NewEnhancedKitchenLayout({
 
           {/* Order Notes */}
           {order.notes && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <h5 className="font-semibold text-blue-900 mb-1">
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+              <h5 className="font-semibold text-blue-700 dark:text-blue-400 mb-1">
                 {t("kitchen.orderNotes")}
               </h5>
-              <p className="text-blue-800 text-sm">{order.notes}</p>
+              <p className="text-blue-700 dark:text-blue-400 text-sm">{order.notes}</p>
             </div>
           )}
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
+            {order.status === "pending" && (
+              <Button
+                onClick={() => handleOrderStatusUpdate(order.id, "confirmed")}
+                className="flex-1 bg-yellow-600 hover:bg-yellow-700 h-12 text-lg"
+                size="lg"
+              >
+                <CheckCircle className="w-5 h-5 mr-2" />
+                {t("kitchen.confirmOrder")}
+              </Button>
+            )}
+
             {order.status === "confirmed" && (
               <Button
                 onClick={() => handleOrderStatusUpdate(order.id, "preparing")}
@@ -517,13 +541,20 @@ export function NewEnhancedKitchenLayout({
             )}
 
             {order.status === "ready" && (
-              <div className="flex-1 bg-green-100 border-2 border-green-500 rounded-lg p-3 text-center">
-                <div className="text-green-800 font-bold text-lg">
+              <div className="flex-1 bg-green-500/10 border-2 border-green-500 rounded-lg p-3 text-center">
+                <div className="text-green-700 dark:text-green-400 font-bold text-lg">
                   🎉 {t("kitchen.orderComplete")}
                 </div>
-                <div className="text-green-600 text-sm">
+                <div className="text-green-600 dark:text-green-500 text-sm mb-2">
                   {t("kitchen.readyForPickupServing")}
                 </div>
+                <Button
+                  onClick={() => handleOrderStatusUpdate(order.id, "served")}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  size="lg"
+                >
+                  🍽️ {t("kitchen.markAsPickedUp")}
+                </Button>
               </div>
             )}
           </div>
@@ -560,17 +591,17 @@ export function NewEnhancedKitchenLayout({
           );
 
           return (
-            <Card key={order.id} className="border-green-500 bg-green-50">
+            <Card key={order.id} className="border-green-500 bg-green-500/10">
               <CardHeader className="text-center pb-2">
-                <CardTitle className="text-2xl font-bold text-green-800">
+                <CardTitle className="text-2xl font-bold text-green-700 dark:text-green-400">
                   #{order.order_number}
                 </CardTitle>
-                <div className="text-lg font-semibold">
+                <div className="text-lg font-semibold text-foreground">
                   {order.customer_name || "Guest"}
                 </div>
                 <Badge
                   variant="outline"
-                  className="text-green-700 border-green-700"
+                  className="text-green-600 dark:text-green-400 border-green-500"
                 >
                   {t("kitchen.readyForPickup", { count: 0 })}
                 </Badge>
@@ -582,7 +613,7 @@ export function NewEnhancedKitchenLayout({
                 <div className="mt-2">
                   {order.items?.map((item) => (
                     <div key={item.id} className="text-sm">
-                      {item.quantity}x {item.product?.name}
+                      {item.quantity}x {item.product_name || item.product?.name || `Item`}
                     </div>
                   ))}
                 </div>
@@ -710,9 +741,9 @@ export function NewEnhancedKitchenLayout({
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Left side - Title and stats */}
           <div className="flex items-center space-x-6">
@@ -721,10 +752,10 @@ export function NewEnhancedKitchenLayout({
                 <ChefHat className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-foreground">
                   {t("kitchen.title")}
                 </h1>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {t("kitchen.chef")} {user.first_name} •{" "}
                   {t("kitchen.activeOrders", { count: stats.total })}
                 </p>
@@ -760,7 +791,7 @@ export function NewEnhancedKitchenLayout({
                   autoRefresh ? "bg-green-500 animate-pulse" : "bg-gray-300",
                 )}
               />
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-muted-foreground">
                 {autoRefresh
                   ? t("kitchen.liveUpdates")
                   : t("kitchen.manualRefresh")}
@@ -813,7 +844,7 @@ export function NewEnhancedKitchenLayout({
 
       {/* Sound Settings Overlay */}
       {showSoundSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="relative">
             <SoundSettingsPanel />
             <Button
@@ -870,11 +901,11 @@ export function NewEnhancedKitchenLayout({
             ) : kitchenRelevantOrders.length === 0 ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
-                  <ChefHat className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <ChefHat className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
                     {t("kitchen.noOrders")}
                   </h3>
-                  <p className="text-gray-500">
+                  <p className="text-muted-foreground">
                     {t("kitchen.kitchenCaughtUp")}
                   </p>
                 </div>

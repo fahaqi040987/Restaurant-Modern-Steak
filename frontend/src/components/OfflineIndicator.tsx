@@ -200,6 +200,7 @@ export class OfflineQueueManager {
     localStorage.removeItem(this.STORAGE_KEY);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static async processQueue(_apiClient: unknown) {
     if (!navigator.onLine) return;
 

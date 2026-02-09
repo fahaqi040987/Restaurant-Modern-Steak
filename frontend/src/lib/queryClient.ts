@@ -39,7 +39,17 @@ const getRetryDelay = (attemptIndex: number): number => {
  * - Authentication errors (401, 403)
  * - Validation errors (400, 422)
  */
-const shouldRetry = (failureCount: number, error: any): boolean => {
+interface ApiError {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
+const shouldRetry = (failureCount: number, error: ApiError): boolean => {
   // Max 3 retries
   if (failureCount >= 3) {
     return false;
@@ -59,14 +69,14 @@ const shouldRetry = (failureCount: number, error: any): boolean => {
 
   // Retry on server errors and specific client errors
   const retryableStatuses = [408, 429, 500, 502, 503, 504];
-  return retryableStatuses.includes(status);
+  return status !== undefined && retryableStatuses.includes(status);
 };
 
 /**
  * Handle query errors globally
  * Shows toast notification with appropriate message
  */
-const handleQueryError = (error: any) => {
+const handleQueryError = (error: ApiError) => {
   console.error('Query error:', error);
 
   // Don't show toast if offline (OfflineIndicator will handle it)
@@ -89,7 +99,7 @@ const handleQueryError = (error: any) => {
     toastMessage = 'Request timeout. Please try again.';
   } else if (status === 429) {
     toastMessage = 'Too many requests. Please wait a moment.';
-  } else if (status >= 500) {
+  } else if (status && status >= 500) {
     toastMessage = 'Server error. Please try again later.';
   }
 
@@ -104,7 +114,7 @@ const handleQueryError = (error: any) => {
  * Handle mutation errors globally
  * Shows toast notification with appropriate message
  */
-const handleMutationError = (error: any) => {
+const handleMutationError = (error: ApiError) => {
   console.error('Mutation error:', error);
 
   // Don't show toast if offline (OfflineIndicator will handle it)
@@ -129,7 +139,7 @@ const handleMutationError = (error: any) => {
     toastMessage = 'Data conflict. Please reload the page.';
   } else if (status === 429) {
     toastMessage = 'Too many requests. Please wait a moment.';
-  } else if (status >= 500) {
+  } else if (status && status >= 500) {
     toastMessage = 'Server error. Please try again later.';
   }
 
@@ -223,7 +233,7 @@ if (typeof window !== 'undefined') {
  * Usage:
  * const handleRetry = () => retryQuery(['queryKey']);
  */
-export const retryQuery = (queryKey: any[]) => {
+export const retryQuery = (queryKey: readonly unknown[]) => {
   queryClient.refetchQueries({ queryKey });
 };
 

@@ -1,41 +1,16 @@
-# Multi-stage build for Go backend
-
 # Build stage
-FROM golang:1.25-alpine AS builder
-
-# Set working directory
+FROM node:22-alpine AS builder
 WORKDIR /app
-
-# Install git for go mod download
-RUN apk add --no-cache git
-
-# Copy go mod files
-COPY go.mod go.sum ./
-
-# Download dependencies
-RUN go mod download
-
-# Copy source code
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
+RUN npm run build
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
-
-# Final stage
-FROM alpine:latest
-
-# Install ca-certificates for HTTPS requests and wget for health checks
-RUN apk --no-cache add ca-certificates wget
-
-# Create app directory
+# Production stage
+FROM node:22-alpine AS production
 WORKDIR /app
-
-# Copy the binary from builder stage
-COPY --from=builder /app/main .
-
-# Expose port
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+COPY --from=builder /app/dist ./dist
 EXPOSE 8080
-
-# Command to run the application
-CMD ["./main"]
-
+CMD ["node", "dist/index.js"]

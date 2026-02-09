@@ -114,3 +114,5 @@ docker-compose.local-test.yml
 opencode.json
 agent-os/
 .factory/
+
+backend-go-archive/

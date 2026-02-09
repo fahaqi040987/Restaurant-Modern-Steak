@@ -48,7 +48,7 @@ export function ProductForm({ product, onSuccess, onCancel, mode = 'create' }: P
 
   // Choose the appropriate schema and default values
   const schema = isEditing ? updateProductSchema : createProductSchema
-  const defaultValues: any = isEditing && product
+  const defaultValues = isEditing && product
     ? {
         id: product.id,
         name: product.name,

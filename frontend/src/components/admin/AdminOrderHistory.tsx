@@ -67,11 +67,18 @@ export function AdminOrderHistory() {
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ['order-history', filters],
     queryFn: async () => {
-      const orderFilters: any = {
+      const orderFilters: {
+        page: number;
+        limit: number;
+        start_date?: string;
+        end_date?: string;
+        status?: string;
+        search?: string;
+      } = {
         page: filters.page,
         limit: filters.pageSize,
       };
-      
+
       if (filters.startDate) orderFilters.start_date = filters.startDate;
       if (filters.endDate) orderFilters.end_date = filters.endDate;
       if (filters.status) orderFilters.status = filters.status;
@@ -86,9 +93,9 @@ export function AdminOrderHistory() {
       const meta = response.meta || {};
       
       return {
-        orders: orders.map((order: any) => ({
+        orders: orders.map((order: OrderHistoryItem) => ({
           ...order,
-          table_number: order.table?.table_number || order.table_number,
+          table_number: order.table_number,
         })),
         total: meta.total || 0,
         page: meta.current_page || 1,
@@ -98,7 +105,7 @@ export function AdminOrderHistory() {
     },
   });
 
-  const updateFilter = (key: keyof OrderHistoryFilters, value: any) => {
+  const updateFilter = (key: keyof OrderHistoryFilters, value: string | number | undefined) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,

@@ -123,6 +123,9 @@ export interface OrderItem {
   updated_at: string;
   product?: Product;
   notes?: string; // Alternative field name for special instructions
+  // Fields added by backend API when fetching orders with product details
+  product_name?: string;
+  product_description?: string;
 }
 
 export interface CreateOrderRequest {
