@@ -3,28 +3,35 @@
  * Tests: POS interface i18n, Indonesian translations, order flow in Indonesian language
  */
 import { test, expect, type Page } from '@playwright/test'
+import { login } from './helpers/test-helpers'
 
 test.describe('POS Interface Indonesian i18n', () => {
   // Helper to login as counter staff with Indonesian language
   async function loginAsCounterWithIndonesian(page: Page) {
+    // Set language before login
     await page.goto('/login')
     await page.evaluate(() => localStorage.setItem('i18nextLng', 'id-ID'))
     await page.reload()
-    await page.fill('input[id="username"]', 'counter1')
-    await page.fill('input[id="password"]', 'admin123')
-    await page.click('button:has-text("Sign In")')
-    await page.waitForURL(/\/counter/)
+
+    // Use test-helpers login with Promise.all() for proper navigation waiting
+    await login(page, 'counter1', 'admin123', {
+      expectedURL: /\/counter/,
+      timeout: 10000,
+    })
   }
 
   // Helper to login as server with Indonesian language
   async function loginAsServerWithIndonesian(page: Page) {
+    // Set language before login
     await page.goto('/login')
     await page.evaluate(() => localStorage.setItem('i18nextLng', 'id-ID'))
     await page.reload()
-    await page.fill('input[id="username"]', 'server1')
-    await page.fill('input[id="password"]', 'admin123')
-    await page.click('button:has-text("Sign In")')
-    await page.waitForURL(/\/server/)
+
+    // Use test-helpers login with Promise.all() for proper navigation waiting
+    await login(page, 'server1', 'admin123', {
+      expectedURL: /\/server/,
+      timeout: 10000,
+    })
   }
 
   test.describe('Counter POS Interface in Indonesian', () => {

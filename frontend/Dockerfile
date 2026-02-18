@@ -29,12 +29,12 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy built assets
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 3000
-EXPOSE 3000
+# Expose port 8000
+EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000 || exit 1
+  CMD curl -f http://localhost:8000 || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

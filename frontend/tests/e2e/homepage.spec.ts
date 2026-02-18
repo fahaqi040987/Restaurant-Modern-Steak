@@ -81,45 +81,63 @@ test.describe('Homepage', () => {
       const nav = page.locator('nav[aria-label="Main navigation"]')
       await expect(nav).toBeVisible()
 
-      // Check all main navigation links
-      const links = ['Home', 'Menu', 'About', 'Reservation', 'Contact']
-      for (const linkText of links) {
-        await expect(nav.getByRole('link', { name: linkText })).toBeVisible()
+      // Check all main navigation links (English or Indonesian)
+      const links = [
+        { en: 'Home', id: 'Beranda' },
+        { en: 'Menu', id: 'Menu' },
+        { en: 'About', id: 'Tentang' },
+        { en: 'Reservation', id: 'Reservasi' },
+        { en: 'Contact', id: 'Kontak' }
+      ]
+      for (const link of links) {
+        const linkElement = nav.getByRole('link', { name: new RegExp(`${link.en}|${link.id}`, 'i') })
+        await expect(linkElement).toBeVisible()
       }
     })
 
     test('should navigate to menu page', async ({ page }) => {
-      await page.click('nav >> text=Menu')
+      const nav = page.locator('nav[aria-label="Main navigation"]')
+      await nav.getByRole('link', { name: 'Menu' }).first().click()
       await expect(page).toHaveURL(/\/site\/menu/)
     })
 
     test('should navigate to about page', async ({ page }) => {
-      await page.click('nav >> text=About')
+      // Support English and Indonesian
+      const nav = page.locator('nav[aria-label="Main navigation"]')
+      await nav.getByRole('link', { name: /About|Tentang/i }).first().click()
       await expect(page).toHaveURL(/\/site\/about/)
     })
 
     test('should navigate to reservation page', async ({ page }) => {
-      await page.click('nav >> text=Reservation')
+      // Support English and Indonesian
+      const nav = page.locator('nav[aria-label="Main navigation"]')
+      await nav.getByRole('link', { name: /Reservation|Reservasi/i }).first().click()
       await expect(page).toHaveURL(/\/site\/reservation/)
     })
 
     test('should navigate to contact page', async ({ page }) => {
-      await page.click('nav >> text=Contact')
+      // Support English and Indonesian
+      const nav = page.locator('nav[aria-label="Main navigation"]')
+      await nav.getByRole('link', { name: /Contact|Kontak/i }).first().click()
       await expect(page).toHaveURL(/\/site\/contact/)
     })
 
     test('should have Staff Login link', async ({ page }) => {
-      const staffLoginLink = page.getByRole('link', { name: /Staff Login/i })
+      // Support English and Indonesian
+      const staffLoginLink = page.getByRole('link', { name: /Staff Login|Login Staf/i })
       await expect(staffLoginLink).toBeVisible()
     })
 
     test('should navigate to login page via Staff Login link', async ({ page }) => {
-      await page.click('text=Staff Login')
+      // Support English and Indonesian - use role-based selector
+      const staffLoginLink = page.getByRole('link', { name: /Staff Login|Login Staf/i }).first()
+      await staffLoginLink.click()
       await expect(page).toHaveURL(/\/login/)
     })
 
     test('should have Book a Table CTA button', async ({ page }) => {
-      const ctaButton = page.getByRole('link', { name: /Book a Table/i })
+      // Support English and Indonesian
+      const ctaButton = page.getByRole('link', { name: /Book a Table|Pesan Meja/i })
       await expect(ctaButton).toBeVisible()
     })
 
@@ -159,7 +177,7 @@ test.describe('Homepage', () => {
     })
 
     test('should open mobile menu when clicking hamburger', async ({ page }) => {
-      await page.click('button[aria-label*="menu"]')
+      await page.getByRole('button', { name: /menu/i }).first().click()
 
       // Mobile menu should be visible
       const mobileMenu = page.locator('#mobile-menu')
@@ -167,10 +185,11 @@ test.describe('Homepage', () => {
     })
 
     test('should close mobile menu when clicking nav link', async ({ page }) => {
-      await page.click('button[aria-label*="menu"]')
+      await page.getByRole('button', { name: /menu/i }).first().click()
 
       // Click a navigation link
-      await page.locator('#mobile-menu >> text=Menu').click()
+      const mobileMenu = page.locator('#mobile-menu')
+      await mobileMenu.getByRole('link', { name: 'Menu' }).first().click()
 
       // Should navigate
       await expect(page).toHaveURL(/\/site\/menu/)
@@ -190,32 +209,38 @@ test.describe('Homepage', () => {
     })
 
     test('should display reservation CTA box', async ({ page }) => {
-      const reservationBox = page.locator('text=Reserve Your Table')
+      // Support English and Indonesian - enhanced with more variations
+      const reservationBox = page.locator('text=Reserve Your Table|Reservasi Meja Anda|Pesan Meja Anda')
       await expect(reservationBox).toBeVisible()
     })
 
     test('should have Book Now button in footer', async ({ page }) => {
-      const bookNowBtn = page.locator('footer >> text=Book Now')
+      // Support English and Indonesian
+      const bookNowBtn = page.locator('footer >> text=Book Now|Pesan Sekarang')
       await expect(bookNowBtn).toBeVisible()
     })
 
     test('should display quick links section', async ({ page }) => {
-      const quickLinks = page.locator('text=Quick Links')
+      // Support English and Indonesian
+      const quickLinks = page.locator('text=Quick Links|Tautan Cepat')
       await expect(quickLinks).toBeVisible()
     })
 
     test('should display contact info section', async ({ page }) => {
-      const contactInfo = page.locator('text=Contact Us')
+      // Support English and Indonesian
+      const contactInfo = page.locator('text=Contact Us|Hubungi Kami')
       await expect(contactInfo).toBeVisible()
     })
 
     test('should display opening hours section', async ({ page }) => {
-      const hours = page.locator('text=Opening Hours')
+      // Support English and Indonesian
+      const hours = page.locator('text=Opening Hours|Jam Buka')
       await expect(hours).toBeVisible()
     })
 
     test('should have Staff Portal link in footer', async ({ page }) => {
-      const staffPortal = page.locator('footer >> text=Staff Portal')
+      // Support English and Indonesian
+      const staffPortal = page.locator('footer >> text=Staff Portal|Portal Staf')
       await expect(staffPortal).toBeVisible()
     })
   })

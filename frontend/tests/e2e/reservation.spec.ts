@@ -25,7 +25,8 @@ test.describe('Reservation Page', () => {
     test('should display page heading', async ({ page }) => {
       const heading = page.locator('h1')
       await expect(heading).toBeVisible()
-      await expect(heading).toContainText(/Reservation|Book a Table/i)
+      // Support English and Indonesian
+      await expect(heading).toContainText(/Reservation|Book a Table|Reservasi|Pesan Meja/i)
     })
 
     test('should display reservation form', async ({ page }) => {
@@ -65,7 +66,8 @@ test.describe('Reservation Page', () => {
     test('should have submit button', async ({ page }) => {
       const submitBtn = page.locator('button[type="submit"]')
       await expect(submitBtn).toBeVisible()
-      await expect(submitBtn).toContainText(/Book|Reserve|Submit/i)
+      // Support English and Indonesian
+      await expect(submitBtn).toContainText(/Book|Reserve|Submit|Pesan/i)
     })
   })
 
@@ -84,8 +86,8 @@ test.describe('Reservation Page', () => {
       // Submit empty form
       await page.click('button[type="submit"]')
 
-      // Should show error for customer name
-      await expect(page.locator('text=Name')).toBeVisible()
+      // Should show error for customer name (English or Indonesian)
+      await expect(page.locator('text=Name|Nama')).toBeVisible()
       const nameError = page.locator('[data-testid="error-customer_name"]')
       await expect(nameError).toBeVisible()
     })
@@ -100,10 +102,10 @@ test.describe('Reservation Page', () => {
 
       await page.click('button[type="submit"]')
 
-      // Should show email validation error
+      // Should show email validation error (English or Indonesian)
       const emailError = page.locator('[data-testid="error-email"]')
       await expect(emailError).toBeVisible()
-      await expect(emailError).toContainText(/valid email/i)
+      await expect(emailError).toContainText(/valid email|Format email tidak valid/i)
     })
 
     test('should show validation error for invalid phone', async ({ page }) => {
@@ -133,10 +135,10 @@ test.describe('Reservation Page', () => {
 
       await page.click('button[type="submit"]')
 
-      // Should show party size validation error
+      // Should show party size validation error (English or Indonesian)
       const sizeError = page.locator('[data-testid="error-party_size"]')
       await expect(sizeError).toBeVisible()
-      await expect(sizeError).toContainText(/20|maximum/i)
+      await expect(sizeError).toContainText(/20|maximum|maksimal/i)
     })
 
     test('should show validation error for past date', async ({ page }) => {
@@ -149,10 +151,10 @@ test.describe('Reservation Page', () => {
 
       await page.click('button[type="submit"]')
 
-      // Should show date validation error
+      // Should show date validation error (English or Indonesian)
       const dateError = page.locator('[data-testid="error-reservation_date"]')
       await expect(dateError).toBeVisible()
-      await expect(dateError).toContainText(/future|today/i)
+      await expect(dateError).toContainText(/future|today|masa depan|hari ini/i)
     })
   })
 
@@ -201,8 +203,8 @@ test.describe('Reservation Page', () => {
 
       await page.click('button[type="submit"]')
 
-      // Should show success message
-      await expect(page.locator('text=successfully')).toBeVisible({
+      // Should show success message (English or Indonesian)
+      await expect(page.locator('text=successfully|berhasil')).toBeVisible({
         timeout: 5000,
       })
     })
@@ -256,8 +258,8 @@ test.describe('Reservation Page', () => {
 
       await page.click('button[type="submit"]')
 
-      // Should show error toast or message
-      await expect(page.locator('text=error')).toBeVisible({ timeout: 5000 })
+      // Should show error toast or message (English or Indonesian)
+      await expect(page.locator('text=error|gagal')).toBeVisible({ timeout: 5000 })
     })
 
     test('should reset form after successful submission', async ({ page }) => {
@@ -280,8 +282,8 @@ test.describe('Reservation Page', () => {
 
       await page.click('button[type="submit"]')
 
-      // Wait for success
-      await expect(page.locator('text=successfully')).toBeVisible({
+      // Wait for success (English or Indonesian)
+      await expect(page.locator('text=successfully|berhasil')).toBeVisible({
         timeout: 5000,
       })
 
@@ -383,8 +385,8 @@ test.describe('Reservation Page', () => {
       // Go to homepage first
       await page.goto('/site')
 
-      // Click reservation link
-      await page.click('nav >> text=Reservation')
+      // Click reservation link (English or Indonesian)
+      await page.click('nav >> text=Reservation|Reservasi')
 
       await expect(page).toHaveURL(/\/site\/reservation/)
     })
@@ -400,8 +402,8 @@ test.describe('Reservation Page', () => {
         window.scrollTo(0, document.body.scrollHeight)
       )
 
-      // Click Book Now in footer
-      await page.click('footer >> text=Book Now')
+      // Click Book Now in footer (English or Indonesian)
+      await page.click('footer >> text=Book Now|Pesan Sekarang')
 
       await expect(page).toHaveURL(/\/site\/reservation/)
     })
@@ -416,8 +418,8 @@ test.describe('Reservation Page', () => {
         timeout: 5000,
       })
 
-      // Click Book a Table CTA in hero
-      await page.click('text=Book a Table')
+      // Click Book a Table CTA in hero (English or Indonesian)
+      await page.click('text=Book a Table|Pesan Meja')
 
       await expect(page).toHaveURL(/\/site\/reservation/)
     })

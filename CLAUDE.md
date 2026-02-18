@@ -120,7 +120,7 @@ make format         # Format code
 ```
 
 **Access URLs (after `make dev`):**
-- Frontend: http://localhost:3000
+- Frontend: http://localhost:8000
 - Backend API: http://localhost:8080/api/v1
 - Database: localhost:5432
 

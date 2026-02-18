@@ -21,34 +21,34 @@ test.describe('Public Website Indonesian i18n', () => {
 
     test('should switch to Indonesian when selecting from dropdown', async ({ page }) => {
       // Click language switcher dropdown
-      await page.click('[data-testid="language-switcher"]')
+      await page.getByTestId('language-switcher').click()
       await page.waitForTimeout(300)
 
-      // Click Indonesian option
-      await page.click('text=Bahasa Indonesia')
+      // Click Indonesian option - use role-based selector
+      await page.getByRole('menuitem', { name: 'Indonesia' }).click()
       await page.waitForTimeout(500)
 
       // Verify navigation changed to Indonesian
-      const homeLink = page.locator('nav >> text=Beranda')
-      await expect(homeLink).toBeVisible()
+      const nav = page.locator('nav[aria-label="Main navigation"]')
+      await expect(nav.getByRole('link', { name: 'Beranda' })).toBeVisible()
     })
 
     test('should switch back to English', async ({ page }) => {
       // First switch to Indonesian
-      await page.click('[data-testid="language-switcher"]')
+      await page.getByTestId('language-switcher').click()
       await page.waitForTimeout(300)
-      await page.click('text=Bahasa Indonesia')
+      await page.getByRole('menuitem', { name: 'Indonesia' }).click()
       await page.waitForTimeout(500)
 
       // Then switch back to English
-      await page.click('[data-testid="language-switcher"]')
+      await page.getByTestId('language-switcher').click()
       await page.waitForTimeout(300)
-      await page.click('text=English')
+      await page.getByRole('menuitem', { name: 'English' }).click()
       await page.waitForTimeout(500)
 
       // Verify navigation changed to English
-      const homeLink = page.locator('nav >> text=Home')
-      await expect(homeLink).toBeVisible()
+      const nav = page.locator('nav[aria-label="Main navigation"]')
+      await expect(nav.getByRole('link', { name: 'Home' })).toBeVisible()
     })
   })
 
@@ -97,20 +97,23 @@ test.describe('Public Website Indonesian i18n', () => {
     })
 
     test('should display footer sections in Indonesian', async ({ page }) => {
-      // Check Indonesian section titles
-      await expect(page.locator('text=Reservasi Meja Anda')).toBeVisible()
-      await expect(page.locator('text=Tautan Cepat')).toBeVisible()
-      await expect(page.locator('text=Hubungi Kami')).toBeVisible()
-      await expect(page.locator('text=Jam Buka')).toBeVisible()
+      const footer = page.locator('footer[role="contentinfo"]')
+      // Check Indonesian section titles - use getByText for better matching
+      await expect(footer.getByText('Reservasi Meja Anda')).toBeVisible()
+      await expect(footer.getByText('Tautan Cepat')).toBeVisible()
+      await expect(footer.getByText('Hubungi Kami')).toBeVisible()
+      await expect(footer.getByText('Jam Buka')).toBeVisible()
     })
 
     test('should display "Pesan Sekarang" button in footer', async ({ page }) => {
-      const bookNowBtn = page.locator('footer >> text=Pesan Sekarang')
+      const footer = page.locator('footer[role="contentinfo"]')
+      const bookNowBtn = footer.getByRole('link', { name: 'Pesan Sekarang' })
       await expect(bookNowBtn).toBeVisible()
     })
 
     test('should display "Portal Staf" link', async ({ page }) => {
-      const staffPortal = page.locator('footer >> text=Portal Staf')
+      const footer = page.locator('footer[role="contentinfo"]')
+      const staffPortal = footer.getByRole('link', { name: /Portal Staf/i })
       await expect(staffPortal).toBeVisible()
     })
   })
@@ -126,17 +129,17 @@ test.describe('Public Website Indonesian i18n', () => {
     })
 
     test('should display reservation form labels in Indonesian', async ({ page }) => {
-      // Check form labels
-      await expect(page.locator('text=Nama Lengkap')).toBeVisible()
-      await expect(page.locator('text=Alamat Email')).toBeVisible()
-      await expect(page.locator('text=Nomor Telepon')).toBeVisible()
-      await expect(page.locator('text=Jumlah Tamu')).toBeVisible()
-      await expect(page.locator('text=Tanggal')).toBeVisible()
-      await expect(page.locator('text=Waktu')).toBeVisible()
+      // Check form labels - use getByText for better matching
+      await expect(page.getByText('Nama Lengkap')).toBeVisible()
+      await expect(page.getByText('Alamat Email')).toBeVisible()
+      await expect(page.getByText('Nomor Telepon')).toBeVisible()
+      await expect(page.getByText('Jumlah Tamu')).toBeVisible()
+      await expect(page.getByText('Tanggal')).toBeVisible()
+      await expect(page.getByText('Waktu')).toBeVisible()
     })
 
     test('should display "Pesan Meja Anda" submit button', async ({ page }) => {
-      const submitBtn = page.locator('button:has-text("Pesan Meja Anda")')
+      const submitBtn = page.getByRole('button', { name: /Pesan Meja Anda/i })
       await expect(submitBtn).toBeVisible()
     })
   })
@@ -152,28 +155,28 @@ test.describe('Public Website Indonesian i18n', () => {
     })
 
     test('should display contact form labels in Indonesian', async ({ page }) => {
-      // Check form labels
-      await expect(page.locator('label:has-text("Nama")')).toBeVisible()
-      await expect(page.locator('label:has-text("Email")')).toBeVisible()
-      await expect(page.locator('label:has-text("Subjek")')).toBeVisible()
-      await expect(page.locator('label:has-text("Pesan")')).toBeVisible()
+      // Check form labels - use getByLabel and getByText for better matching
+      await expect(page.getByLabel(/Nama/i)).toBeVisible()
+      await expect(page.getByLabel(/Email/i)).toBeVisible()
+      await expect(page.getByLabel(/Subjek/i)).toBeVisible()
+      await expect(page.getByLabel(/Pesan/i)).toBeVisible()
     })
 
     test('should display "Kirim Pesan" submit button', async ({ page }) => {
-      const submitBtn = page.locator('button:has-text("Kirim Pesan")')
+      const submitBtn = page.getByRole('button', { name: /Kirim Pesan/i })
       await expect(submitBtn).toBeVisible()
     })
 
     test('should display subject options in Indonesian', async ({ page }) => {
       // Click subject dropdown
-      await page.click('[data-testid="subject-trigger"]')
+      await page.getByTestId('subject-trigger').click()
       await page.waitForTimeout(300)
 
-      // Check Indonesian subject options
-      await expect(page.locator('text=Reservasi')).toBeVisible()
-      await expect(page.locator('text=Masukan')).toBeVisible()
-      await expect(page.locator('text=Katering')).toBeVisible()
-      await expect(page.locator('text=Pertanyaan Umum')).toBeVisible()
+      // Check Indonesian subject options - use getByText with exact match
+      await expect(page.getByText('Reservasi')).toBeVisible()
+      await expect(page.getByText('Masukan')).toBeVisible()
+      await expect(page.getByText('Katering')).toBeVisible()
+      await expect(page.getByText('Pertanyaan Umum')).toBeVisible()
     })
   })
 
@@ -184,9 +187,9 @@ test.describe('Public Website Indonesian i18n', () => {
       await page.reload()
 
       // Switch to Indonesian
-      await page.click('[data-testid="language-switcher"]')
+      await page.getByTestId('language-switcher').click()
       await page.waitForTimeout(300)
-      await page.click('text=Bahasa Indonesia')
+      await page.getByRole('menuitem', { name: 'Indonesia' }).click()
       await page.waitForTimeout(500)
 
       // Reload page
@@ -194,8 +197,8 @@ test.describe('Public Website Indonesian i18n', () => {
       await page.waitForTimeout(500)
 
       // Verify language is still Indonesian
-      const homeLink = page.locator('nav >> text=Beranda')
-      await expect(homeLink).toBeVisible()
+      const nav = page.locator('nav[aria-label="Main navigation"]')
+      await expect(nav.getByRole('link', { name: 'Beranda' })).toBeVisible()
     })
 
     test('should persist language across different public pages', async ({ page }) => {
@@ -207,17 +210,18 @@ test.describe('Public Website Indonesian i18n', () => {
       await page.reload()
 
       // Navigate to different pages and verify Indonesian text
-      await page.click('nav >> text=Menu')
+      const nav = page.locator('nav[aria-label="Main navigation"]')
+      await nav.getByRole('link', { name: 'Menu' }).first().click()
       await page.waitForTimeout(500)
-      await expect(page.locator('text=Semua Item')).toBeVisible()
+      await expect(page.getByText('Semua Item')).toBeVisible()
 
-      await page.click('nav >> text=Tentang')
+      await nav.getByRole('link', { name: 'Tentang' }).first().click()
       await page.waitForTimeout(500)
-      await expect(page.locator('text=Tentang Kami')).toBeVisible()
+      await expect(page.getByText('Tentang Kami')).toBeVisible()
 
-      await page.click('nav >> text=Kontak')
+      await nav.getByRole('link', { name: 'Kontak' }).first().click()
       await page.waitForTimeout(500)
-      await expect(page.locator('button:has-text("Kirim Pesan")')).toBeVisible()
+      await expect(page.getByRole('button', { name: /Kirim Pesan/i })).toBeVisible()
     })
 
     test('should store language preference in localStorage', async ({ page }) => {
@@ -226,9 +230,9 @@ test.describe('Public Website Indonesian i18n', () => {
       await page.reload()
 
       // Switch to Indonesian
-      await page.click('[data-testid="language-switcher"]')
+      await page.getByTestId('language-switcher').click()
       await page.waitForTimeout(300)
-      await page.click('text=Bahasa Indonesia')
+      await page.getByRole('menuitem', { name: 'Indonesia' }).click()
       await page.waitForTimeout(500)
 
       // Check localStorage
@@ -248,28 +252,28 @@ test.describe('Public Website Indonesian i18n', () => {
 
     test('should show language switcher in mobile menu', async ({ page }) => {
       // Open mobile menu
-      await page.click('button[aria-label*="menu"]')
+      await page.getByRole('button', { name: /menu/i }).first().click()
       await page.waitForTimeout(300)
 
       // Language buttons should be visible in mobile menu
       const mobileMenu = page.locator('#mobile-menu')
-      await expect(mobileMenu.locator('button:has-text("EN")')).toBeVisible()
-      await expect(mobileMenu.locator('button:has-text("ID")')).toBeVisible()
+      await expect(mobileMenu.getByRole('button', { name: /EN/i })).toBeVisible()
+      await expect(mobileMenu.getByRole('button', { name: /ID/i })).toBeVisible()
     })
 
     test('should switch language in mobile menu', async ({ page }) => {
       // Open mobile menu
-      await page.click('button[aria-label*="menu"]')
+      await page.getByRole('button', { name: /menu/i }).first().click()
       await page.waitForTimeout(300)
 
       // Click Indonesian button
       const mobileMenu = page.locator('#mobile-menu')
-      await mobileMenu.locator('button:has-text("ID")').click()
+      await mobileMenu.getByRole('button', { name: /ID/i }).first().click()
       await page.waitForTimeout(500)
 
       // Verify mobile menu links changed to Indonesian
-      await expect(mobileMenu.locator('text=Beranda')).toBeVisible()
-      await expect(mobileMenu.locator('text=Reservasi')).toBeVisible()
+      await expect(mobileMenu.getByRole('link', { name: 'Beranda' })).toBeVisible()
+      await expect(mobileMenu.getByRole('link', { name: 'Reservasi' })).toBeVisible()
     })
   })
 })

@@ -5,32 +5,22 @@
  * Flow: Counter creates order -> Kitchen processes -> Counter completes payment
  */
 import { test, expect, Page } from '@playwright/test'
-
-// Helper function to login
-async function login(page: Page, username: string, password: string) {
-  await page.goto('/login')
-  await page.fill('input[id="username"]', username)
-  await page.fill('input[id="password"]', password)
-  await page.click('button:has-text("Sign In")')
-  await page.waitForTimeout(2000)
-}
+import { loginAs, login, TEST_USERS, waitForAuth } from './helpers/test-helpers'
 
 test.describe('Complete Order Flow - Full Lifecycle Test', () => {
 
   test('FULL FLOW: Create order at Counter -> Process in Kitchen -> Complete Payment', async ({ page, browser }) => {
     console.log('=== PART 1: COUNTER - CREATE TAKEAWAY ORDER ===')
 
-    // Step 1: Login as counter staff
+    // Step 1: Login as counter staff with proper wait for navigation
     await page.goto('/login')
     await page.screenshot({ path: 'test-results/flow-01-login-page.png', fullPage: true })
 
-    await page.fill('input[id="username"]', 'counter1')
-    await page.fill('input[id="password"]', 'admin123')
-    await page.click('button:has-text("Sign In")')
-    await page.waitForTimeout(3000)
+    await loginAs(page, 'counter', { timeout: 10000 })
+    await waitForAuth(page) // Verify auth token is stored
 
     // Verify we're at the counter interface
-    await expect(page).toHaveURL('/')
+    await expect(page).toHaveURL(TEST_USERS.counter.expectedPath)
     await page.screenshot({ path: 'test-results/flow-02-counter-interface.png', fullPage: true })
     console.log('Counter URL:', page.url())
 
@@ -86,18 +76,15 @@ test.describe('Complete Order Flow - Full Lifecycle Test', () => {
     const kitchenContext = await browser.newContext()
     const kitchenPage = await kitchenContext.newPage()
 
-    // Login as kitchen staff
-    await kitchenPage.goto('http://localhost:4000/login')
-    await kitchenPage.fill('input[id="username"]', 'kitchen1')
-    await kitchenPage.fill('input[id="password"]', 'admin123')
-    await kitchenPage.click('button:has-text("Sign In")')
-    await kitchenPage.waitForTimeout(3000)
+    // Login as kitchen staff using test-helpers for consistent auth handling
+    await loginAs(kitchenPage, 'kitchen', { timeout: 10000 })
+    await waitForAuth(kitchenPage)
 
     await kitchenPage.screenshot({ path: 'test-results/flow-05-kitchen-display.png', fullPage: true })
     console.log('Kitchen URL:', kitchenPage.url())
 
     // Verify kitchen display
-    await expect(kitchenPage).toHaveURL('/kitchen')
+    await expect(kitchenPage).toHaveURL(TEST_USERS.kitchen.expectedPath)
     await expect(kitchenPage.getByText('Tampilan Dapur')).toBeVisible()
 
     // Check for orders - look at both tabs
@@ -217,12 +204,9 @@ test.describe('Server Station - Dine-in Orders', () => {
   test('Server creates dine-in order with table assignment', async ({ page }) => {
     console.log('=== SERVER STATION - DINE-IN ORDER ===')
 
-    // Login as server staff
-    await page.goto('/login')
-    await page.fill('input[id="username"]', 'server1')
-    await page.fill('input[id="password"]', 'admin123')
-    await page.click('button:has-text("Sign In")')
-    await page.waitForTimeout(3000)
+    // Login as server staff with proper navigation handling
+    await loginAs(page, 'server', { timeout: 10000 })
+    await waitForAuth(page)
 
     await page.screenshot({ path: 'test-results/server-01-interface.png', fullPage: true })
     console.log('Server URL:', page.url())
@@ -252,12 +236,9 @@ test.describe('Order Management - View and Track Orders', () => {
   test('View orders in admin dashboard', async ({ page }) => {
     console.log('=== ADMIN - ORDER MANAGEMENT ===')
 
-    // Login as admin
-    await page.goto('/login')
-    await page.fill('input[id="username"]', 'admin')
-    await page.fill('input[id="password"]', 'admin123')
-    await page.click('button:has-text("Sign In")')
-    await page.waitForTimeout(3000)
+    // Login as admin with proper navigation handling
+    await loginAs(page, 'admin', { timeout: 10000 })
+    await waitForAuth(page)
 
     await page.screenshot({ path: 'test-results/admin-01-login-result.png', fullPage: true })
     console.log('Admin login URL:', page.url())

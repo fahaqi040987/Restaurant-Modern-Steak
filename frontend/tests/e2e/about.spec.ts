@@ -14,7 +14,8 @@ test.describe('About Page', () => {
 
   test.describe('Page Structure', () => {
     test('should display about page with correct title', async ({ page }) => {
-      await expect(page).toHaveTitle(/About|Story/i)
+      // Support English and Indonesian
+      await expect(page).toHaveTitle(/About|Story|Tentang|Cerita/i)
     })
 
     test('should have header and footer', async ({ page }) => {
@@ -25,7 +26,8 @@ test.describe('About Page', () => {
     test('should display main heading', async ({ page }) => {
       const heading = page.getByRole('heading', { level: 1 })
       await expect(heading).toBeVisible()
-      await expect(heading).toContainText(/Story|About/i)
+      // Support English and Indonesian
+      await expect(heading).toContainText(/Story|About|Cerita|Tentang/i)
     })
   })
 
@@ -36,9 +38,9 @@ test.describe('About Page', () => {
     })
 
     test('should display restaurant description', async ({ page }) => {
-      // Look for descriptive text about the restaurant
+      // Look for descriptive text about the restaurant (English or Indonesian)
       await expect(
-        page.getByText(/passion|culinary|experience|hospitality/i).first()
+        page.getByText(/passion|culinary|experience|hospitality|passion|kuliner|pengalaman|keramahan/i).first()
       ).toBeVisible()
     })
 
@@ -138,16 +140,16 @@ test.describe('About Page', () => {
 
   test.describe('Values Section', () => {
     test('should display values/features section', async ({ page }) => {
-      // Look for values cards
-      const valuesSection = page.locator('text=Values').first()
+      // Look for values cards (English or Indonesian)
+      const valuesSection = page.locator('text=Values|Nilai').first()
       if (await valuesSection.isVisible()) {
         await expect(valuesSection).toBeVisible()
       }
     })
 
     test('should display value cards with titles', async ({ page }) => {
-      // Check for quality, craftsmanship, hospitality cards
-      const qualityCard = page.getByText(/Quality|Premium/i).first()
+      // Check for quality, craftsmanship, hospitality cards (English or Indonesian)
+      const qualityCard = page.getByText(/Quality|Premium|Kualitas|Keunggulan/i).first()
       if (await qualityCard.isVisible()) {
         await expect(qualityCard).toBeVisible()
       }
@@ -163,13 +165,15 @@ test.describe('About Page', () => {
     })
 
     test('should have contact/reservation button', async ({ page }) => {
-      const ctaButton = page.getByRole('link', { name: /Contact|Reserve|Book/i })
+      // Support English and Indonesian - enhanced with more variations
+      const ctaButton = page.getByRole('link', { name: /Contact|Reserve|Book|Hubungi|Reservasi|Pesan/i })
       await expect(ctaButton.first()).toBeVisible()
     })
 
     test('should navigate to contact page when CTA clicked', async ({ page }) => {
+      // Support English and Indonesian
       const ctaButton = page
-        .getByRole('link', { name: /Contact|Get in Touch/i })
+        .getByRole('link', { name: /Contact|Get in Touch|Hubungi/i })
         .first()
       if (await ctaButton.isVisible()) {
         await ctaButton.click()
