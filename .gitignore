@@ -116,3 +116,62 @@ agent-os/
 .factory/
 
 backend-go-archive/
+
+# =============================================================================
+# Claude Code & AI Development Tools
+# =============================================================================
+.claude-flow/
+.swarm/
+.mcp.json
+.agent-os/
+.factory/
+# =============================================================================
+# Python (UV, pip, etc.)
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+.Python
+*.so
+*.egg
+*.egg-info/
+dist-python/
+build-python/
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# =============================================================================
+# TestSprite & Testing Artifacts
+# =============================================================================
+testsprite_tests/
+test-results/
+playwright-report/
+playwright/.cache/
+frontend/tests/e2e/storage-state.json
+frontend/tests/e2e/screenshots/
+frontend/tests/e2e/videos/
+frontend/tests/e2e/traces/
+
+# =============================================================================
+# Product & Specification Artifacts (Auto-generated)
+# =============================================================================
+PRODUCT_SPECIFICATION.md
+spec.md
+plan.md
+tasks.md
+quickstart.md
+SUMMARY.md
+summary.md
+
+# =============================================================================
+# Daemon & Runtime State Files
+# =============================================================================
+*.pid
+*.pid.lock
+daemon-state.json
+daemon.log
+metrics/

@@ -21,10 +21,10 @@ test.describe('Authentication', () => {
     // Fill in invalid credentials
     await page.fill('input[name="username"]', 'invaliduser');
     await page.fill('input[type="password"]', 'wrongpassword');
-    
+
     // Submit form
     await page.click('button[type="submit"]');
-    
+
     // Wait for error message
     await expect(page.locator('text=/invalid|gagal|error/i')).toBeVisible({ timeout: 5000 });
   });
@@ -33,13 +33,13 @@ test.describe('Authentication', () => {
     // Fill in admin credentials
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[type="password"]', 'admin123');
-    
-    // Submit form
-    await page.click('button[type="submit"]');
-    
-    // Wait for redirect to admin dashboard
-    await page.waitForURL('**/admin/**', { timeout: 10000 });
-    
+
+    // Submit form and wait for navigation using Promise.all()
+    await Promise.all([
+      page.waitForURL('**/admin/**', { timeout: 10000 }),
+      page.click('button[type="submit"]')
+    ]);
+
     // Verify admin dashboard is loaded
     await expect(page.locator('text=/dashboard|dasbor/i')).toBeVisible({ timeout: 5000 });
   });

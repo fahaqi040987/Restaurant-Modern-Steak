@@ -54,7 +54,7 @@ cd restaurant-modern-steak
 make dev
 
 # Access
-# Frontend: http://localhost:3000
+# Frontend: http://localhost:8000
 # API: http://localhost:8080/api/v1
 ```
 

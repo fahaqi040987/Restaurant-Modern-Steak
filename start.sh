@@ -38,7 +38,7 @@ docker-compose up --build
 echo "✅ POS System is starting up!"
 echo ""
 echo "📱 Access the application at:"
-echo "   Frontend: http://localhost:3000"
+echo "   Frontend: http://localhost:8000"
 echo "   Backend API: http://localhost:8080"
 echo "   Database: localhost:5432"
 echo ""

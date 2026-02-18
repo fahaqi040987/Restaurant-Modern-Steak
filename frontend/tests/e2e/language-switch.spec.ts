@@ -3,15 +3,16 @@
  * Tests: Language switch functionality, persistence across navigation and page reload
  */
 import { test, expect, type Page } from '@playwright/test'
+import { login } from './helpers/test-helpers'
 
 test.describe('Admin Language Settings', () => {
-  // Helper to login as admin
+  // Helper to login as admin using test-helpers for proper navigation handling
   async function loginAsAdmin(page: Page) {
-    await page.goto('/login')
-    await page.fill('input[id="username"]', 'admin')
-    await page.fill('input[id="password"]', 'admin123')
-    await page.click('button:has-text("Sign In")')
-    await page.waitForURL(/\/admin/)
+    // Use test-helpers login with Promise.all() for proper navigation waiting
+    await login(page, 'admin', 'admin123', {
+      expectedURL: /\/admin/,
+      timeout: 10000,
+    })
   }
 
   test.describe('Language Switching', () => {

@@ -153,7 +153,7 @@ test.describe('Application Smoke Tests', () => {
 
 test.describe('API Health Checks', () => {
   test('frontend should be accessible', async ({ request }) => {
-    const response = await request.get('http://localhost:3000/');
+    const response = await request.get('http://localhost:8000/');
     expect(response.status()).toBe(200);
   });
 

@@ -80,7 +80,7 @@ dev:
 	fi
 	@docker compose -f $(COMPOSE_DEV) up --build
 	@echo "$(GREEN)✅ Development environment started!$(NC)"
-	@echo "$(BLUE)📱 Frontend: http://localhost:4000$(NC)"
+	@echo "$(BLUE)📱 Frontend: http://localhost:8000$(NC)"
 	@echo "$(BLUE)🔧 Backend API: http://localhost:8080$(NC)"
 	@echo "$(BLUE)🗄️  Database: localhost:5432$(NC)"
 
@@ -103,7 +103,7 @@ local-test:
 	fi
 	@docker compose -f $(COMPOSE_PROD) -f $(COMPOSE_TEST_PROD) --env-file .env up -d --build
 	@echo "$(GREEN)✅ Local test environment started!$(NC)"
-	@echo "$(BLUE)📱 Frontend: http://localhost:4000$(NC)"
+	@echo "$(BLUE)📱 Frontend: http://localhost:8000$(NC)"
 	@echo "$(BLUE)🔧 Backend API: http://localhost:8080$(NC)"
 	@echo "$(BLUE)🗄️  Database: localhost:5432$(NC)"
 
@@ -155,7 +155,7 @@ create-demo-users:
 	@echo "$(YELLOW)💰 Counter:$(NC) counter1, counter2 / admin123"
 	@echo "$(YELLOW)👨‍🍳 Kitchen:$(NC) kitchen1 / admin123"
 	@echo ""
-	@echo "$(GREEN)🌐 Access: http://localhost:3000$(NC)"
+	@echo "$(GREEN)🌐 Access: http://localhost:8000$(NC)"
 
 # List all existing users in the database
 list-users:

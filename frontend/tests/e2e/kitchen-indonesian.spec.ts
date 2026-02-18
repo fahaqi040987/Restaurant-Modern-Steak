@@ -3,17 +3,21 @@
  * Tests: Kitchen interface i18n, Indonesian translations, kitchen workflow in Indonesian language
  */
 import { test, expect, type Page } from '@playwright/test'
+import { login } from './helpers/test-helpers'
 
 test.describe('Kitchen Display Indonesian i18n', () => {
   // Helper to login as kitchen staff with Indonesian language
   async function loginAsKitchenWithIndonesian(page: Page) {
+    // Set language before login
     await page.goto('/login')
     await page.evaluate(() => localStorage.setItem('i18nextLng', 'id-ID'))
     await page.reload()
-    await page.fill('input[id="username"]', 'kitchen1')
-    await page.fill('input[id="password"]', 'admin123')
-    await page.click('button:has-text("Sign In")')
-    await page.waitForURL(/\/kitchen/)
+
+    // Use test-helpers login with Promise.all() for proper navigation waiting
+    await login(page, 'kitchen1', 'admin123', {
+      expectedURL: /\/kitchen/,
+      timeout: 10000,
+    })
   }
 
   test.describe('Kitchen Display Header in Indonesian', () => {

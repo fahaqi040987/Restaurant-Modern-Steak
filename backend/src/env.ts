@@ -10,7 +10,7 @@ export const env = {
   PORT: Number(process.env.PORT) || 8080,
   JWT_SECRET: process.env.JWT_SECRET || 'dev-only-secret-change-in-production-min-32-chars',
   NODE_ENV: process.env.NODE_ENV || 'development',
-  CORS_ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:4000,http://localhost:3001,http://localhost:5173',
+  CORS_ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:8000,http://localhost:3001,http://localhost:5173',
   UPLOADS_DIR: process.env.UPLOADS_DIR || './uploads',
 } as const;
 
