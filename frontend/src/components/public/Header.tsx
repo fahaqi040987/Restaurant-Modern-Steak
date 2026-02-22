@@ -51,7 +51,7 @@ function NavLink({ to, children, onClick, className }: NavLinkProps) {
 const navLinkKeys = [
   { to: '/site', labelKey: 'public.home' },
   { to: '/site/menu', labelKey: 'public.menu' },
-  { to: '/site/about', labelKey: 'public.about' },
+  { to: '/site/about', labelKey: 'public.aboutUs' },
   { to: '/site/reservation', labelKey: 'public.reservation' },
   { to: '/site/contact', labelKey: 'public.contact' },
 ]

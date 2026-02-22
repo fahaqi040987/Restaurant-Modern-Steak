@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/api/client'
 import { Header } from './Header'
 import { Footer } from './Footer'
-import { LottieLoader } from './LottieLoader'
+import { Loader } from './Loader'
 import '@/styles/public-theme.css'
 
 interface PublicLayoutProps {
@@ -18,7 +18,7 @@ interface PublicLayoutProps {
  * Layout wrapper for public website pages (Restoran-master style).
  *
  * Provides:
- * - Animated page loader on initial visit
+ * - Animated page loader (with fork/knife/steak animations) on initial visit
  * - Fixed header with scroll behavior
  * - Footer with reservation box
  * - Consistent theme styling
@@ -71,7 +71,7 @@ export function PublicLayout({
     <div className="public-theme min-h-screen flex flex-col">
       {/* Page Loader */}
       {showLoader && (
-        <LottieLoader
+        <Loader
           show={isLoading}
           duration={loaderDuration}
           onComplete={handleLoaderComplete}

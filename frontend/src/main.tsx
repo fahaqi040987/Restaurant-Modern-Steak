@@ -53,12 +53,12 @@ if (sentryDsn) {
       return event;
     },
   });
-  console.warn(
+  console.log(
     "Sentry initialized for environment:",
     import.meta.env.VITE_ENVIRONMENT || import.meta.env.MODE,
   );
 } else {
-  console.warn("Sentry DSN not configured, error tracking disabled");
+  console.log("Sentry DSN not configured, error tracking disabled");
 }
 
 // Import the generated route tree

@@ -250,3 +250,5 @@ The project includes 17 Cursor AI rule files in `.cursor/rules/` covering:
 - PostgreSQL 15 (Docker container), Docker volumes for persistence (008-production-deploy)
 - Go 1.23+ (backend), TypeScript 5+ (frontend) + Gin v1.9.1, React 18, TanStack Router, Docker Compose, Cloudflare Tunnel (cloudflared) (009-fix-production-parity)
 - PostgreSQL 15+ (Docker container) (009-fix-production-parity)
+- TypeScript 5+ (strict mode), React 18.3.1 + @lottiefiles/react-lottie-player, React hooks (useState, useEffect) (001-fix-site-loading)
+- N/A (pure frontend component fix) (001-fix-site-loading)

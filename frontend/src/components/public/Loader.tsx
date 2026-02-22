@@ -18,6 +18,12 @@ interface LoaderProps {
  * Animated page loader inspired by Restoran-master design.
  * Shows animated utensils (fork/knife) with loading dots on initial page load.
  *
+ * ARIA Attributes:
+ * - role="status": Indicates a status message (non-interruptive)
+ * - aria-live="polite": Announces changes politely without interrupting
+ * - aria-busy="true": Indicates the region is being updated
+ * - aria-label="Loading page content": Describes the loading state
+ *
  * @example
  * ```tsx
  * // In a page component
@@ -77,7 +83,8 @@ export function Loader({
         isFading ? 'opacity-0' : 'opacity-100',
         className
       )}
-      role="alert"
+      role="status"
+      aria-live="polite"
       aria-busy="true"
       aria-label="Loading page content"
     >
@@ -112,90 +119,9 @@ export function Loader({
 
       {/* Content Layer */}
       <div className="relative z-10 flex flex-col items-center justify-center">
-        {/* Animated Utensils - Hidden in video mode */}
+        {/* Pan and Egg Cooking Animation - Hidden in video mode */}
         {!useVideo && (
-          <div className="relative flex items-center justify-center mb-8">
-            {/* Enhanced Fork with flame effect */}
-            <div className="relative">
-              {/* Flame under fork */}
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-                <div className="flame-effect">
-                  <div className="flame flame-main"></div>
-                  <div className="flame flame-secondary"></div>
-                </div>
-              </div>
-              
-              <svg
-                className="w-16 h-16 text-[var(--public-accent)] loader-utensils-animation"
-                style={{ animationDelay: '0s', transformOrigin: 'center bottom' }}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                {/* Fork prongs */}
-                <path d="M6 2v6c0 1.5 0.5 3 2 3V22" />
-                <path d="M4 2v4" />
-                <path d="M8 2v4" />
-                <path d="M10 2v4" />
-              </svg>
-            </div>
-
-            {/* Enhanced Knife with flame effect */}
-            <div className="relative ml-6">
-              {/* Flame under knife */}
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-                <div className="flame-effect" style={{ animationDelay: '0.3s' }}>
-                  <div className="flame flame-main"></div>
-                  <div className="flame flame-secondary"></div>
-                </div>
-              </div>
-              
-              <svg
-                className="w-16 h-16 text-[var(--public-accent)] loader-utensils-animation"
-                style={{ animationDelay: '0.2s', transformOrigin: 'center bottom' }}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                {/* Knife blade */}
-                <path d="M18 2C18 2 22 6 22 10C22 14 18 15 18 15V22" />
-                <path d="M18 15H17" />
-              </svg>
-            </div>
-
-            {/* Sizzling steak icon in center */}
-            <div className="relative mx-4">
-              <div className="steak-icon-loader">
-                <svg
-                  className="w-20 h-20 text-orange-500 loader-steak-animation"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  {/* Steak shape */}
-                  <ellipse cx="12" cy="12" rx="10" ry="6" />
-                  {/* Sizzle lines */}
-                  <path d="M6 8 Q8 6 10 8" stroke="#FF6B35" strokeWidth="1.5" fill="none" opacity="0.8"/>
-                  <path d="M14 8 Q16 6 18 8" stroke="#FF6B35" strokeWidth="1.5" fill="none" opacity="0.8"/>
-                  <path d="M8 16 Q10 18 12 16" stroke="#FF6B35" strokeWidth="1.5" fill="none" opacity="0.8"/>
-                </svg>
-                {/* Steam/sizzle effect */}
-                <div className="steam-effect">
-                  <div className="steam steam-1"></div>
-                  <div className="steam steam-2"></div>
-                  <div className="steam steam-3"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <span className="loader-pan mb-8"></span>
         )}
 
         {/* Restaurant Name */}
