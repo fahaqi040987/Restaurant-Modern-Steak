@@ -17,6 +17,12 @@ interface LottieLoaderProps {
  * Lottie animation page loader using Food Prepared animation from LottieFiles.
  * Shows animated food preparation with loading dots on initial page load.
  *
+ * ARIA Attributes:
+ * - role="status": Indicates a status message (non-interruptive)
+ * - aria-live="polite": Announces changes politely without interrupting
+ * - aria-busy="true": Indicates the region is being updated
+ * - aria-label="Loading page content": Describes the loading state
+ *
  * @example
  * ```tsx
  * // In a page component
@@ -75,7 +81,8 @@ export function LottieLoader({
         isFading ? 'opacity-0' : 'opacity-100',
         className
       )}
-      role="alert"
+      role="status"
+      aria-live="polite"
       aria-busy="true"
       aria-label="Loading page content"
     >
