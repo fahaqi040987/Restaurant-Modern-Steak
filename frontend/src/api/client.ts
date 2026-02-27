@@ -66,6 +66,10 @@ import type {
   CreateIngredientData,
   UpdateIngredientData,
   RestockResponse,
+  // Stock validation types
+  StockValidationResult,
+  ProductIngredientStatus,
+  OrderItemForValidation,
 } from "@/types";
 
 class APIClient {
@@ -1258,6 +1262,80 @@ class APIClient {
       method: "GET",
       url: "/admin/ingredients/usage-report",
       params: { start_date: startDate, end_date: endDate },
+    });
+  }
+
+  // ===========================================
+  // Stock Validation (Supply Chain)
+  // ===========================================
+
+  /**
+   * Validate ingredient stock for order items
+   * @param items - Order items to validate
+   * @returns Stock validation result
+   */
+  async validateIngredientStock(
+    items: { product_id: string; quantity: number }[],
+  ): Promise<APIResponse<{
+    valid: boolean;
+    missing_ingredients: Array<{
+      name: string;
+      unit: string;
+      has: number;
+      needs: number;
+      shortage: number;
+    }>;
+    can_make_partial?: boolean;
+    max_portions?: number;
+  }>> {
+    return this.request({
+      method: "POST",
+      url: "/orders/validate-ingredients",
+      data: { items },
+    });
+  }
+
+  /**
+   * Get product ingredient status
+   * @param productId - Product ID
+   * @returns Product ingredient availability status
+   */
+  async getProductIngredientStatus(
+    productId: string,
+  ): Promise<APIResponse<{
+    available: boolean;
+    status: "available" | "low_stock" | "out_of_stock";
+    missing_ingredients: string[];
+    limiting_ingredients: Array<{
+      name: string;
+      currentStock: number;
+      minimumStock: number;
+    }>;
+  }>> {
+    return this.request({
+      method: "GET",
+      url: `/products/${productId}/ingredient-status`,
+    });
+  }
+
+  /**
+   * Manually sync all product availability with ingredient stock
+   * @returns Sync result with counts of updated products
+   */
+  async syncProductAvailability(): Promise<APIResponse<{
+    products_updated: number;
+    products_disabled: number;
+    products_enabled: number;
+    details: Array<{
+      product_id: string;
+      product_name: string;
+      was_available: boolean;
+      now_available: boolean;
+    }>;
+  }>> {
+    return this.request({
+      method: "POST",
+      url: "/admin/ingredients/sync-availability",
     });
   }
 

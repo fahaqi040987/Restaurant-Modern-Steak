@@ -4,6 +4,8 @@ import { db, pool } from '../db/connection.js';
 import { orders, orderItems, products, diningTables, users, orderStatusHistory, orderNotifications, systemSettings } from '../db/schema.js';
 import { successResponse, errorResponse, paginatedResponse } from '../lib/response.js';
 import { parsePagination, buildMeta } from '../lib/pagination.js';
+import { deductIngredientsForOrder, restoreIngredientsForOrder } from '../services/ingredient.js';
+import { validateIngredientStock, logIngredientOverride } from '../services/ingredientValidation.js';
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -327,6 +329,7 @@ export async function createOrder(c: Context) {
     customer_name?: string;
     order_type: string;
     notes?: string;
+    forceOverride?: boolean; // Admin/manager can override ingredient warnings
     items: { product_id: string; quantity: number; special_instructions?: string }[];
   };
 
@@ -396,6 +399,36 @@ export async function createOrder(c: Context) {
 
       subtotal += Number(prod.price) * item.quantity;
     }
+
+    // ── Ingredient Stock Validation ─────────────────────────────────────────────
+    // Check if sufficient ingredients exist (unless override is requested)
+    const stockValidation = await validateIngredientStock(body.items);
+
+    if (!stockValidation.valid && !body.forceOverride) {
+      await client.query('ROLLBACK');
+
+      const missingList = stockValidation.missingIngredients
+        .map((i) => `${i.name} (need ${i.needs}${i.unit}, have ${i.has}${i.unit})`)
+        .join(', ');
+
+      return errorResponse(
+        c,
+        `Insufficient ingredients: ${missingList}`,
+        'insufficient_ingredients',
+        400,
+        {
+          missing_ingredients: stockValidation.missingIngredients,
+          can_make_partial: stockValidation.canMakePartial,
+          max_portions: stockValidation.maxPortions,
+        },
+      );
+    }
+
+    // Log override if admin/manager forced the order through
+    if (!stockValidation.valid && body.forceOverride) {
+      await logIngredientOverride(orderId || 'pending', stockValidation.missingIngredients, userId);
+    }
+    // ── End Ingredient Stock Validation ─────────────────────────────────────────
 
     // Get tax rate from system settings (default 11% Indonesian VAT)
     let taxRate = 0.11;
@@ -507,6 +540,28 @@ export async function updateOrderStatus(c: Context) {
 
     updateQuery += ' WHERE id = $2';
     await client.query(updateQuery, args);
+
+    // ── Ingredient Deduction / Restoration ────────────────────────────────────────
+    // Deduct ingredients when order starts preparing
+    if (body.status === 'preparing' && currentStatus !== 'preparing') {
+      try {
+        await deductIngredientsForOrder(orderId);
+      } catch (error) {
+        console.error(`Ingredient deduction failed for order ${orderId}:`, error);
+        // Don't block the order - log but allow it to proceed
+      }
+    }
+
+    // Restore ingredients when order is cancelled
+    if (body.status === 'cancelled' && currentStatus !== 'cancelled') {
+      try {
+        await restoreIngredientsForOrder(orderId);
+      } catch (error) {
+        console.error(`Ingredient restoration failed for order ${orderId}:`, error);
+        // Don't block the cancellation - log but allow it to proceed
+      }
+    }
+    // ── End Ingredient Deduction / Restoration ───────────────────────────────────
 
     // Log status change
     await client.query(

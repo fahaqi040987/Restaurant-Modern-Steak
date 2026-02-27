@@ -9,14 +9,15 @@ import {
   CreditCard,
   ChefHat,
   Settings,
-  Menu,
+  Menu as MenuIcon,
   BarChart3,
   UserCog,
   LayoutGrid,
   ChevronLeft,
   ChevronRight,
   MessageSquare,
-  Package
+  Package,
+  Wheat
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
 
@@ -83,6 +84,13 @@ const adminSections: AdminSection[] = [
     href: '/admin/inventory'
   },
   {
+    id: 'ingredients',
+    labelKey: 'admin.ingredientsManagement',
+    icon: <Wheat className="w-5 h-5" />,
+    descriptionKey: 'admin.ingredientsDescription',
+    href: '/admin/ingredients'
+  },
+  {
     id: 'staff',
     labelKey: 'admin.manageStaff',
     icon: <UserCog className="w-5 h-5" />,
@@ -92,7 +100,7 @@ const adminSections: AdminSection[] = [
   {
     id: 'menu',
     labelKey: 'admin.manageMenu',
-    icon: <Menu className="w-5 h-5" />,
+    icon: <MenuIcon className="w-5 h-5" />,
     descriptionKey: 'admin.menuDescription',
     href: '/admin/menu'
   },

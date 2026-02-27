@@ -161,24 +161,19 @@ ORDER BY table_name;
 echo ""
 echo -e "${GREEN}🎉 Database reset completed successfully!${NC}"
 echo ""
-echo -e "${BLUE}Default users available:${NC}"
+echo -e "${BLUE}Default admin user available:${NC}"
 
-# Show default users
+# Show default admin user
 docker exec $CONTAINER_NAME psql -U postgres -d pos_system -c "
-SELECT username, email, role, is_active 
-FROM users 
+SELECT username, email, role, is_active
+FROM users
 ORDER BY role, username;
 "
 
 echo ""
 echo -e "${YELLOW}💡 Default login credentials:${NC}"
 echo "  Username: admin    | Password: admin123    | Role: admin"
-echo "  Username: manager1 | Password: admin123    | Role: manager"
-echo "  Username: server1  | Password: admin123    | Role: server"
-echo "  Username: server2  | Password: admin123    | Role: server"
-echo "  Username: counter1 | Password: admin123    | Role: counter"
-echo "  Username: counter2 | Password: admin123    | Role: counter"
-echo "  Username: kitchen1 | Password: admin123    | Role: kitchen"
 echo ""
+echo -e "${YELLOW}💡 You can create additional users through the admin dashboard${NC}"
 echo -e "${YELLOW}💾 Pre-reset backup saved to: $BACKUP_FILE${NC}"
 echo -e "${BLUE}🚀 The system is now ready for development!${NC}"

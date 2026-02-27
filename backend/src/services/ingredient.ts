@@ -19,18 +19,18 @@ export async function deductIngredientsForOrder(orderId: string): Promise<void> 
     for (const item of itemsRes.rows) {
       // Get recipe (product ingredients)
       const recipesRes = await client.query(
-        `SELECT pi.ingredient_id, pi.quantity_needed
+        `SELECT pi.ingredient_id, pi.quantity_required
          FROM product_ingredients pi
          WHERE pi.product_id = $1`,
         [item.product_id],
       );
 
       for (const recipe of recipesRes.rows) {
-        const deductionAmount = Number(recipe.quantity_needed) * item.quantity;
+        const deductionAmount = Number(recipe.quantity_required) * item.quantity;
 
-        // Get current stock
+        // Get current stock with row-level lock (FOR UPDATE) to prevent concurrent modifications
         const stockRes = await client.query(
-          `SELECT current_stock FROM ingredients WHERE id = $1`,
+          `SELECT current_stock FROM ingredients WHERE id = $1 FOR UPDATE`,
           [recipe.ingredient_id],
         );
 
@@ -47,8 +47,8 @@ export async function deductIngredientsForOrder(orderId: string): Promise<void> 
 
         // Record history
         await client.query(
-          `INSERT INTO ingredient_stock_history (ingredient_id, type, quantity, previous_stock, new_stock, notes, order_id)
-           VALUES ($1, 'order_deduction', $2, $3, $4, $5, $6)`,
+          `INSERT INTO ingredient_history (ingredient_id, operation, quantity, previous_stock, new_stock, notes, order_id)
+           VALUES ($1, 'order_consumption', $2, $3, $4, $5, $6)`,
           [recipe.ingredient_id, deductionAmount, currentStock, newStock, `Deducted for order ${orderId}`, orderId],
         );
 
@@ -100,18 +100,18 @@ export async function restoreIngredientsForOrder(orderId: string): Promise<void>
     for (const item of itemsRes.rows) {
       // Get recipe (product ingredients)
       const recipesRes = await client.query(
-        `SELECT pi.ingredient_id, pi.quantity_needed
+        `SELECT pi.ingredient_id, pi.quantity_required
          FROM product_ingredients pi
          WHERE pi.product_id = $1`,
         [item.product_id],
       );
 
       for (const recipe of recipesRes.rows) {
-        const restoreAmount = Number(recipe.quantity_needed) * item.quantity;
+        const restoreAmount = Number(recipe.quantity_required) * item.quantity;
 
-        // Get current stock
+        // Get current stock with row-level lock (FOR UPDATE) to prevent concurrent modifications
         const stockRes = await client.query(
-          `SELECT current_stock FROM ingredients WHERE id = $1`,
+          `SELECT current_stock FROM ingredients WHERE id = $1 FOR UPDATE`,
           [recipe.ingredient_id],
         );
 
@@ -128,8 +128,8 @@ export async function restoreIngredientsForOrder(orderId: string): Promise<void>
 
         // Record history
         await client.query(
-          `INSERT INTO ingredient_stock_history (ingredient_id, type, quantity, previous_stock, new_stock, notes, order_id)
-           VALUES ($1, 'order_cancelled', $2, $3, $4, $5, $6)`,
+          `INSERT INTO ingredient_history (ingredient_id, operation, quantity, previous_stock, new_stock, notes, order_id)
+           VALUES ($1, 'order_cancellation', $2, $3, $4, $5, $6)`,
           [recipe.ingredient_id, restoreAmount, currentStock, newStock, `Restored from cancelled order ${orderId}`, orderId],
         );
       }
@@ -175,9 +175,9 @@ export async function getIngredientUsageReport(
 ): Promise<Array<Record<string, unknown>>> {
   const res = await pool.query(
     `SELECT i.name, i.unit, SUM(h.quantity) as total_used, COUNT(DISTINCT h.order_id) as order_count
-     FROM ingredient_stock_history h
+     FROM ingredient_history h
      JOIN ingredients i ON h.ingredient_id = i.id
-     WHERE h.type = 'order_deduction'
+     WHERE h.operation = 'order_consumption'
        AND h.created_at >= $1 AND h.created_at <= $2
      GROUP BY i.id, i.name, i.unit
      ORDER BY total_used DESC`,

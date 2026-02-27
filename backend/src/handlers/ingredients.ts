@@ -1,6 +1,7 @@
 import type { Context } from 'hono';
 import { sql } from 'drizzle-orm';
 import { db, pool } from '../db/connection.js';
+import { successResponse, errorResponse } from '../lib/response.js';
 
 // ── GetIngredients ──────────────────────────────────────────────────────────
 
@@ -57,10 +58,10 @@ export async function getIngredients(c: Context) {
       updated_at: row.updated_at,
     }));
 
-    // Return raw array (matches Go behavior)
-    return c.json(ingredients, 200);
+    // Return wrapped response for frontend consistency
+    return successResponse(c, 'Ingredients retrieved successfully', ingredients);
   } catch {
-    return c.json({ error: 'Failed to fetch ingredients' }, 500);
+    return errorResponse(c, 'Failed to fetch ingredients', 'fetch_error', 500);
   }
 }
 
@@ -413,10 +414,10 @@ export async function getLowStockIngredients(c: Context) {
       updated_at: row.updated_at,
     }));
 
-    // Return raw array (matches Go behavior)
-    return c.json(ingredients, 200);
+    // Return wrapped response for frontend consistency
+    return successResponse(c, 'Low stock ingredients retrieved successfully', ingredients);
   } catch {
-    return c.json({ error: 'Failed to fetch low stock ingredients' }, 500);
+    return errorResponse(c, 'Failed to fetch low stock ingredients', 'fetch_error', 500);
   }
 }
 
@@ -461,9 +462,9 @@ export async function getIngredientHistory(c: Context) {
       created_at: row.created_at,
     }));
 
-    // Return raw array (matches Go behavior)
-    return c.json(history, 200);
+    // Return wrapped response for frontend consistency
+    return successResponse(c, 'Ingredient history retrieved successfully', history);
   } catch {
-    return c.json({ error: 'Failed to fetch history' }, 500);
+    return errorResponse(c, 'Failed to fetch history', 'fetch_error', 500);
   }
 }

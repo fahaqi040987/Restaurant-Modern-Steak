@@ -440,6 +440,8 @@
     "contactMessages": "Contact Messages",
     "contactDescription": "Customer contact submissions",
     "inventoryDescription": "Stock management and tracking",
+    "ingredientsManagement": "Raw Ingredients",
+    "ingredientsDescription": "Raw material stock management (bahan baku)",
     "manageStaff": "Manage Staff",
     "staffDescription": "User and role management",
     "manageMenu": "Manage Menu",

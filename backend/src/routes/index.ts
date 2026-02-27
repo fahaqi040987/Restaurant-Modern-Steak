@@ -26,6 +26,7 @@ import { getDashboardStats, getSalesReport, getOrdersReport, getIncomeReport } f
 import { getPublicMenu, getPublicCategories, getRestaurantInfo, submitContactForm, getCSRFToken, getTableByQRCode, createCustomerOrder } from '../handlers/public.js';
 import { getAdminCategories, createCategory, updateCategory, deleteCategory, getAdminTables, createTable, updateTable, deleteTable, getAdminUsers, createUser, updateUser, deleteUser } from '../handlers/admin.js';
 import { getSystemHealth } from '../handlers/health.js';
+import { validateIngredientStock, getProductIngredientStatus, syncProductAvailability } from '../handlers/ingredientSync.js';
 
 // Middleware that sets force_order_type so createOrder forces dine_in
 import { createMiddleware } from 'hono/factory';
@@ -112,6 +113,10 @@ export function setupRoutes(app: Hono) {
   protectedRoutes.get('/orders/:id', getOrder);
   protectedRoutes.get('/orders/:id/status-history', getOrderStatusHistory);
   protectedRoutes.patch('/orders/:id/status', updateOrderStatus);
+  protectedRoutes.post('/orders/validate-ingredients', validateIngredientStock);
+
+  // Products - ingredient status check
+  protectedRoutes.get('/products/:id/ingredient-status', getProductIngredientStatus);
 
   // Payments (read-only for all authenticated users)
   protectedRoutes.get('/orders/:id/payments', getPayments);
@@ -194,6 +199,7 @@ export function setupRoutes(app: Hono) {
   adminRoutes.delete('/ingredients/:id', deleteIngredient);
   adminRoutes.post('/ingredients/restock', restockIngredient);
   adminRoutes.get('/ingredients/:id/history', getIngredientHistory);
+  adminRoutes.post('/ingredients/sync-availability', syncProductAvailability);
 
   // Menu management (admin paginated versions)
   adminRoutes.get('/products', getProducts);

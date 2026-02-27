@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="steakGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B4513;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#A0522D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#CD853F;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grillMarks" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#5D3A1A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3D2510;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="fatGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFF8DC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F5DEB3;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Main steak body -->
+  <ellipse cx="64" cy="64" rx="56" ry="40" fill="url(#steakGradient)" transform="rotate(-15, 64, 64)"/>
+
+  <!-- Fat cap on top -->
+  <path d="M 28 45 Q 64 30, 100 45 Q 110 50, 105 58 Q 64 48, 23 58 Q 18 50, 28 45 Z" fill="url(#fatGradient)" opacity="0.9"/>
+
+  <!-- Grill marks - horizontal -->
+  <rect x="20" y="52" width="88" height="4" rx="2" fill="url(#grillMarks)" opacity="0.6" transform="rotate(-15, 64, 64)"/>
+  <rect x="20" y="65" width="88" height="4" rx="2" fill="url(#grillMarks)" opacity="0.6" transform="rotate(-15, 64, 64)"/>
+  <rect x="20" y="78" width="88" height="4" rx="2" fill="url(#grillMarks)" opacity="0.6" transform="rotate(-15, 64, 64)"/>
+
+  <!-- Grill marks - vertical -->
+  <rect x="40" y="40" width="4" height="48" rx="2" fill="url(#grillMarks)" opacity="0.6" transform="rotate(-15, 64, 64)"/>
+  <rect x="60" y="40" width="4" height="48" rx="2" fill="url(#grillMarks)" opacity="0.6" transform="rotate(-15, 64, 64)"/>
+  <rect x="80" y="40" width="4" height="48" rx="2" fill="url(#grillMarks)" opacity="0.6" transform="rotate(-15, 64, 64)"/>
+
+  <!-- Highlight for 3D effect -->
+  <ellipse cx="48" cy="52" rx="12" ry="6" fill="white" opacity="0.2" transform="rotate(-15, 48, 52)"/>
+</svg>

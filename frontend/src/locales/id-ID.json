@@ -440,6 +440,8 @@
     "contactMessages": "Pesan Kontak",
     "contactDescription": "Pesan kontak pelanggan",
     "inventoryDescription": "Manajemen dan pelacakan stok",
+    "ingredientsManagement": "Bahan Baku",
+    "ingredientsDescription": "Manajemen stok bahan mentah (bahan baku)",
     "manageStaff": "Kelola Staf",
     "staffDescription": "Manajemen pengguna dan peran",
     "manageMenu": "Kelola Menu",

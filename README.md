@@ -58,15 +58,13 @@ make dev
 # API: http://localhost:8080/api/v1
 ```
 
-### Demo Accounts
+### Default Account
 
 | Role | Username | Password |
 |------|----------|----------|
 | Admin | `admin` | `admin123` |
-| Manager | `manager1` | `admin123` |
-| Server | `server1`, `server2` | `admin123` |
-| Counter | `counter1`, `counter2` | `admin123` |
-| Kitchen | `kitchen1` | `admin123` |
+
+**Note:** Create additional staff accounts through the admin dashboard (Users section).
 
 ## User Roles
 
@@ -117,7 +115,7 @@ make status           # Check health
 # Database
 make db-shell         # PostgreSQL shell
 make db-reset         # Reset with fresh data
-make create-demo-users # Create test accounts
+make create-admin     # Create a custom admin user
 
 # Testing
 make test             # Run all tests

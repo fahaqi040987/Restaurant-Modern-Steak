@@ -32,7 +32,6 @@ help:
 	@echo "  make rebuild      - Force rebuild all Docker images"
 	@echo ""
 	@echo "$(GREEN)Database Commands:$(NC)"
-	@echo "  make create-demo-users - Create all demo users for testing"
 	@echo "  make list-users        - List all existing users in the database"
 	@echo "  make create-admin      - Create a custom super admin user"
 	@echo "  make remove-data       - Remove all data from database (DESTRUCTIVE)"
@@ -136,26 +135,6 @@ rebuild:
 	@echo "$(GREEN)✅ Images rebuilt successfully$(NC)"
 
 ## Database Commands
-
-# Create all demo users for testing
-create-demo-users:
-	@echo "$(GREEN)👥 Creating all demo users...$(NC)"
-	@if [ -z "$$(docker ps -q -f name=pos-postgres)" ]; then \
-		echo "$(RED)❌ Database container is not running. Please run 'make up' first.$(NC)"; \
-		exit 1; \
-	fi
-	@echo "$(BLUE)Creating demo users with default password 'admin123'...$(NC)"
-	@./scripts/create-demo-users.sh
-	@echo "$(GREEN)✅ Demo users created successfully!$(NC)"
-	@echo ""
-	@echo "$(BLUE)🎭 Demo Accounts Available:$(NC)"
-	@echo "$(YELLOW)👑 Admin:$(NC) admin / admin123"
-	@echo "$(YELLOW)📊 Manager:$(NC) manager1 / admin123"
-	@echo "$(YELLOW)🍽️ Servers:$(NC) server1, server2 / admin123"
-	@echo "$(YELLOW)💰 Counter:$(NC) counter1, counter2 / admin123"
-	@echo "$(YELLOW)👨‍🍳 Kitchen:$(NC) kitchen1 / admin123"
-	@echo ""
-	@echo "$(GREEN)🌐 Access: http://localhost:8000$(NC)"
 
 # List all existing users in the database
 list-users:

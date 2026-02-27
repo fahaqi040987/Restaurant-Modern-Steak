@@ -72,6 +72,9 @@ export interface Product {
   created_at: string;
   updated_at: string;
   category?: Category;
+  // Ingredient supply chain status
+  ingredient_status?: 'available' | 'low_stock' | 'out_of_stock';
+  missing_ingredients?: string[];
 }
 
 // Table Types
@@ -134,6 +137,7 @@ export interface CreateOrderRequest {
   order_type: 'dine_in' | 'takeout' | 'delivery';
   items: CreateOrderItem[];
   notes?: string;
+  forceOverride?: boolean; // Admin/manager can override ingredient warnings
 }
 
 export interface CreateOrderItem {
@@ -938,4 +942,47 @@ export interface RestockResponse {
   previous_stock: number;
   added_quantity: number;
   new_stock: number;
+}
+
+// ===========================================
+// Stock Validation Types (Supply Chain)
+// ===========================================
+
+/**
+ * Missing ingredient details for stock validation
+ */
+export interface MissingIngredient {
+  name: string;
+  unit: string;
+  has: number;
+  needs: number;
+  shortage: number;
+}
+
+/**
+ * Stock validation result for order items
+ */
+export interface StockValidationResult {
+  valid: boolean;
+  missing_ingredients: MissingIngredient[];
+  can_make_partial?: boolean;
+  max_portions?: number;
+}
+
+/**
+ * Product ingredient status
+ */
+export interface ProductIngredientStatus {
+  available: boolean;
+  status: 'available' | 'low_stock' | 'out_of_stock';
+  missing_ingredients: string[];
+  limiting_ingredients: Array<{ name: string; currentStock: number; minimumStock: number }>;
+}
+
+/**
+ * Order item for validation
+ */
+export interface OrderItemForValidation {
+  product_id: string;
+  quantity: number;
 }

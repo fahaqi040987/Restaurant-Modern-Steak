@@ -104,7 +104,7 @@ make status         # Check service health
 # Database
 make db-shell       # Access PostgreSQL shell
 make db-reset       # Reset database with fresh schema and seed data
-make create-demo-users  # Create all demo users for testing
+make create-admin   # Create a custom admin user
 make backup         # Backup database and files
 make restore        # Restore from backup
 
@@ -124,8 +124,10 @@ make format         # Format code
 - Backend API: http://localhost:8080/api/v1
 - Database: localhost:5432
 
-**Demo Accounts:** All use password `admin123`
-- admin, manager1, server1, server2, counter1, counter2, kitchen1
+**Default Account:**
+- Username: `admin` | Password: `admin123` | Role: admin
+
+**Note:** You can create additional users through the admin dashboard (Users section).
 
 ## Architecture
 
