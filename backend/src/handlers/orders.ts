@@ -208,7 +208,13 @@ export async function getOrders(c: Context) {
   try {
     // Build conditions
     const conditions = [];
-    if (status) conditions.push(eq(orders.status, status));
+    if (status) {
+      if (status.includes(',')) {
+        conditions.push(inArray(orders.status, status.split(',')));
+      } else {
+        conditions.push(eq(orders.status, status));
+      }
+    }
     if (orderType) conditions.push(eq(orders.orderType, orderType));
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 

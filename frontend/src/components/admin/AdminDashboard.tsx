@@ -25,7 +25,8 @@ export function AdminDashboard() {
   // Fetch dashboard stats
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboardStats'],
-    queryFn: () => apiClient.getDashboardStats().then(res => res.data)
+    queryFn: () => apiClient.getDashboardStats().then(res => res.data),
+    refetchInterval: 10000, // Poll every 10 seconds to keep metrics fresh
   })
 
   // Fetch income report
