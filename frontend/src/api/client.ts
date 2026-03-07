@@ -67,9 +67,6 @@ import type {
   UpdateIngredientData,
   RestockResponse,
   // Stock validation types
-  StockValidationResult,
-  ProductIngredientStatus,
-  OrderItemForValidation,
 } from "@/types";
 
 class APIClient {

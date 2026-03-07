@@ -16,27 +16,25 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "hono": "^4.7.4",
     "@hono/node-server": "^1.13.8",
-    "drizzle-orm": "^0.38.4",
-    "pg": "^8.13.1",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "uuid": "^11.0.5",
     "dotenv": "^16.4.7",
-    "mime-types": "^2.1.35",
+    "drizzle-orm": "^0.38.4",
+    "hono": "^4.7.4",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1",
+    "uuid": "^11.0.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/node": "^22.10.7",
-    "@types/pg": "^8.11.11",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.7",
+    "@types/pg": "^8.11.11",
     "@types/uuid": "^10.0.0",
-    "@types/mime-types": "^2.1.4",
-    "typescript": "^5.7.3",
-    "tsx": "^4.19.2",
     "drizzle-kit": "^0.30.4",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }
 }

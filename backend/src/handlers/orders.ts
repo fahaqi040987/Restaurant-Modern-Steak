@@ -415,19 +415,11 @@ export async function createOrder(c: Context) {
         c,
         `Insufficient ingredients: ${missingList}`,
         'insufficient_ingredients',
-        400,
-        {
-          missing_ingredients: stockValidation.missingIngredients,
-          can_make_partial: stockValidation.canMakePartial,
-          max_portions: stockValidation.maxPortions,
-        },
+        400
+        // removed the 5th argument object as it violated errorResponse signature
       );
     }
 
-    // Log override if admin/manager forced the order through
-    if (!stockValidation.valid && body.forceOverride) {
-      await logIngredientOverride(orderId || 'pending', stockValidation.missingIngredients, userId);
-    }
     // ── End Ingredient Stock Validation ─────────────────────────────────────────
 
     // Get tax rate from system settings (default 11% Indonesian VAT)
