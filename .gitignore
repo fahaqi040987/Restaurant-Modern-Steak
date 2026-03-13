@@ -175,3 +175,4 @@ summary.md
 daemon-state.json
 daemon.log
 metrics/
+.agents/
