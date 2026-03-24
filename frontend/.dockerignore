@@ -52,10 +52,10 @@ docs/
 .prettierrc*
 .eslintrc*
 eslint.config.js
-tsconfig.json
-vite.config.ts
 vitest.config.ts
 playwright.config.ts
+# NOTE: tsconfig.json and vite.config.ts are NOT excluded — they are required for the build
+# (vite.config.ts defines @ path alias, tsconfig.json defines path mappings)
 
 # Backup files
 *.backup
