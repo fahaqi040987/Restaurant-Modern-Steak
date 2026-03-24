@@ -176,3 +176,4 @@ daemon-state.json
 daemon.log
 metrics/
 .agents/
+MIGRATION_NOTE.md

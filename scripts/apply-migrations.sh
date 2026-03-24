@@ -3,7 +3,7 @@
 # Usage: ./scripts/apply-migrations.sh [--prod]
 #
 # Applies all migrations in database/migrations/ to the running database
-# Use --prod flag for production database
+# Updated to auto-detect Dokploy/Swarm container names.
 
 set -e
 
@@ -22,10 +22,17 @@ fi
 
 # Set container name based on environment
 if [ "$IS_PROD" = true ]; then
-    DB_CONTAINER="steak-kenangan-db"
+    echo -e "${YELLOW}Running in PRODUCTION mode (Auto-detecting Dokploy container)...${NC}"
+    # Mencari ID kontainer yang mengandung kata 'steakdb' (Nama stack Dokploy Anda)
+    DB_CONTAINER=$(docker ps -q -f name=steakdb | head -n 1)
+    
+    # Jika tidak ketemu, coba cari berdasarkan image postgres
+    if [ -z "$DB_CONTAINER" ]; then
+        DB_CONTAINER=$(docker ps -q -f ancestor=postgres:15-alpine | head -n 1)
+    fi
+    
     DB_USER="${DB_USER:-steakkenangan}"
     DB_NAME="${DB_NAME:-steak_kenangan}"
-    echo -e "${YELLOW}Running in PRODUCTION mode${NC}"
 else
     DB_CONTAINER="pos-postgres-dev"
     DB_USER="postgres"
@@ -38,15 +45,16 @@ echo -e "${BLUE}   Database Migration Runner           ${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
-# Check if container is running
-if [ -z "$(docker ps -q -f name=$DB_CONTAINER)" ]; then
-    echo -e "${RED}Error: Database container '$DB_CONTAINER' is not running${NC}"
-    echo -e "${YELLOW}Start containers first with 'make dev' or 'make deploy-prod'${NC}"
+# Check if container is found and running
+if [ -z "$DB_CONTAINER" ]; then
+    echo -e "${RED}Error: Database container not found!${NC}"
+    echo -e "${YELLOW}Ensure your database service is running in Dokploy.${NC}"
     exit 1
 fi
 
-echo -e "${GREEN}Database container: ${DB_CONTAINER}${NC}"
-echo -e "${GREEN}Database: ${DB_NAME}${NC}"
+echo -e "${GREEN}Detected Container ID: ${DB_CONTAINER}${NC}"
+echo -e "${GREEN}Database User: ${DB_USER}${NC}"
+echo -e "${GREEN}Database Name: ${DB_NAME}${NC}"
 echo ""
 
 # Get migration directory
@@ -76,6 +84,7 @@ echo -e "${BLUE}[2/3] Checking for pending migrations...${NC}"
 PENDING_COUNT=0
 APPLIED_COUNT=0
 
+# Menggunakan sorting untuk memastikan urutan file benar
 for migration in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
     filename=$(basename "$migration")
 
@@ -96,8 +105,8 @@ for migration in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
         echo -e "    ${GREEN}✓ Applied successfully${NC}"
         APPLIED_COUNT=$((APPLIED_COUNT + 1))
     else
-        echo -e "    ${YELLOW}⚠ Migration may have partial errors (continuing)${NC}"
-        # Still record it to avoid re-running
+        echo -e "    ${YELLOW}⚠ Migration may have partial errors or already exist (continuing)${NC}"
+        # Tetap record agar tidak mencoba running ulang jika struktur sudah ada
         docker exec -i $DB_CONTAINER psql -U $DB_USER -d $DB_NAME -c \
             "INSERT INTO schema_migrations (filename) VALUES ('$filename') ON CONFLICT (filename) DO NOTHING;" > /dev/null 2>&1
         APPLIED_COUNT=$((APPLIED_COUNT + 1))
@@ -114,7 +123,7 @@ echo -e "${GREEN}========================================${NC}"
 if [ $PENDING_COUNT -eq 0 ]; then
     echo -e "${GREEN}Database is up to date!${NC}"
 else
-    echo -e "${GREEN}All migrations applied successfully!${NC}"
+    echo -e "${GREEN}All migrations processed!${NC}"
 fi
 
 # Verify restaurant_info table has timezone column
