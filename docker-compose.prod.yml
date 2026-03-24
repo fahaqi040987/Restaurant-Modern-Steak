@@ -183,6 +183,5 @@ networks:
 
 volumes:
   postgres_data:
-    labels:
-      - "app.project=steak-kenangan"
-      - "app.data=persistent"
+    # No labels - prevents "config mismatch" prompt on re-deploy
+    # Volumes are NEVER touched by cleanup anyway
