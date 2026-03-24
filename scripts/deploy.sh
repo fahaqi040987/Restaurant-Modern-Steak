@@ -106,7 +106,7 @@ sleep 5
 # Check backend health
 BACKEND_HEALTHY=false
 for i in {1..6}; do
-    if docker exec steak-kenangan-backend wget -q --spider http://localhost:8080/api/v1/health 2>/dev/null; then
+    if docker compose -f docker-compose.prod.yml exec backend wget -q --spider http://localhost:8080/api/v1/health 2>/dev/null; then
         BACKEND_HEALTHY=true
         break
     fi
