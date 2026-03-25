@@ -177,3 +177,4 @@ daemon.log
 metrics/
 .agents/
 MIGRATION_NOTE.md
+docker-compose.prod.back.yml
