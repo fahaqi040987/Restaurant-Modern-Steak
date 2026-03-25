@@ -1,45 +1,37 @@
 version: '3.8'
 
 services:
-  # 0. CLEANUP SERVICE (runs once before other services)
-  # Multi-strategy identification to find containers regardless of Dokploy naming.
-  # Uses: 0) Exact names, 1) Docker labels, 2) Name patterns, 3) Image matching
-  # NEVER touches volumes - database data is always preserved.
+  # 0. CLEANUP SERVICE
   cleanup:
     image: docker:cli
     restart: "no"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    entrypoint: ["/bin/sh", "-c"]
+    entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
         set -e
         echo "=== Pre-deploy cleanup (containers only, volumes NEVER touched) ==="
         echo "Started at: $$(date)"
 
-        # Collect all container IDs to remove
         CONTAINERS=""
 
-        # Strategy 0: Find by exact container names (most reliable with explicit container_name)
         echo "[0/3] Searching by exact container names"
         for name in "steak-db-prod" "steak-backend-prod" "steak-frontend-prod" "steak-tunnel-prod"; do
           EXACT=$$(docker ps -a -q --filter "name=^$${name}$$" 2>/dev/null || true)
           [ -n "$$EXACT" ] && CONTAINERS="$$CONTAINERS $$EXACT"
         done
 
-        # Strategy 1: Find by label (handles Dokploy-named containers)
         echo "[1/3] Searching by label: app.project=steak-kenangan"
         LABELED=$$(docker ps -a -q --filter "label=app.project=steak-kenangan" 2>/dev/null || true)
         [ -n "$$LABELED" ] && CONTAINERS="$$CONTAINERS $$LABELED"
 
-        # Strategy 2: Find by name patterns (handles Dokploy random suffixes)
         echo "[2/3] Searching by name patterns: *steak*, *kenangan*"
         for pattern in "steak" "kenangan"; do
           MATCHED=$$(docker ps -a -q --filter "name=$$pattern" 2>/dev/null || true)
           [ -n "$$MATCHED" ] && CONTAINERS="$$CONTAINERS $$MATCHED"
         done
 
-        # Strategy 3: Find by specific images (fallback)
         echo "[3/3] Searching by image (postgres, cloudflared with steak name)"
         for img in "postgres:15-alpine" "cloudflare/cloudflared"; do
           IMG_CONTAINERS=$$(docker ps -a -q --filter "ancestor=$$img" 2>/dev/null || true)
@@ -51,25 +43,18 @@ services:
           done
         done
 
-        # Deduplicate container IDs
         UNIQUE=$$(echo "$$CONTAINERS" | tr ' ' '\n' | sort -u | grep -v '^$$' | tr '\n' ' ')
-
-        # Get our own container ID to exclude
         SELF_CID=$$(cat /proc/1/cpuset 2>/dev/null | grep -oE '[0-9a-f]{12,64}' | head -1 || hostname)
 
-        # Remove containers
         REMOVED=0
         SKIPPED=0
         for cid in $$UNIQUE; do
           [ -z "$$cid" ] && continue
-
-          # Skip if it's us (cleanup container)
           if echo "$$cid" | grep -q "$$SELF_CID" || echo "$$SELF_CID" | grep -q "$$cid"; then
             echo "  [SKIP] Self (cleanup container)"
             SKIPPED=$$((SKIPPED+1))
             continue
           fi
-
           cname=$$(docker inspect --format '{{.Name}}' $$cid 2>/dev/null | sed 's/^\///' || echo "$$cid")
           echo "  [REMOVE] $$cname"
           docker stop "$$cid" --time 5 2>/dev/null || true
@@ -79,9 +64,6 @@ services:
 
         echo ""
         echo "=== Cleanup Complete ==="
-        echo "  Removed: $$REMOVED container(s)"
-        echo "  Skipped: $$SKIPPED (self)"
-        echo "  Volumes: PRESERVED (postgres_data untouched)"
         echo "========================"
     networks:
       - steak-network
@@ -94,7 +76,6 @@ services:
     labels:
       - "app.project=steak-kenangan"
       - "app.service=database"
-      - "app.role=db"
     depends_on:
       cleanup:
         condition: service_completed_successfully
@@ -105,7 +86,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -113,7 +94,7 @@ services:
     networks:
       - steak-network
 
-  # 2. BACKEND SERVICE (Go/Gin)
+  # 2. BACKEND SERVICE
   backend:
     build:
       context: ./backend
@@ -123,7 +104,6 @@ services:
     labels:
       - "app.project=steak-kenangan"
       - "app.service=backend"
-      - "app.role=api"
     depends_on:
       cleanup:
         condition: service_completed_successfully
@@ -133,7 +113,7 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
-      - DB_HOST=steak-db-prod
+      - DB_HOST=steak-db-prod # Sudah dikunci ke DB yang benar
       - DB_PORT=5432
       - JWT_SECRET=${JWT_SECRET}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
@@ -143,17 +123,20 @@ services:
     networks:
       - steak-network
 
-  # 3. FRONTEND SERVICE (Nginx + Vite Build)
+  # 3. FRONTEND SERVICE (Disempurnakan)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      # TAMBAHAN KRUSIAL: Memasukkan variabel VITE saat proses Build
+      args:
+        - VITE_API_URL=${VITE_API_URL}
+        - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
     container_name: steak-frontend-prod
     restart: always
     labels:
       - "app.project=steak-kenangan"
       - "app.service=frontend"
-      - "app.role=web"
     depends_on:
       backend:
         condition: service_started
@@ -170,10 +153,7 @@ services:
     labels:
       - "app.project=steak-kenangan"
       - "app.service=tunnel"
-      - "app.role=network"
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
       frontend:
         condition: service_started
@@ -187,5 +167,3 @@ networks:
 
 volumes:
   postgres_data:
-    # No labels - prevents "config mismatch" prompt on re-deploy
-    # Volumes are NEVER touched by cleanup anyway
