@@ -103,30 +103,30 @@ export function Header() {
         className="public-container flex items-center justify-between"
         aria-label="Main navigation"
       >
-          {/* Logo */}
-          <Link
-            to="/site"
-            className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]"
-            aria-label="Steak Kenangan - Home"
-          >
-            {restaurantInfo?.logo_url ? (
-              <img
-                src={restaurantInfo?.logo_url || '/assets/restoran/images/LogoSteakKenangan.png'}
-                alt={restaurantInfo.name || 'Steak Kenangan'}
-                className="h-28 md:h-30 lg:h-32 w-auto object-contain transition-all duration-300"
-              />
-            ) : (
-              <span
-                className={cn(
-                  'font-accent text-2xl md:text-3xl transition-colors duration-300',
-                  'text-white'
-                )}
-                style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
-              >
-                Steak Kenangan
-              </span>
-            )}
-          </Link>
+        {/* Logo */}
+        <Link
+          to="/site"
+          className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]"
+          aria-label="Steak Kenangan - Home"
+        >
+          {restaurantInfo?.logo_url ? (
+            <img
+              src={restaurantInfo?.logo_url || '/assets/restoran/images/LogoSteakKenangan.png'}
+              alt={restaurantInfo.name || 'Steak Kenangan'}
+              className="h-28 md:h-30 lg:h-32 w-auto object-contain transition-all duration-300"
+            />
+          ) : (
+            <span
+              className={cn(
+                'font-accent text-2xl md:text-3xl transition-colors duration-300',
+                'text-white'
+              )}
+              style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
+            >
+              Steak Kenangan
+            </span>
+          )}
+        </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8">
@@ -182,20 +182,15 @@ export function Header() {
             </Link>
           </Button>
 
-          {/* Reservation CTA */}
-          <Button
-            asChild
-            className={cn(
-              'gap-2 transition-all duration-300',
-              'bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
-              'text-white font-medium'
-            )}
-          >
-            <Link to="/site/reservation">
-              <Calendar className="h-4 w-4" aria-hidden="true" />
-              <span>{t('public.bookATable')}</span>
-            </Link>
-          </Button>
+          {/* Halal Logo */}
+          <div className="flex items-center justify-center mr-3 lg:mr-4">
+            <img
+              src="/assets/restoran/images/Halal_Indonesia.svg"
+              alt="Sertifikat Halal Indonesia"
+              title="Sertifikat Halal Indonesia"
+              className="h-16 md:h-20 lg:h-28 w-auto object-contain drop-shadow-md brightness-110"
+            />
+          </div>
         </div>
 
         {/* Mobile Menu Button */}
