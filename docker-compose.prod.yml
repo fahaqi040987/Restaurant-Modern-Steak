@@ -1,84 +1,13 @@
 version: '3.8'
 
 services:
-  # 0. CLEANUP SERVICE
-  cleanup:
-    image: docker:cli
-    restart: "no"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    entrypoint: [ "/bin/sh", "-c" ]
-    command:
-      - |
-        set -e
-        echo "=== Pre-deploy cleanup (containers only, volumes NEVER touched) ==="
-        echo "Started at: $$(date)"
-
-        CONTAINERS=""
-
-        echo "[0/3] Searching by exact container names"
-        for name in "steak-db-prod" "steak-backend-prod" "steak-frontend-prod" "steak-tunnel-prod"; do
-          EXACT=$$(docker ps -a -q --filter "name=^$${name}$$" 2>/dev/null || true)
-          [ -n "$$EXACT" ] && CONTAINERS="$$CONTAINERS $$EXACT"
-        done
-
-        echo "[1/3] Searching by label: app.project=steak-kenangan"
-        LABELED=$$(docker ps -a -q --filter "label=app.project=steak-kenangan" 2>/dev/null || true)
-        [ -n "$$LABELED" ] && CONTAINERS="$$CONTAINERS $$LABELED"
-
-        echo "[2/3] Searching by name patterns: *steak*, *kenangan*"
-        for pattern in "steak" "kenangan"; do
-          MATCHED=$$(docker ps -a -q --filter "name=$$pattern" 2>/dev/null || true)
-          [ -n "$$MATCHED" ] && CONTAINERS="$$CONTAINERS $$MATCHED"
-        done
-
-        echo "[3/3] Searching by image (postgres, cloudflared with steak name)"
-        for img in "postgres:15-alpine" "cloudflare/cloudflared"; do
-          IMG_CONTAINERS=$$(docker ps -a -q --filter "ancestor=$$img" 2>/dev/null || true)
-          for cid in $$IMG_CONTAINERS; do
-            cname=$$(docker inspect --format '{{.Name}}' $$cid 2>/dev/null | sed 's/^\///' || echo "")
-            if echo "$$cname" | grep -qiE "(steak|kenangan)"; then
-              CONTAINERS="$$CONTAINERS $$cid"
-            fi
-          done
-        done
-
-        UNIQUE=$$(echo "$$CONTAINERS" | tr ' ' '\n' | sort -u | grep -v '^$$' | tr '\n' ' ')
-        SELF_CID=$$(cat /proc/1/cpuset 2>/dev/null | grep -oE '[0-9a-f]{12,64}' | head -1 || hostname)
-
-        REMOVED=0
-        SKIPPED=0
-        for cid in $$UNIQUE; do
-          [ -z "$$cid" ] && continue
-          if echo "$$cid" | grep -q "$$SELF_CID" || echo "$$SELF_CID" | grep -q "$$cid"; then
-            echo "  [SKIP] Self (cleanup container)"
-            SKIPPED=$$((SKIPPED+1))
-            continue
-          fi
-          cname=$$(docker inspect --format '{{.Name}}' $$cid 2>/dev/null | sed 's/^\///' || echo "$$cid")
-          echo "  [REMOVE] $$cname"
-          docker stop "$$cid" --time 5 2>/dev/null || true
-          docker rm -f "$$cid" 2>/dev/null || true
-          REMOVED=$$((REMOVED+1))
-        done
-
-        echo ""
-        echo "=== Cleanup Complete ==="
-        echo "========================"
-    networks:
-      - steak-network
-
   # 1. DATABASE SERVICE
   db:
     image: postgres:15-alpine
-    container_name: steak-db-prod
     restart: always
     labels:
       - "app.project=steak-kenangan"
       - "app.service=database"
-    depends_on:
-      cleanup:
-        condition: service_completed_successfully
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -99,14 +28,11 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: steak-backend-prod
     restart: always
     labels:
       - "app.project=steak-kenangan"
       - "app.service=backend"
     depends_on:
-      cleanup:
-        condition: service_completed_successfully
       db:
         condition: service_healthy
     environment:
@@ -132,8 +58,6 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL}
         - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
-    container_name: steak-frontend-prod
-    hostname: steak-frontend-prod
     restart: always
     labels:
       - "app.project=steak-kenangan"
@@ -150,7 +74,6 @@ services:
   # 4. CLOUDFLARE TUNNEL SERVICE
   cloudflared:
     image: cloudflare/cloudflared:latest
-    container_name: steak-tunnel-prod
     restart: always
     labels:
       - "app.project=steak-kenangan"
@@ -164,8 +87,9 @@ services:
 
 networks:
   steak-network:
-    name: steak-kenangan-network
     driver: bridge
 
 volumes:
   postgres_data:
+    name: restaurant-modern-steak_postgres_data
+    external: true
