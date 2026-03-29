@@ -19,9 +19,21 @@ import {
   Package,
   Car,
   Users,
-  Receipt
+  Receipt,
+  UtensilsCrossed
 } from 'lucide-react'
 import type { Product, DiningTable, Order } from '@/types'
+
+function getImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (url.startsWith('/uploads') || url.startsWith('/images')) {
+    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1'
+    const baseUrl = apiUrl.replace('/api/v1', '')
+    return `${baseUrl}${url}`
+  }
+  return url
+}
 
 interface CartItem {
   product: Product
@@ -340,36 +352,50 @@ export function CounterInterface() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredProducts.map(product => {
                 const cartItem = cart.find(item => item.product.id === product.id)
+                const imageUrl = getImageUrl(product.image_url)
                 return (
-                  <Card key={product.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg leading-tight">{product.name}</CardTitle>
-                          {product.description && (
-                            <CardDescription className="text-sm mt-1">
-                              {product.description.substring(0, 60)}
-                              {product.description.length > 60 ? '...' : ''}
-                            </CardDescription>
-                          )}
+                  <Card key={product.id} className="hover:shadow-md transition-shadow overflow-hidden">
+                    {/* Product Image */}
+                    <div className="relative aspect-[3/2] bg-muted">
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                          <UtensilsCrossed className="w-12 h-12 text-muted-foreground/50" />
                         </div>
-                        <div className="text-lg font-bold text-primary">
+                      )}
+                      {!product.is_available && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                          <Badge variant="secondary" className="text-sm">
+                            Unavailable
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                    <CardHeader className="pb-2 pt-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-base leading-tight line-clamp-1">{product.name}</CardTitle>
+                        <div className="text-base font-bold text-primary shrink-0">
                           {formatCurrency(product.price)}
                         </div>
                       </div>
+                      {product.description && (
+                        <CardDescription className="text-xs mt-1 line-clamp-2">
+                          {product.description}
+                        </CardDescription>
+                      )}
                     </CardHeader>
-                    <CardContent className="pt-0">
+                    <CardContent className="pt-0 pb-3">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                           {product.preparation_time > 0 && (
                             <Badge variant="outline" className="text-xs">
                               <Clock className="w-3 h-3 mr-1" />
                               {product.preparation_time}min
-                            </Badge>
-                          )}
-                          {!product.is_available && (
-                            <Badge variant="secondary" className="text-xs">
-                              Unavailable
                             </Badge>
                           )}
                         </div>
@@ -377,20 +403,22 @@ export function CounterInterface() {
                         {product.is_available && (
                           <div className="flex items-center gap-2">
                             {cartItem ? (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="h-8 w-8 p-0"
                                   onClick={() => removeFromCart(product.id)}
                                 >
                                   <Minus className="h-4 w-4" />
                                 </Button>
-                                <span className="w-8 text-center font-medium">
+                                <span className="w-6 text-center font-medium text-sm">
                                   {cartItem.quantity}
                                 </span>
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="h-8 w-8 p-0"
                                   onClick={() => addToCart(product)}
                                 >
                                   <Plus className="h-4 w-4" />

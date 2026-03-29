@@ -40,6 +40,7 @@ CREATE TABLE products (
     barcode VARCHAR(50),
     sku VARCHAR(50) UNIQUE,
     is_available BOOLEAN DEFAULT true,
+    is_deleted BOOLEAN DEFAULT false,
     preparation_time INTEGER DEFAULT 0, -- in minutes
     sort_order INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

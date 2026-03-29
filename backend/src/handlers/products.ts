@@ -88,6 +88,9 @@ export async function getProducts(c: Context) {
     // Build conditions
     const conditions = [];
 
+    // Always filter out deleted products unless explicitly requested
+    conditions.push(eq(products.isDeleted, false));
+
     if (categoryID) {
       conditions.push(eq(products.categoryId, categoryID));
     }
@@ -449,27 +452,12 @@ export async function deleteProduct(c: Context) {
       return errorResponse(c, 'Product not found', 'product_not_found', 404);
     }
 
-    // Check if product is used in any orders
-    const [usedInOrders] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(orderItems)
-      .where(eq(orderItems.productId, productId));
-
-    if (Number(usedInOrders.count) > 0) {
-      // Soft delete: mark as unavailable
-      await db
-        .update(products)
-        .set({ isAvailable: false, updatedAt: sql`NOW()` })
-        .where(eq(products.id, productId));
-
-      return successResponse(c, 'Product deactivated (used in existing orders)', {
-        product_id: productId,
-        deactivated: true,
-      });
-    }
-
-    // Hard delete if not used in orders
-    await db.delete(products).where(eq(products.id, productId));
+    // Always soft delete by setting is_deleted flag
+    // This preserves order history integrity
+    await db
+      .update(products)
+      .set({ isDeleted: true, updatedAt: sql`NOW()` })
+      .where(eq(products.id, productId));
 
     return successResponse(c, 'Product deleted successfully', {
       product_id: productId,

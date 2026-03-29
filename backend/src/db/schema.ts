@@ -69,6 +69,7 @@ export const products = pgTable(
     barcode: varchar('barcode', { length: 50 }),
     sku: varchar('sku', { length: 50 }).unique(),
     isAvailable: boolean('is_available').default(true),
+    isDeleted: boolean('is_deleted').default(false),
     preparationTime: integer('preparation_time').default(0),
     sortOrder: integer('sort_order').default(0),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow(),
@@ -77,6 +78,7 @@ export const products = pgTable(
   (table) => ({
     categoryIdIdx: index('idx_products_category_id').on(table.categoryId),
     isAvailableIdx: index('idx_products_is_available').on(table.isAvailable),
+    isDeletedIdx: index('idx_products_is_deleted').on(table.isDeleted),
   }),
 );
 
