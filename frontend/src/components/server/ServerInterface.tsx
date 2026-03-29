@@ -6,20 +6,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Plus, 
-  Minus, 
-  ShoppingCart, 
-  Users, 
+import {
+  Plus,
+  Minus,
+  ShoppingCart,
+  Users,
   User,
   Check,
   Clock,
   Table as TableIcon,
   Search,
   Settings,
-  Package
+  Package,
+  UtensilsCrossed
 } from 'lucide-react'
 import type { Product, DiningTable } from '@/types'
+
+function getImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (url.startsWith('/uploads') || url.startsWith('/images')) {
+    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1'
+    const baseUrl = apiUrl.replace('/api/v1', '')
+    return `${baseUrl}${url}`
+  }
+  return url
+}
 
 interface CartItem {
   product: Product
@@ -299,9 +311,31 @@ export function ServerInterface() {
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             {filteredProducts.map(product => {
               const cartItem = cart.find(item => item.product.id === product.id)
+              const imageUrl = getImageUrl(product.image_url)
               return (
-                <Card key={product.id} className="hover:shadow-md active:scale-95 transition-all duration-150 touch-manipulation">
-                  <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
+                <Card key={product.id} className="hover:shadow-md active:scale-95 transition-all duration-150 touch-manipulation overflow-hidden">
+                  {/* Product Image */}
+                  <div className="relative aspect-[3/2] bg-muted">
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <UtensilsCrossed className="w-12 h-12 text-muted-foreground/50" />
+                      </div>
+                    )}
+                    {!product.is_available && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <Badge variant="secondary" className="text-sm">
+                          Unavailable
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                  <CardHeader className="pb-2 pt-3 p-3 sm:p-6">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <CardTitle className="text-sm sm:text-base lg:text-lg leading-tight truncate">{product.name}</CardTitle>
@@ -324,11 +358,6 @@ export function ServerInterface() {
                           <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                             <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
                             {product.preparation_time}min
-                          </Badge>
-                        )}
-                        {!product.is_available && (
-                          <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
-                            Unavailable
                           </Badge>
                         )}
                       </div>
