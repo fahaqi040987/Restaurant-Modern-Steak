@@ -19,6 +19,26 @@ export const Route = createFileRoute('/site/')({
   component: PublicLandingPage,
 })
 
+/**
+ * Build the full image URL from a relative path
+ * Handles /uploads and /images paths by prefixing with backend URL
+ */
+function getImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  // If it's already a full URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  // If it's a relative URL starting with /uploads or /images, prepend the API base
+  if (url.startsWith('/uploads') || url.startsWith('/images')) {
+    const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api/v1'
+    // Remove /api/v1 from the API URL to get the base URL
+    const baseUrl = apiUrl.replace('/api/v1', '')
+    return `${baseUrl}${url}`
+  }
+  return url
+}
+
 function PublicLandingPage() {
   // Fetch restaurant info
   const { data: restaurantInfo } = useQuery({
@@ -261,15 +281,29 @@ function MenuItemCard({ item, index, formatPrice }: MenuItemCardProps) {
     >
       {/* Image */}
       <div className="aspect-[4/3] bg-[var(--public-bg-hover)] relative overflow-hidden">
-        {item.image_url ? (
+        {getImageUrl(item.image_url) ? (
           <img
-            src={item.image_url}
+            src={getImageUrl(item.image_url) || ''}
             alt={item.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
+            onError={(e) => {
+              // Hide broken image and show placeholder
+              const target = e.target as HTMLImageElement
+              target.style.display = 'none'
+              const placeholder = target.parentElement?.querySelector('[data-placeholder]') as HTMLElement
+              if (placeholder) {
+                placeholder.style.display = 'flex'
+              }
+            }}
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
+        ) : null}
+        {(!item.image_url || !getImageUrl(item.image_url)) && (
+          <div
+            data-placeholder
+            className="w-full h-full flex items-center justify-center"
+            style={{ display: item.image_url ? 'none' : 'flex' }}
+          >
             <Utensils className="h-12 w-12 text-[var(--public-text-muted)]" />
           </div>
         )}

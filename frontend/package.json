@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "generate-favicons": "node scripts/generate-favicons.js",
     "dev": "vite --port 8000 --host 0.0.0.0",
     "build": "tsc && vite build",
     "build:prod": "vite build",
