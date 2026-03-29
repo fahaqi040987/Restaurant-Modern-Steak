@@ -23,7 +23,54 @@ services:
     networks:
       - steak-network
 
-  # 2. BACKEND SERVICE
+  # 2. DATABASE MIGRATION SERVICE
+  db-migrate:
+    image: postgres:15-alpine
+    labels:
+      - "app.project=steak-kenangan"
+      - "app.service=migration"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - PGUSER=${DB_USER}
+      - PGPASSWORD=${DB_PASSWORD}
+      - PGDATABASE=${DB_NAME}
+      - PGHOST=db
+      - PGPORT=${DB_PORT}
+    volumes:
+      - ./database/migrations:/migrations:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "=== Running database migrations ==="
+        # Create migration tracking table if it doesn't exist
+        psql -c "CREATE TABLE IF NOT EXISTS schema_migrations (
+          filename TEXT PRIMARY KEY,
+          applied_at TIMESTAMPTZ DEFAULT NOW()
+        );"
+        # Run each migration file in order, skip if already applied
+        for f in /migrations/*.sql; do
+          fname=$$(basename "$$f")
+          already_applied=$$(psql -t -c "SELECT COUNT(*) FROM schema_migrations WHERE filename = '$$fname';" | tr -d ' ')
+          if [ "$$already_applied" = "0" ]; then
+            echo "Applying migration: $$fname"
+            if psql -f "$$f"; then
+              psql -c "INSERT INTO schema_migrations (filename) VALUES ('$$fname');"
+              echo "  -> OK"
+            else
+              echo "  -> FAILED! Stopping migrations."
+              exit 1
+            fi
+          else
+            echo "Skipping (already applied): $$fname"
+          fi
+        done
+        echo "=== All migrations applied successfully ==="
+    networks:
+      - steak-network
+
+  # 3. BACKEND SERVICE
   backend:
     build:
       context: ./backend
@@ -35,6 +82,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
     environment:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -46,6 +95,12 @@ services:
       - GIN_MODE=release
     volumes:
       - steak_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8001/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - steak-network
 
@@ -63,7 +118,8 @@ services:
       - "app.project=steak-kenangan"
       - "app.service=frontend"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     volumes:
       - steak_uploads:/usr/share/nginx/html/uploads
     networks:
@@ -81,7 +137,7 @@ services:
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
       frontend:
-        condition: service_started
+        condition: service_healthy
     networks:
       - steak-network
 

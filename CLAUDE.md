@@ -2,9 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ AI AGENT EXECUTION RULES (CRITICAL)
+
+To prevent system hangs, excessive token usage, and hook timeouts, **YOU MUST ADHERE TO THESE RULES STRICTLY**:
+
+1. **NO ROOT SEARCHING (CRITICAL):** NEVER run broad `find`, `ls -R`, or `Search` commands from the root directory (`/`). You are strictly forbidden from doing full-project scans.
+2. **MANDATORY IGNORE LIST:** ALWAYS completely ignore the following directories in any search or tool use: `node_modules/`, `.git/`, `dist/`, `build/`, `vendor/`, and `.claude/`.
+3. **ANTI-EXPLORATION (No Pre-mapping):** DO NOT proactively map out the project structure, backend routes, frontend components, or look for spec files before answering a prompt. **SKIP the "Explore" phase entirely.** Only open files that are directly related to the user's immediate request.
+4. **ASK, DON'T GUESS:** If the user asks to fix a bug or add a feature but doesn't provide the exact file path, DO NOT search the repository to find it. Instead, **STOP and ask the user for the exact file path.**
+5. **ANTI-HISTORY (Current State Only):** Focus ONLY on the current state of the codebase. DO NOT use `git log`, `git diff`, or check commit history unless explicitly requested by the user.
+6. **DIRECT FILE ACCESS:** Prioritize reading specific files directly (using `Read`) over searching (`Search`).
+
+---
+
 ## Project Overview
 
-A modern, enterprise-grade Point of Sale (POS) system for Indonesian steakhouse restaurant management. Built with Golang backend, React frontend (TanStack Router), and PostgreSQL database.
+A modern, enterprise-grade Point of Sale (POS) system for Indonesian steakhouse restaurant management. Built with Node.js/TypeScript backend (Hono), React frontend (TanStack Router), and PostgreSQL database.
 
 **Features**:
 - ✅ Public B2C website (menu, contact, restaurant info)
@@ -20,14 +33,12 @@ A modern, enterprise-grade Point of Sale (POS) system for Indonesian steakhouse 
 ## Technology Stack
 
 ### Backend
-- **Language**: Go 1.21+
-- **Framework**: Gin v1.9.1 (HTTP router)
-- **Database**: PostgreSQL 14+ (lib/pq v1.10.9)
-- **Authentication**: JWT (golang-jwt/jwt/v5 v5.2.0)
-- **Password**: bcrypt (golang.org/x/crypto)
-- **Testing**: testify/mock v1.11.1
-- **CORS**: gin-contrib/cors v1.5.0
-- **Environment**: godotenv v1.5.1
+- **Language**: TypeScript 5+ (strict mode)
+- **Runtime**: Node.js 20+
+- **Framework**: Hono
+- **Database**: PostgreSQL 14+
+- **ORM**: Drizzle ORM
+- **Authentication**: JWT
 
 ### Frontend
 - **Language**: TypeScript 5+ (strict mode)
@@ -106,149 +117,4 @@ make db-shell       # Access PostgreSQL shell
 make db-reset       # Reset database with fresh schema and seed data
 make create-demo-users  # Create all demo users for testing
 make backup         # Backup database and files
-make restore        # Restore from backup
-
-# Logs
-make logs           # All service logs
-make logs-backend   # Backend only
-make logs-frontend  # Frontend only
-
-# Testing & Quality
-make test           # Run all tests
-make lint           # Run linting
-make format         # Format code
-```
-
-**Access URLs (after `make dev`):**
-- Frontend: http://localhost:8000
-- Backend API: http://localhost:8080/api/v1
-- Database: localhost:5432
-
-**Demo Accounts:** All use password `admin123`
-- admin, manager1, server1, server2, counter1, counter2, kitchen1
-
-## Architecture
-
-### Backend (Golang + Gin)
-
-Located in `backend/`. Standard Go project layout:
-
-```
-backend/
-├── main.go                     # Entry point, CORS, middleware setup
-├── internal/
-│   ├── api/routes.go           # RESTful route definitions with role-based grouping
-│   ├── models/models.go        # Data models, DTOs, APIResponse struct
-│   ├── database/connection.go  # PostgreSQL connection pooling
-│   ├── middleware/auth.go      # JWT authentication + RBAC middleware
-│   └── handlers/               # Domain-specific HTTP handlers
-│       ├── auth.go             # Login, logout, user management
-│       ├── orders.go           # Order lifecycle management
-│       ├── products.go         # Menu and category management
-│       ├── tables.go           # Table and seating management
-│       └── payments.go         # Payment processing
-```
-
-**Key patterns:**
-- Handler structs with `*sql.DB` dependency injection
-- Raw SQL with parameterized queries (no ORM)
-- Standard APIResponse format: `{success, message, data, error}`
-- RESTful API versioning: `/api/v1/`
-
-### Frontend (React + TanStack Start)
-
-Located in `frontend/`. Uses file-based routing:
-
-```
-frontend/src/
-├── main.tsx                    # React entry point
-├── routes/                     # TanStack Start file-based routing
-│   ├── login.tsx
-│   ├── kitchen.tsx
-│   └── admin/                  # Admin routes with nested layouts
-├── components/
-│   ├── ui/                     # shadcn/ui base components
-│   ├── admin/                  # Admin dashboard components
-│   ├── pos/                    # POS interface (cart, product grid)
-│   ├── kitchen/                # Kitchen display system
-│   ├── server/                 # Server-specific interface
-│   ├── counter/                # Counter/checkout interface
-│   └── forms/                  # Form components with Zod validation
-├── api/client.ts               # Axios-based API client
-├── types/index.ts              # TypeScript definitions
-├── hooks/                      # Custom React hooks
-└── lib/
-    ├── utils.ts                # cn() utility, formatters
-    └── form-schemas.ts         # Zod validation schemas
-```
-
-**Key patterns:**
-- TanStack Query for data fetching and caching
-- shadcn/ui + Radix UI for components
-- Zod + React Hook Form for validation
-- `cn()` utility for conditional Tailwind classes
-
-### Database (PostgreSQL)
-
-Schema in `database/init/01_schema.sql`. Main tables:
-- `users` - Role-based users (admin, manager, server, counter, kitchen)
-- `products` / `categories` - Menu items with inventory
-- `orders` / `order_items` - Order lifecycle with status tracking
-- `dining_tables` - Table occupancy management
-- `payments` - Multi-method payment processing
-- `order_status_history` - Audit trail
-
-### Role-Based Access
-
-Five user roles with different interface access:
-- **Admin**: Full system access, can switch to any interface
-- **Manager**: Business operations and reporting
-- **Server**: Dine-in orders only
-- **Counter**: All order types + payment processing
-- **Kitchen**: Order preparation workflow (as-ready service)
-
-Backend enforces roles via `RequireRoles()` middleware. Frontend uses `RoleBasedLayout` component.
-
-## Key Files Reference
-
-- `Makefile` - All development commands
-- `docker-compose.dev.yml` - Development environment
-- `backend/internal/api/routes.go` - All API endpoints
-- `backend/internal/models/models.go` - All data structures
-- `frontend/src/types/index.ts` - TypeScript types
-- `frontend/src/api/client.ts` - API client methods
-- `database/init/01_schema.sql` - Database schema
-- `.cursor/rules/` - AI-enhanced development patterns (17 rule files)
-
-## Cursor Rules
-
-The project includes 17 Cursor AI rule files in `.cursor/rules/` covering:
-- Project architecture and patterns
-- Backend Golang conventions
-- Frontend React patterns
-- Database operations
-- Role-based access patterns
-- Performance optimization
-- Testing patterns
-
-## Active Technologies
-- Go 1.21+ (backend), TypeScript 5+ strict mode (frontend) (001-restaurant-management)
-- Go 1.21+ (backend), TypeScript 5+ (frontend) + Gin 1.9.1, React 18.3.1, TanStack Router, PostgreSQL 15 (002-restaurant-management)
-- PostgreSQL 15 with UUID primary keys, Docker volumes for persistence (002-restaurant-management)
-- Go 1.21+ (backend), TypeScript 5+ strict mode (frontend) + Gin v1.9.1, React 18, TanStack Router/Query, PostgreSQL 15 (002-restaurant-management)
-- PostgreSQL 15 with Docker volume persistence (002-restaurant-management)
-- PostgreSQL 15 (data), MinIO/Cloudflare R2 (images) (002-restaurant-management)
-- PostgreSQL 14+ (mocked via go-sqlmock for unit tests) (002-restaurant-management)
-- TypeScript 5+ (strict mode), Go 1.23+ + React 18.3.1, TanStack Router v1.57.15, TanStack Query v5.56.2, Embla Carousel (new), Tailwind CSS, Gin v1.9.1 (004-restaurant-management)
-- PostgreSQL 14+ (existing database schema) (004-restaurant-management)
-- TypeScript 5+ (strict mode), React 18.3.1 + i18next v25.7.2, react-i18next v16.5.0 (005-admin-language-settings)
-- Browser localStorage (key: `i18nextLng`) (005-admin-language-settings)
-- Go 1.23+ (backend), TypeScript 5+ strict mode (frontend) + Gin v1.9.1, React 18.3.1, TanStack Router v1.57.15, TanStack Query v5.56.2 (001-fix-opening-hours)
-- PostgreSQL 14+ with UUID primary keys (001-fix-opening-hours)
-- Go 1.23+ (backend), TypeScript 5+ strict mode (frontend) + Gin v1.9.1, React 18.3.1, TanStack Router v1.57+, TanStack Query v5+ (007-fix-order-inventory-system)
-- Go 1.23+ (backend), Node.js 20+ (frontend build) + Docker 20.10+, Docker Compose 2.0+, Cloudflare Tunnel (cloudflared) (008-production-deploy)
-- PostgreSQL 15 (Docker container), Docker volumes for persistence (008-production-deploy)
-- Go 1.23+ (backend), TypeScript 5+ (frontend) + Gin v1.9.1, React 18, TanStack Router, Docker Compose, Cloudflare Tunnel (cloudflared) (009-fix-production-parity)
-- PostgreSQL 15+ (Docker container) (009-fix-production-parity)
-- TypeScript 5+ (strict mode), React 18.3.1 + @lottiefiles/react-lottie-player, React hooks (useState, useEffect) (001-fix-site-loading)
-- N/A (pure frontend component fix) (001-fix-site-loading)
+make restore
