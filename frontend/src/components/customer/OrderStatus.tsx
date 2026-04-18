@@ -148,12 +148,7 @@ export function OrderStatus({
           <div className="text-right">
             <p className="text-sm text-[var(--public-text-secondary)]">Total</p>
             <p className="text-xl font-bold text-[var(--public-accent)]">
-              {new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              }).format(order.total_amount || 0)}
+              Rp.{new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(order.total_amount || 0)},-
             </p>
           </div>
         </div>
@@ -171,11 +166,7 @@ export function OrderStatus({
                   {item.quantity}x {item.product?.name || 'Item'}
                 </span>
                 <span>
-                  {new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: 'IDR',
-                    minimumFractionDigits: 0,
-                  }).format(item.total_price)}
+                  Rp.{new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(item.total_price)},-
                 </span>
               </li>
             ))}

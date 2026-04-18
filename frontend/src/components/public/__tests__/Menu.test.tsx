@@ -42,12 +42,8 @@ function TestMenuPage({
   const [searchQuery, setSearchQuery] = React.useState('')
 
   const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price)
+    const formatted = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(price);
+    return `Rp.${formatted},-`;
   }
 
   const handleCategoryChange = (categoryId: string | null) => {

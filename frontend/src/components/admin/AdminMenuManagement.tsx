@@ -364,7 +364,7 @@ export function AdminMenuManagement() {
                             </p>
                             <div className="flex items-center gap-2 mt-2">
                               <Badge variant="outline" className="text-green-600">
-                                Rp {new Intl.NumberFormat('id-ID').format(product.price)}
+                                Rp.{new Intl.NumberFormat('id-ID').format(product.price)},-
                               </Badge>
                               <Badge variant="outline" className="text-blue-600">
                                 <Clock className="w-3 h-3 mr-1" />

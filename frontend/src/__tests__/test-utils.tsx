@@ -556,12 +556,8 @@ export async function flushPromises(): Promise<void> {
  * Formats number as Indonesian Rupiah
  */
 export function formatIDR(value: number): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
+  const formatted = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+    return `Rp.${formatted},-`;
 }
 
 /**
