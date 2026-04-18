@@ -78,12 +78,8 @@ class ReceiptPrinterService {
     const currency = this.settings.currency || 'IDR';
 
     if (currency === 'IDR') {
-      return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(amount);
+      const formatted = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
+    return `Rp.${formatted},-`;
     }
 
     return new Intl.NumberFormat('en-US', {

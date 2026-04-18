@@ -162,11 +162,8 @@ function OrderStatusPage() {
   }, [order, previousStatus, surveySubmitted]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(amount);
+    const formatted = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
+    return `Rp.${formatted},-`;
   };
 
   const getCurrentStatusIndex = (status: OrderStatusType): number => {

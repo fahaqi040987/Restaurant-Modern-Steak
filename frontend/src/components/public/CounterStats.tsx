@@ -174,7 +174,8 @@ function StatItemComponent({
 
   const formatNumber = (num: number): string => {
     if (num >= 1000) {
-      return new Intl.NumberFormat('id-ID').format(num)
+      const formatted = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(num);
+      return `Rp.${formatted},-`
     }
     return num.toString()
   }
