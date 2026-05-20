@@ -105,7 +105,7 @@ export function HeroSection({
           ref={headingRef}
           className={cn(
             'font-accent text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white mb-6',
-            'transition-all duration-700 ease-out',
+            'transition-[opacity,transform] duration-700 ease-out',
             headingVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
@@ -123,7 +123,7 @@ export function HeroSection({
           ref={taglineRef}
           className={cn(
             'text-lg sm:text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto',
-            'transition-all duration-700 ease-out delay-200',
+            'transition-[opacity,transform] duration-700 ease-out delay-200',
             taglineVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
@@ -138,7 +138,7 @@ export function HeroSection({
           ref={ctaRef}
           className={cn(
             'flex flex-col sm:flex-row gap-4 justify-center items-center',
-            'transition-all duration-700 ease-out delay-400',
+            'transition-[opacity,transform] duration-700 ease-out delay-400',
             ctaVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
@@ -152,7 +152,7 @@ export function HeroSection({
               'gap-2 px-8 py-6 text-lg font-semibold',
               'bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
               'text-white shadow-lg hover:shadow-xl',
-              'transition-all duration-300 hover:scale-105'
+              'transition-[background-color,box-shadow,transform] duration-300 hover:scale-105'
             )}
           >
             <Link to="/site/reservation">
@@ -169,7 +169,7 @@ export function HeroSection({
               'gap-2 px-8 py-6 text-lg font-semibold',
               'bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
               'text-white shadow-lg hover:shadow-xl',
-              'transition-all duration-300 hover:scale-105'
+              'transition-[background-color,box-shadow,transform] duration-300 hover:scale-105'
             )}
           >
             <Link to="/site/menu">
@@ -195,7 +195,7 @@ export function HeroSection({
           // T027: Active state feedback (tap feedback for touch)
           'active:scale-95',
           // T028: Smooth transition utilities
-          'transition-all duration-200 ease-out',
+          'transition-[color,transform] duration-200 ease-out',
           // Focus ring for keyboard navigation
           'focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent',
           'bg-transparent border-none p-2 rounded-full'

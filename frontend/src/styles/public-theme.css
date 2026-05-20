@@ -1,6 +1,3 @@
-/* Google Fonts import for Playfair Display */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-
 /**
  * Public Website Theme Configuration
  *
@@ -11,6 +8,8 @@
 
 /* Public Website CSS Custom Properties (Design Tokens) */
 :root {
+  color-scheme: dark;
+
   /* Primary Colors - Dark Theme Base */
   --public-primary: #1a1a1a;           /* Deep charcoal - main background */
   --public-primary-light: #2d2d2d;     /* Lighter charcoal - cards/elevated */
@@ -61,6 +60,11 @@
   /* Typography Scale */
   --public-font-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --public-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Font aliases used by components */
+  --font-heading: var(--public-font-heading);
+  --font-body: var(--public-font-body);
+  --font-accent: 'Pacifico', cursive;
 
   /* Font Sizes */
   --public-text-xs: 0.75rem;           /* 12px */
@@ -117,6 +121,7 @@
 
 /* Base styles for public website pages */
 .public-theme {
+  color-scheme: dark;
   background-color: var(--public-bg-primary);
   color: var(--public-text-primary);
   font-family: var(--public-font-body);
@@ -171,7 +176,7 @@
   font-size: var(--public-text-sm);
   font-weight: 500;
   border-radius: var(--public-radius-md);
-  transition: all var(--public-transition-fast);
+  transition: background-color var(--public-transition-fast), color var(--public-transition-fast), border-color var(--public-transition-fast), box-shadow var(--public-transition-fast);
   cursor: pointer;
 }
 
@@ -678,4 +683,43 @@
 @keyframes panex {
   0% { transform: rotate(-5deg); }
   100% { transform: rotate(10deg); }
+}
+
+/* ============================================
+   REDUCED MOTION: Respect user preferences
+   Disable all animations for users who prefer reduced motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-on-scroll,
+  .animate-fade-up,
+  .animate-fade-down,
+  .animate-fade-left,
+  .animate-fade-right,
+  .animate-zoom-in,
+  .animate-fade {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .loader-utensils-animation,
+  .loader-dot,
+  .flame-effect .flame,
+  .steam-effect .steam,
+  .loader-steak-animation,
+  .loader-pan,
+  .loader-pan::after,
+  .loader-text-animation {
+    animation: none !important;
+  }
 }

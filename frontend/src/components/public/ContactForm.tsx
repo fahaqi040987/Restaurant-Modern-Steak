@@ -184,6 +184,7 @@ export function ContactForm({
         <Input
           id="name"
           type="text"
+          autoComplete="name"
           {...register('name')}
           placeholder={t('contact.namePlaceholder')}
           className={cn(
@@ -218,6 +219,8 @@ export function ContactForm({
         <Input
           id="email"
           type="email"
+          autoComplete="email"
+          spellCheck={false}
           {...register('email')}
           placeholder={t('contact.emailPlaceholder')}
           className={cn(
@@ -252,6 +255,8 @@ export function ContactForm({
         <Input
           id="phone"
           type="tel"
+          inputMode="tel"
+          autoComplete="tel"
           {...register('phone')}
           placeholder={t('contact.phonePlaceholder')}
           className="public-input"
@@ -352,7 +357,7 @@ export function ContactForm({
           'w-full py-6 text-lg font-semibold',
           'bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
           'text-white shadow-lg hover:shadow-xl',
-          'transition-all duration-300'
+          'transition-colors duration-300'
         )}
       >
         {mutation.isPending ? (

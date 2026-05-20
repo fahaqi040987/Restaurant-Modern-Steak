@@ -9,9 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReservationRouteImport } from './routes/reservation'
+import { Route as MenuRouteImport } from './routes/menu'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as KitchenRouteImport } from './routes/kitchen'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SiteIndexRouteImport } from './routes/site/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -39,6 +43,16 @@ import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminCounterRouteImport } from './routes/admin/counter'
 import { Route as AdminContactsRouteImport } from './routes/admin/contacts'
 
+const ReservationRoute = ReservationRouteImport.update({
+  id: '/reservation',
+  path: '/reservation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MenuRoute = MenuRouteImport.update({
+  id: '/menu',
+  path: '/menu',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -49,9 +63,19 @@ const KitchenRoute = KitchenRouteImport.update({
   path: '/kitchen',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -187,9 +211,13 @@ const AdminContactsRoute = AdminContactsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/contact': typeof ContactRoute
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
+  '/menu': typeof MenuRoute
+  '/reservation': typeof ReservationRoute
   '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -218,8 +246,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
+  '/menu': typeof MenuRoute
+  '/reservation': typeof ReservationRoute
   '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -249,9 +281,13 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
+  '/contact': typeof ContactRoute
   '/kitchen': typeof KitchenRoute
   '/login': typeof LoginRoute
+  '/menu': typeof MenuRoute
+  '/reservation': typeof ReservationRoute
   '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -282,9 +318,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/admin'
+    | '/contact'
     | '/kitchen'
     | '/login'
+    | '/menu'
+    | '/reservation'
     | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
@@ -313,8 +353,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
+    | '/contact'
     | '/kitchen'
     | '/login'
+    | '/menu'
+    | '/reservation'
     | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
@@ -343,9 +387,13 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/admin'
+    | '/contact'
     | '/kitchen'
     | '/login'
+    | '/menu'
+    | '/reservation'
     | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
@@ -375,9 +423,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
+  ContactRoute: typeof ContactRoute
   KitchenRoute: typeof KitchenRoute
   LoginRoute: typeof LoginRoute
+  MenuRoute: typeof MenuRoute
+  ReservationRoute: typeof ReservationRoute
   CustomerSurveyRoute: typeof CustomerSurveyRoute
   OrderStatusOrderIdRoute: typeof OrderStatusOrderIdRoute
   OrderTableCodeRoute: typeof OrderTableCodeRoute
@@ -392,6 +444,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reservation': {
+      id: '/reservation'
+      path: '/reservation'
+      fullPath: '/reservation'
+      preLoaderRoute: typeof ReservationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/menu': {
+      id: '/menu'
+      path: '/menu'
+      fullPath: '/menu'
+      preLoaderRoute: typeof MenuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -406,11 +472,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KitchenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -638,9 +718,13 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
+  ContactRoute: ContactRoute,
   KitchenRoute: KitchenRoute,
   LoginRoute: LoginRoute,
+  MenuRoute: MenuRoute,
+  ReservationRoute: ReservationRoute,
   CustomerSurveyRoute: CustomerSurveyRoute,
   OrderStatusOrderIdRoute: OrderStatusOrderIdRoute,
   OrderTableCodeRoute: OrderTableCodeRoute,

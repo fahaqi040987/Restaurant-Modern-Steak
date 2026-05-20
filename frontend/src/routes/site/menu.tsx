@@ -85,7 +85,7 @@ function PublicMenuPage() {
         <div
           ref={headerRef}
           className={cn(
-            "public-container text-center transition-all duration-700",
+            "public-container text-center transition-[opacity,transform] duration-700",
             headerVisible
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-8",
@@ -170,7 +170,7 @@ function PublicMenuPage() {
         <div
           ref={gridRef}
           className={cn(
-            "public-container transition-all duration-700",
+            "public-container transition-[opacity,transform] duration-700",
             gridVisible
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-8",
@@ -224,7 +224,7 @@ function PublicMenuPage() {
               {menuItems.map((item, index) => (
                 <div
                   key={item.id}
-                  className="transition-all duration-500"
+                  className="transition-[opacity,transform] duration-500"
                   style={{
                     transitionDelay: `${index * 50}ms`,
                   }}

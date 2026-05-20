@@ -36,7 +36,7 @@ function NavLink({ to, children, onClick, className }: NavLinkProps) {
       to={to}
       onClick={onClick}
       className={cn(
-        'text-sm font-medium transition-all duration-300',
+        'text-sm font-medium transition-colors duration-300',
         'hover:text-[var(--public-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]',
         isActive && 'text-[var(--public-accent)]',
         !isActive && 'text-white',
@@ -96,7 +96,7 @@ export function Header() {
 
   return (
     <header
-      className="bg-transparent transition-all duration-300 w-full absolute top-0 left-0 right-0 z-50"
+      className="bg-transparent transition-colors duration-300 w-full absolute top-0 left-0 right-0 z-50"
       role="banner"
     >
       <nav
@@ -113,7 +113,9 @@ export function Header() {
             <img
               src={restaurantInfo?.logo_url || '/assets/restoran/images/LogoSteakKenangan.png'}
               alt={restaurantInfo.name || 'Steak Kenangan'}
-              className="h-28 md:h-30 lg:h-32 w-auto object-contain transition-all duration-300"
+              width={128}
+              height={128}
+              className="h-28 md:h-30 lg:h-32 w-auto object-contain transition-[height,opacity] duration-300"
             />
           ) : (
             <span
@@ -188,6 +190,8 @@ export function Header() {
               src="/assets/restoran/images/Halal_Indonesia.svg"
               alt="Sertifikat Halal Indonesia"
               title="Sertifikat Halal Indonesia"
+              width={112}
+              height={112}
               className="h-16 md:h-20 lg:h-28 w-auto object-contain drop-shadow-md brightness-110"
             />
           </div>
@@ -225,6 +229,8 @@ export function Header() {
                 <img
                   src={restaurantInfo?.logo_url || '/assets/restoran/images/LogoSteakKenangan.png'}
                   alt={restaurantInfo?.name || 'Steak Kenangan'}
+                  width={80}
+                  height={80}
                   className="h-20 w-auto object-contain"
                 />
               </SheetTitle>

@@ -101,7 +101,9 @@ export function TestimonialSlider({
   const displayTitle = title || t('public.whatOurGuestsSay')
   const displaySubtitle = subtitle || t('public.realExperiences')
 
-  const autoplayPlugin = autoplay
+  const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  const autoplayPlugin = autoplay && !prefersReducedMotion
     ? Autoplay({ delay: autoplayDelay, stopOnInteraction: true })
     : undefined
 
@@ -178,7 +180,7 @@ export function TestimonialSlider({
         {/* Section Header */}
         <div
           className={cn(
-            'text-center mb-12 transition-all duration-700',
+            'text-center mb-12 transition-[opacity,transform] duration-700',
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           )}
         >
@@ -220,7 +222,7 @@ export function TestimonialSlider({
               'hidden md:flex -ml-4 lg:-ml-12',
               'bg-[var(--public-primary)] border-[var(--public-border)]',
               'hover:bg-[var(--public-accent)] hover:border-[var(--public-accent)]',
-              'hover:text-white transition-all duration-300'
+              'hover:text-white transition-colors duration-300'
             )}
             aria-label="Previous testimonial"
           >
@@ -255,7 +257,7 @@ export function TestimonialSlider({
               'hidden md:flex -mr-4 lg:-mr-12',
               'bg-[var(--public-primary)] border-[var(--public-border)]',
               'hover:bg-[var(--public-accent)] hover:border-[var(--public-accent)]',
-              'hover:text-white transition-all duration-300'
+              'hover:text-white transition-colors duration-300'
             )}
             aria-label="Next testimonial"
           >
@@ -297,7 +299,7 @@ export function TestimonialSlider({
               key={index}
               onClick={() => scrollTo(index)}
               className={cn(
-                'w-3 h-3 rounded-full transition-all duration-300',
+                'w-3 h-3 rounded-full transition-[background-color,width] duration-300',
                 index === selectedIndex
                   ? 'bg-[var(--public-accent)] w-8'
                   : 'bg-[var(--public-border)] hover:bg-[var(--public-text-muted)]'
@@ -323,7 +325,7 @@ function TestimonialCard({ testimonial, isActive }: TestimonialCardProps) {
     <div
       data-testid="testimonial-card"
       className={cn(
-        'relative p-8 md:p-10 rounded-2xl transition-all duration-500',
+        'relative p-8 md:p-10 rounded-2xl transition-[opacity,transform] duration-500',
         'bg-[var(--public-primary)] border border-[var(--public-border)]',
         isActive
           ? 'scale-100 opacity-100 shadow-xl border-[var(--public-accent)]'
@@ -370,6 +372,8 @@ function TestimonialCard({ testimonial, isActive }: TestimonialCardProps) {
           <img
             src={testimonial.image}
             alt={`${testimonial.name}`}
+            width={56}
+            height={56}
             className="w-14 h-14 rounded-full object-cover border-2 border-[var(--public-accent)]"
             loading="lazy"
           />
@@ -379,7 +383,8 @@ function TestimonialCard({ testimonial, isActive }: TestimonialCardProps) {
               'w-14 h-14 rounded-full flex items-center justify-center',
               'bg-[var(--public-accent)] text-white text-xl font-bold'
             )}
-            aria-hidden="true"
+            role="img"
+            aria-label={`${testimonial.name}'s avatar`}
           >
             {testimonial.name
               .split(' ')

@@ -164,7 +164,7 @@ export function MenuSlider({
             disabled={disabled}
             aria-pressed={selectedCategory === null}
             className={cn(
-              'flex-shrink-0 rounded-full px-5 transition-all duration-200',
+              'flex-shrink-0 rounded-full px-5 transition-[background-color,color,border-color] duration-200',
               selectedCategory === null
                 ? 'bg-[var(--public-accent)] text-white hover:bg-[var(--public-accent)]/90 border-transparent'
                 : 'border-[var(--public-border)] text-[var(--public-text-secondary)] hover:bg-[var(--public-bg-hover)] hover:text-[var(--public-text-primary)]'
@@ -188,7 +188,7 @@ export function MenuSlider({
                 disabled={disabled}
                 aria-pressed={isSelected}
                 className={cn(
-                  'flex-shrink-0 rounded-full px-5 transition-all duration-200',
+                  'flex-shrink-0 rounded-full px-5 transition-[background-color,color,border-color] duration-200',
                   isSelected
                     ? 'bg-[var(--public-accent)] text-white hover:bg-[var(--public-accent)]/90 border-transparent'
                     : 'border-[var(--public-border)] text-[var(--public-text-secondary)] hover:bg-[var(--public-bg-hover)] hover:text-[var(--public-text-primary)]'

@@ -161,7 +161,7 @@ function FeaturedDishesSection({
         <div
           ref={headerRef}
           className={cn(
-            'text-center mb-12 transition-all duration-700',
+            'text-center mb-12 transition-[opacity,transform] duration-700',
             headerVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
@@ -230,7 +230,7 @@ function FeaturedDishesSection({
             className={cn(
               'gap-2 bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
               'text-white font-semibold shadow-lg hover:shadow-xl',
-              'transition-all duration-300'
+              'transition-colors duration-300'
             )}
           >
             <Link to="/site/menu">
@@ -269,7 +269,7 @@ function MenuItemCard({ item, index, formatPrice }: MenuItemCardProps) {
       ref={ref}
       className={cn(
         'public-card group overflow-hidden',
-        'transition-all duration-500 ease-out',
+        'transition-[opacity,transform] duration-500 ease-out',
         'hover:border-[var(--public-accent)] hover:shadow-xl hover:-translate-y-2',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       )}
@@ -281,6 +281,8 @@ function MenuItemCard({ item, index, formatPrice }: MenuItemCardProps) {
           <img
             src={getImageUrl(item.image_url) || ''}
             alt={item.name}
+            width={400}
+            height={300}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
             onError={(e) => {
@@ -300,7 +302,7 @@ function MenuItemCard({ item, index, formatPrice }: MenuItemCardProps) {
             className="w-full h-full flex items-center justify-center"
             style={{ display: item.image_url ? 'none' : 'flex' }}
           >
-            <Utensils className="h-12 w-12 text-[var(--public-text-muted)]" />
+            <Utensils className="h-12 w-12 text-[var(--public-text-muted)]" aria-hidden="true" />
           </div>
         )}
         {/* Category badge */}
@@ -369,7 +371,7 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
           ref={ref}
           className={cn(
             'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center',
-            'transition-all duration-700',
+            'transition-[opacity,transform] duration-700',
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           )}
         >
@@ -408,7 +410,7 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
               className={cn(
                 'gap-2 border-2 border-[var(--public-accent)] text-[var(--public-accent)]',
                 'hover:bg-[var(--public-accent)] hover:text-white',
-                'font-semibold transition-all duration-300'
+                'font-semibold transition-colors duration-300'
               )}
             >
               <Link to="/site/about">
@@ -425,6 +427,8 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
                 <img
                   src="/assets/restoran/images/image_grid_1.jpeg"
                   alt="Our restaurant interior"
+                  width={300}
+                  height={375}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
@@ -433,6 +437,8 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
                 <img
                   src="/assets/restoran/images/image_grid_2.jpeg"
                   alt="Our signature dishes"
+                  width={300}
+                  height={300}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
@@ -443,6 +449,8 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
                 <img
                   src="/assets/restoran/images/image_grid_3.jpeg"
                   alt="Our chef at work"
+                  width={300}
+                  height={300}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
@@ -451,6 +459,8 @@ function AboutTeaserSection({ description }: AboutTeaserSectionProps) {
                 <img
                   src="/assets/restoran/images/image_grid_4.jpeg"
                   alt="Premium ingredients"
+                  width={300}
+                  height={375}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />

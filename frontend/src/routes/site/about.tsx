@@ -76,7 +76,7 @@ function HeroBanner({ description }: HeroBannerProps) {
         ref={ref}
         className={cn(
           'relative z-10 text-center px-4 max-w-4xl mx-auto',
-          'transition-all duration-700',
+          'transition-[opacity,transform] duration-700',
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         )}
       >
@@ -140,7 +140,7 @@ function ValuesSection() {
         {/* Section Header */}
         <div
           className={cn(
-            'text-center mb-12 transition-all duration-700',
+            'text-center mb-12 transition-[opacity,transform] duration-700',
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           )}
         >
@@ -199,7 +199,7 @@ function ValueCard({ value, index, isVisible }: ValueCardProps) {
   return (
     <Card
       className={cn(
-        'public-card p-6 text-center transition-all duration-500',
+        'public-card p-6 text-center transition-[opacity,transform,box-shadow] duration-500',
         'hover:border-[var(--public-accent)] hover:-translate-y-2',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       )}
@@ -247,7 +247,7 @@ function CTASection() {
         <div
           ref={ref}
           className={cn(
-            'max-w-3xl mx-auto text-center transition-all duration-700',
+            'max-w-3xl mx-auto text-center transition-[opacity,transform] duration-700',
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           )}
         >
@@ -278,7 +278,7 @@ function CTASection() {
                 'gap-2 px-8 font-semibold',
                 'border-2 border-[var(--public-accent)] text-[var(--public-accent)]',
                 'hover:bg-[var(--public-accent)] hover:text-black',
-                'transition-all duration-300'
+                'transition-[opacity,transform,border-color] duration-300'
               )}
             >
               <Link to="/site/reservation">
@@ -294,7 +294,7 @@ function CTASection() {
                 'gap-2 px-8 font-semibold',
                 'border-2 border-[var(--public-accent)] text-[var(--public-accent)]',
                 'hover:bg-[var(--public-accent)] hover:text-black',
-                'transition-all duration-300'
+                'transition-[opacity,transform,border-color] duration-300'
               )}
             >
               <Link to="/site/contact">

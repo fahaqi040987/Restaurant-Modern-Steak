@@ -133,6 +133,14 @@ function StatItemComponent({
       return
     }
 
+    // Skip animation when user prefers reduced motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion) {
+      setCount(stat.value)
+      countRef.current = stat.value
+      return
+    }
+
     const startTime = Date.now()
     const endValue = stat.value
 
@@ -173,18 +181,14 @@ function StatItemComponent({
   const Icon = stat.icon
 
   const formatNumber = (num: number): string => {
-    if (num >= 1000) {
-      const formatted = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(num);
-      return `Rp.${formatted},-`
-    }
-    return num.toString()
+    return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(num)
   }
 
   return (
     <div
       data-testid="stat-item"
       className={cn(
-        'text-center transition-all duration-500',
+        'text-center transition-[opacity,transform] duration-500',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       )}
       style={{ transitionDelay: `${index * 100}ms` }}
@@ -257,7 +261,7 @@ export function HorizontalStats({
             <div
               key={stat.label}
               className={cn(
-                'text-center transition-all duration-500',
+                'text-center transition-[opacity,transform] duration-500',
                 isVisible
                   ? 'opacity-100 translate-y-0'
                   : 'opacity-0 translate-y-4'

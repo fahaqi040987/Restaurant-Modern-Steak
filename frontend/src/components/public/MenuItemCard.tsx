@@ -48,7 +48,7 @@ export function MenuItemCard({ item, className }: MenuItemCardProps) {
     <Card
       data-testid="menu-item-card"
       className={cn(
-        'public-card group overflow-hidden transition-all duration-300 hover:border-[var(--public-accent)] hover:shadow-lg',
+        'public-card group overflow-hidden transition-[border-color,box-shadow] duration-300 hover:border-[var(--public-accent)] hover:shadow-lg',
         className
       )}
     >
@@ -58,6 +58,8 @@ export function MenuItemCard({ item, className }: MenuItemCardProps) {
           <img
             src={getImageUrl(item.image_url) || ''}
             alt={item.name}
+            width={400}
+            height={300}
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
@@ -80,7 +82,7 @@ export function MenuItemCard({ item, className }: MenuItemCardProps) {
             item.image_url ? 'hidden' : 'flex'
           )}
         >
-          <Utensils className="h-16 w-16 text-[var(--public-text-muted)]" />
+          <Utensils className="h-16 w-16 text-[var(--public-text-muted)]" aria-hidden="true" />
         </div>
 
         {/* Category badge */}
@@ -94,7 +96,7 @@ export function MenuItemCard({ item, className }: MenuItemCardProps) {
         </div>
 
         {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
       </div>
 
       {/* Content */}

@@ -229,7 +229,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
               className={cn(
                 'relative gap-2 bg-white text-[var(--public-accent)]',
                 'hover:bg-white/90 font-semibold',
-                'shadow-lg hover:shadow-xl transition-all'
+                'shadow-lg hover:shadow-xl transition-[background-color,box-shadow]'
               )}
             >
               <Link to="/site/reservation">
@@ -273,7 +273,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                   className={cn(
                     'w-10 h-10 rounded-full flex items-center justify-center',
                     'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                    'hover:bg-[var(--public-accent)] hover:text-white transition-all'
+                    'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
                   )}
                   aria-label="Follow us on Instagram"
                 >
@@ -288,7 +288,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                   className={cn(
                     'w-10 h-10 rounded-full flex items-center justify-center',
                     'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                    'hover:bg-[var(--public-accent)] hover:text-white transition-all'
+                    'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
                   )}
                   aria-label="Follow us on Facebook"
                 >
@@ -303,7 +303,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                   className={cn(
                     'w-10 h-10 rounded-full flex items-center justify-center',
                     'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                    'hover:bg-[var(--public-accent)] hover:text-white transition-all'
+                    'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
                   )}
                   aria-label="Follow us on Twitter"
                 >
@@ -318,7 +318,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                     className={cn(
                       'w-10 h-10 rounded-full flex items-center justify-center',
                       'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                      'hover:bg-[var(--public-accent)] hover:text-white transition-all'
+                      'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
                     )}
                     aria-label="Follow us on Instagram"
                   >
@@ -329,7 +329,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                     className={cn(
                       'w-10 h-10 rounded-full flex items-center justify-center',
                       'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                      'hover:bg-[var(--public-accent)] hover:text-white transition-all'
+                      'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
                     )}
                     aria-label="Follow us on Facebook"
                   >
@@ -340,7 +340,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
                     className={cn(
                       'w-10 h-10 rounded-full flex items-center justify-center',
                       'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                      'hover:bg-[var(--public-accent)] hover:text-white transition-all'
+                      'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
                     )}
                     aria-label="Follow us on Twitter"
                   >
