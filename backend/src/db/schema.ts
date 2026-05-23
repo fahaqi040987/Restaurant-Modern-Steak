@@ -549,3 +549,67 @@ export const systemSettings = pgTable(
     categoryIdx: index('idx_system_settings_category').on(table.category),
   }),
 );
+
+// ---------------------------------------------------------------------------
+// bio_link_profile (singleton)
+// ---------------------------------------------------------------------------
+export const bioLinkProfile = pgTable(
+  'bio_link_profile',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    accountName: varchar('account_name', { length: 100 }).notNull(),
+    bioText: text('bio_text'),
+    avatarUrl: varchar('avatar_url', { length: 500 }),
+    themeColor: varchar('theme_color', { length: 7 }).default('#e5612f'),
+    noindex: boolean('noindex').default(true),
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+  },
+  (table) => ({
+    singletonIdx: uniqueIndex('idx_bio_link_profile_singleton').on(sql`(true)`),
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// bio_links
+// ---------------------------------------------------------------------------
+export const bioLinks = pgTable(
+  'bio_links',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: varchar('title', { length: 100 }).notNull(),
+    url: varchar('url', { length: 500 }).notNull(),
+    icon: varchar('icon', { length: 50 }),
+    isActive: boolean('is_active').default(true),
+    sortOrder: integer('sort_order').default(0),
+    clickCount: integer('click_count').default(0),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+  },
+  (table) => ({
+    isActiveIdx: index('idx_bio_links_is_active').on(table.isActive),
+    sortOrderIdx: index('idx_bio_links_sort_order').on(table.sortOrder),
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// bio_link_clicks
+// ---------------------------------------------------------------------------
+export const bioLinkClicks = pgTable(
+  'bio_link_clicks',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    linkId: uuid('link_id')
+      .notNull()
+      .references(() => bioLinks.id, { onDelete: 'cascade' }),
+    ipAddress: varchar('ip_address', { length: 45 }),
+    userAgent: varchar('user_agent', { length: 500 }),
+    referrer: varchar('referrer', { length: 500 }),
+    clickedAt: timestamp('clicked_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+  },
+  (table) => ({
+    linkIdIdx: index('idx_bio_link_clicks_link_id').on(table.linkId),
+    clickedAtIdx: index('idx_bio_link_clicks_clicked_at').on(table.clickedAt),
+  }),
+);

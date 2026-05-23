@@ -124,7 +124,7 @@ function ServiceCardItem({ card, index }: ServiceCardItemProps) {
       className={cn(
         'service-card group relative p-6 md:p-8 rounded-lg',
         'bg-[var(--public-bg-secondary)] border border-[var(--public-border)]',
-        'transition-all duration-500 ease-out',
+        'transition-[opacity,transform,border-color,box-shadow] duration-500 ease-out',
         'hover:border-[var(--public-accent)] hover:shadow-xl',
         'hover:-translate-y-2',
         isVisible
@@ -145,7 +145,7 @@ function ServiceCardItem({ card, index }: ServiceCardItemProps) {
         className={cn(
           'text-xl font-bold text-[var(--public-text-primary)] mb-3',
           'group-hover:opacity-0',
-          'transition-all duration-300'
+          'transition-opacity duration-300'
         )}
         style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
       >
@@ -183,7 +183,7 @@ function ServiceCardItem({ card, index }: ServiceCardItemProps) {
         className={cn(
           'absolute bottom-0 left-0 h-1 bg-[var(--public-accent)]',
           'w-0 group-hover:w-full',
-          'transition-all duration-300 rounded-b-lg'
+          'transition-[width] duration-300 rounded-b-lg'
         )}
         aria-hidden="true"
       />
@@ -303,7 +303,7 @@ function InfoCardItem({ card, index }: { card: InfoCard; index: number }) {
       className={cn(
         'flex items-center gap-4 p-6 rounded-lg',
         'bg-[var(--public-primary)] border border-[var(--public-border)]',
-        'transition-all duration-500 ease-out',
+        'transition-[opacity,transform,border-color,box-shadow] duration-500 ease-out',
         'hover:border-[var(--public-accent)]',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       )}

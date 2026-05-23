@@ -171,6 +171,7 @@ export function ReservationForm({
         <Input
           id="customer_name"
           type="text"
+          autoComplete="name"
           {...register('customer_name')}
           placeholder={t('reservation.namePlaceholder')}
           className={cn(
@@ -205,6 +206,8 @@ export function ReservationForm({
         <Input
           id="email"
           type="email"
+          autoComplete="email"
+          spellCheck={false}
           {...register('email')}
           placeholder={t('reservation.emailPlaceholder')}
           className={cn(
@@ -239,6 +242,8 @@ export function ReservationForm({
         <Input
           id="phone"
           type="tel"
+          inputMode="tel"
+          autoComplete="tel"
           {...register('phone')}
           placeholder={t('reservation.phonePlaceholder')}
           className={cn(
@@ -273,6 +278,7 @@ export function ReservationForm({
         <Input
           id="party_size"
           type="number"
+          inputMode="numeric"
           {...register('party_size', { valueAsNumber: true })}
           min={1}
           max={20}
@@ -411,7 +417,7 @@ export function ReservationForm({
           'w-full py-6 text-lg font-semibold',
           'bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
           'text-white shadow-lg hover:shadow-xl',
-          'transition-all duration-300'
+          'transition-colors duration-300'
         )}
       >
         {mutation.isPending ? (

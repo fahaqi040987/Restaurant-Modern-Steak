@@ -100,7 +100,7 @@ export function StorySection({
           {/* Story Content */}
           <div
             className={cn(
-              'transition-all duration-700',
+              'transition-[opacity,transform] duration-700',
               sectionVisible
                 ? 'opacity-100 translate-y-0'
                 : 'opacity-0 translate-y-8'
@@ -146,6 +146,8 @@ export function StorySection({
                 <img
                   src={backgroundImage}
                   alt="Our restaurant"
+                  width={600}
+                  height={256}
                   className="w-full h-64 object-cover"
                   loading="lazy"
                 />
@@ -157,7 +159,7 @@ export function StorySection({
           <div
             data-testid="story-timeline"
             className={cn(
-              'relative transition-all duration-700 delay-200',
+              'relative transition-[opacity,transform] duration-700 delay-200',
               sectionVisible
                 ? 'opacity-100 translate-y-0'
                 : 'opacity-0 translate-y-8'
@@ -202,7 +204,7 @@ function TimelineMilestoneItem({ milestone, index }: TimelineMilestoneItemProps)
       ref={ref}
       data-testid="timeline-milestone"
       className={cn(
-        'relative pl-12 md:pl-16 transition-all duration-500',
+        'relative pl-12 md:pl-16 transition-[opacity,transform] duration-500',
         isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
       )}
       style={{ transitionDelay: `${index * 100}ms` }}

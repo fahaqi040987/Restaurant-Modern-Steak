@@ -83,6 +83,7 @@ export function PublicLayout({
 
       {/* Main Content */}
       <main
+        id="main"
         className={`flex-1 transition-opacity duration-500 ${
           isLoading ? 'opacity-0' : 'opacity-100'
         }`}

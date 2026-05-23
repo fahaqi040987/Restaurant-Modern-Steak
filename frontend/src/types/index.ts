@@ -939,3 +939,36 @@ export interface RestockResponse {
   added_quantity: number;
   new_stock: number;
 }
+
+// Bio Link Types
+export interface BioLinkProfile {
+  id?: string;
+  account_name: string;
+  bio_text: string | null;
+  avatar_url: string | null;
+  theme_color: string;
+  noindex: boolean;
+  is_active: boolean;
+}
+
+export interface BioLink {
+  id: string;
+  title: string;
+  url: string;
+  icon: string | null;
+  is_active: boolean;
+  sort_order: number;
+  click_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BioLinkClickAnalytics {
+  date: string;
+  clicks: number;
+}
+
+export interface PublicBioLinksResponse {
+  profile: BioLinkProfile;
+  links: Pick<BioLink, 'id' | 'title' | 'url' | 'icon' | 'sort_order'>[];
+}

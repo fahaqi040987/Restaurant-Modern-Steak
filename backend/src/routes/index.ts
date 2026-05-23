@@ -24,6 +24,7 @@ import { createSurvey, getSurveyStats } from '../handlers/surveys.js';
 import { uploadImage, deleteImage } from '../handlers/upload.js';
 import { getDashboardStats, getSalesReport, getOrdersReport, getIncomeReport } from '../handlers/dashboard.js';
 import { getPublicMenu, getPublicCategories, getRestaurantInfo, submitContactForm, getCSRFToken, getTableByQRCode, createCustomerOrder } from '../handlers/public.js';
+import { getPublicBioLinks, trackBioLinkClick, getBioLinks, createBioLink, updateBioLink, deleteBioLink, reorderBioLinks, getBioLinkProfile, updateBioLinkProfile, getBioLinkAnalytics } from '../handlers/bio-links.js';
 import { getAdminCategories, createCategory, updateCategory, deleteCategory, getAdminTables, createTable, updateTable, deleteTable, getAdminUsers, createUser, updateUser, deleteUser } from '../handlers/admin.js';
 import { getSystemHealth } from '../handlers/health.js';
 
@@ -53,6 +54,8 @@ export function setupRoutes(app: Hono) {
   publicAPI.get('/health/open-status', getRestaurantInfo); // Debug endpoint
   publicAPI.post('/contact', contactFormRateLimiter(), submitContactForm);
   publicAPI.post('/reservations', contactFormRateLimiter(), csrfProtection, createReservation);
+  publicAPI.get('/links', getPublicBioLinks);
+  publicAPI.post('/links/:id/click', trackBioLinkClick);
 
   api.route('/public', publicAPI);
 
@@ -230,6 +233,16 @@ export function setupRoutes(app: Hono) {
   // File upload
   adminRoutes.post('/upload', uploadImage);
   adminRoutes.delete('/upload/:filename', deleteImage);
+
+  // Bio link management (static routes BEFORE parameterized routes)
+  adminRoutes.get('/links', getBioLinks);
+  adminRoutes.post('/links', createBioLink);
+  adminRoutes.put('/links/reorder', reorderBioLinks);
+  adminRoutes.get('/links/profile', getBioLinkProfile);
+  adminRoutes.put('/links/profile', updateBioLinkProfile);
+  adminRoutes.put('/links/:id', updateBioLink);
+  adminRoutes.delete('/links/:id', deleteBioLink);
+  adminRoutes.get('/links/:id/analytics', getBioLinkAnalytics);
 
   api.route('/admin', adminRoutes);
 

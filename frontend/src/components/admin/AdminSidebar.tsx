@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageSquare,
-  Package
+  Package,
+  Link2
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
 
@@ -104,6 +105,13 @@ const adminSections: AdminSection[] = [
     href: '/admin/tables'
   },
   {
+    id: 'links',
+    labelKey: 'admin.bioLinks',
+    icon: <Link2 className="w-5 h-5" />,
+    descriptionKey: 'admin.bioLinksDescription',
+    href: '/admin/links'
+  },
+  {
     id: 'reports',
     labelKey: 'admin.viewReports',
     icon: <BarChart3 className="w-5 h-5" />,
@@ -151,7 +159,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
       )}
 
       {/* Sidebar */}
-      <div className={`bg-card border-r border-border transition-all duration-300 flex flex-col z-50 ${
+      <div className={`bg-card border-r border-border transition-[width] duration-300 flex flex-col z-50 ${
         (isMobile || isTablet) 
           ? `fixed left-0 top-0 h-full ${sidebarCollapsed ? '-translate-x-full w-0' : 'translate-x-0 w-80'}` 
           : `relative ${sidebarCollapsed ? 'w-16' : 'w-64'}`

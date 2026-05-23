@@ -208,7 +208,7 @@ export function AdminLayout({ user }: AdminLayoutProps) {
       )}
 
       {/* Sidebar */}
-      <div className={`bg-card border-r border-border transition-all duration-300 flex flex-col z-50 ${
+      <div className={`bg-card border-r border-border transition-[width] duration-300 flex flex-col z-50 ${
         (isMobile || isTablet) 
           ? `fixed left-0 top-0 h-full ${sidebarCollapsed ? '-translate-x-full w-0' : 'translate-x-0 w-80'}` 
           : `relative ${sidebarCollapsed ? 'w-16' : 'w-64'}`
