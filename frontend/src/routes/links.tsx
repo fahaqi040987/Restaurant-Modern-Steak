@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { apiClient } from '@/api/client'
 import type { PublicBioLinksResponse } from '@/types'
-import { Instagram, Youtube, Twitter, MessageCircle, ExternalLink, ChefHat } from 'lucide-react'
+import { Instagram, Twitter, MessageCircle, ExternalLink, ChefHat } from 'lucide-react'
 
 export const Route = createFileRoute('/links')({
   component: BioLinkPage,
@@ -23,7 +23,7 @@ function getImageUrl(url: string | null | undefined): string | null {
 function BioLinkPage() {
   const [clickedId, setClickedId] = useState<string | null>(null)
 
-  const { data, isLoading } = useQuery({
+  const { data: bioData, isLoading } = useQuery({
     queryKey: ['publicBioLinks'],
     queryFn: async () => {
       const res = await apiClient.getPublicBioLinks()
@@ -32,8 +32,14 @@ function BioLinkPage() {
     staleTime: 60_000,
   })
 
-  const profile = data?.profile
-  const links = data?.links || []
+  const { data: restaurantInfo } = useQuery({
+    queryKey: ['restaurantInfo'],
+    queryFn: () => apiClient.getRestaurantInfo(),
+    staleTime: 5 * 60_000,
+  })
+
+  const profile = bioData?.profile
+  const links = bioData?.links || []
   const themeColor = profile?.theme_color || '#e5612f'
 
   useEffect(() => {
@@ -127,42 +133,50 @@ function BioLinkPage() {
 
         {/* Social Icons */}
         <div className="flex items-center gap-5 mt-10 pb-8">
-          <a
-            href="https://instagram.com/steakkenangan"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/50 hover:text-white transition-colors"
-            aria-label="Instagram"
-          >
-            <Instagram className="w-6 h-6" />
-          </a>
-          <a
-            href="https://wa.me/6281234567890"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/50 hover:text-white transition-colors"
-            aria-label="WhatsApp"
-          >
-            <MessageCircle className="w-6 h-6" />
-          </a>
-          <a
-            href="https://twitter.com/steakkenangan"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/50 hover:text-white transition-colors"
-            aria-label="Twitter"
-          >
-            <Twitter className="w-6 h-6" />
-          </a>
-          <a
-            href="https://youtube.com/@steakkenangan"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/50 hover:text-white transition-colors"
-            aria-label="YouTube"
-          >
-            <Youtube className="w-6 h-6" />
-          </a>
+          {restaurantInfo?.instagram_url && (
+            <a
+              href={restaurantInfo.instagram_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/50 hover:text-white transition-colors"
+              aria-label="Instagram"
+            >
+              <Instagram className="w-6 h-6" />
+            </a>
+          )}
+          {restaurantInfo?.whatsapp && (
+            <a
+              href={`https://wa.me/${restaurantInfo.whatsapp.replace(/[^0-9]/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/50 hover:text-white transition-colors"
+              aria-label="WhatsApp"
+            >
+              <MessageCircle className="w-6 h-6" />
+            </a>
+          )}
+          {restaurantInfo?.twitter_url && (
+            <a
+              href={restaurantInfo.twitter_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/50 hover:text-white transition-colors"
+              aria-label="Twitter"
+            >
+              <Twitter className="w-6 h-6" />
+            </a>
+          )}
+          {restaurantInfo?.facebook_url && (
+            <a
+              href={restaurantInfo.facebook_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/50 hover:text-white transition-colors"
+              aria-label="Facebook"
+            >
+              <ExternalLink className="w-6 h-6" />
+            </a>
+          )}
         </div>
       </div>
     </div>
