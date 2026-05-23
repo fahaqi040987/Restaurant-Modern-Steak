@@ -560,6 +560,7 @@ export const bioLinkProfile = pgTable(
     accountName: varchar('account_name', { length: 100 }).notNull(),
     bioText: text('bio_text'),
     avatarUrl: varchar('avatar_url', { length: 500 }),
+    backgroundUrl: varchar('background_url', { length: 500 }),
     themeColor: varchar('theme_color', { length: 7 }).default('#e5612f'),
     noindex: boolean('noindex').default(true),
     isActive: boolean('is_active').default(true),

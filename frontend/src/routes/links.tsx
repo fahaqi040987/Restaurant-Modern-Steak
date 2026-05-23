@@ -41,6 +41,7 @@ function BioLinkPage() {
   const profile = bioData?.profile
   const links = bioData?.links || []
   const themeColor = profile?.theme_color || '#e5612f'
+  const backgroundUrl = getImageUrl(profile?.background_url)
 
   useEffect(() => {
     if (profile?.noindex) {
@@ -74,7 +75,7 @@ function BioLinkPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-950 to-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-950 to-gray-900 text-white">
         <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
       </div>
     )
@@ -82,10 +83,24 @@ function BioLinkPage() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 text-white"
+      className="min-h-screen text-white relative"
       style={{ '--bio-theme': themeColor } as React.CSSProperties}
     >
-      <div className="max-w-md mx-auto px-4 py-12 flex flex-col items-center min-h-screen">
+      {/* Background layer */}
+      {backgroundUrl ? (
+        <>
+          <div
+            className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${backgroundUrl})` }}
+          />
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px]" />
+        </>
+      ) : (
+        <div className="fixed inset-0 bg-gradient-to-b from-gray-950 to-gray-900" />
+      )}
+
+      {/* Content */}
+      <div className="relative max-w-md mx-auto px-4 py-12 flex flex-col items-center min-h-screen">
         {/* Profile */}
         <div className="flex flex-col items-center mb-8">
           <div

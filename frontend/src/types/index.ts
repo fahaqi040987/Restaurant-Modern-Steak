@@ -946,6 +946,7 @@ export interface BioLinkProfile {
   account_name: string;
   bio_text: string | null;
   avatar_url: string | null;
+  background_url: string | null;
   theme_color: string;
   noindex: boolean;
   is_active: boolean;

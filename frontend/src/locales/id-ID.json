@@ -759,7 +759,9 @@
     "bioLinksSortOrder": "Urutan",
     "bioLinksAvatar": "Foto Profil",
     "bioLinksSaveProfile": "Simpan Profil",
-    "bioLinksViewPage": "Lihat Halaman"
+    "bioLinksViewPage": "Lihat Halaman",
+    "bioLinksBackground": "Background",
+    "bioLinksChangeBg": "Ganti Background"
   },
   "navigation": {
     "home": "Beranda",
