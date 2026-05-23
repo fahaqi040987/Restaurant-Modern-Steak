@@ -37,6 +37,7 @@ export async function getPublicBioLinks(c: Context) {
       account_name: 'Steak Kenangan',
       bio_text: 'Premium steaks crafted with passion',
       avatar_url: null,
+      background_url: null,
       theme_color: '#e5612f',
       noindex: true,
     };
@@ -48,6 +49,7 @@ export async function getPublicBioLinks(c: Context) {
           account_name: profile.account_name,
           bio_text: profile.bio_text,
           avatar_url: profile.avatar_url,
+          background_url: profile.background_url,
           theme_color: profile.theme_color,
           noindex: profile.noindex,
         },
@@ -132,7 +134,7 @@ export async function updateBioLinkProfile(c: Context) {
       return c.json({ success: false, message: 'Request body is empty' }, 400);
     }
 
-    const fields = ['account_name', 'bio_text', 'avatar_url', 'theme_color', 'noindex', 'is_active'];
+    const fields = ['account_name', 'bio_text', 'avatar_url', 'background_url', 'theme_color', 'noindex', 'is_active'];
     const updates: string[] = [];
     const params: unknown[] = [];
     let idx = 1;
@@ -152,8 +154,8 @@ export async function updateBioLinkProfile(c: Context) {
     updates.push(`updated_at = NOW()`);
 
     const query = `
-      INSERT INTO bio_link_profile (account_name, bio_text, avatar_url, theme_color, noindex, is_active)
-      VALUES ($${idx}, $${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5})
+      INSERT INTO bio_link_profile (account_name, bio_text, avatar_url, background_url, theme_color, noindex, is_active)
+      VALUES ($${idx}, $${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5}, $${idx + 6})
       ON CONFLICT ((TRUE)) DO UPDATE SET ${updates.join(', ')}
       RETURNING *
     `;
@@ -161,11 +163,12 @@ export async function updateBioLinkProfile(c: Context) {
     const defaultName = body.account_name || 'Steak Kenangan';
     const defaultBio = body.bio_text || '';
     const defaultAvatar = body.avatar_url || null;
+    const defaultBackground = body.background_url || null;
     const defaultTheme = body.theme_color || '#e5612f';
     const defaultNoindex = body.noindex !== undefined ? body.noindex : true;
     const defaultActive = body.is_active !== undefined ? body.is_active : true;
 
-    params.push(defaultName, defaultBio, defaultAvatar, defaultTheme, defaultNoindex, defaultActive);
+    params.push(defaultName, defaultBio, defaultAvatar, defaultBackground, defaultTheme, defaultNoindex, defaultActive);
 
     const res = await pool.query(query, params);
     return c.json({ success: true, data: res.rows[0] });

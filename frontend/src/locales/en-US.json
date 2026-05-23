@@ -759,7 +759,9 @@
     "bioLinksSortOrder": "Order",
     "bioLinksAvatar": "Profile Photo",
     "bioLinksSaveProfile": "Save Profile",
-    "bioLinksViewPage": "View Page"
+    "bioLinksViewPage": "View Page",
+    "bioLinksBackground": "Background",
+    "bioLinksChangeBg": "Change Background"
   },
   "navigation": {
     "home": "Home",

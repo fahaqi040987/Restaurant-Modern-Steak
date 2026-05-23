@@ -377,14 +377,17 @@ function ProfileForm({
 }) {
   const { t } = useTranslation()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const bgInputRef = useRef<HTMLInputElement>(null)
   const [formData, setFormData] = useState({
     account_name: profile?.account_name || '',
     bio_text: profile?.bio_text || '',
     avatar_url: profile?.avatar_url || '',
+    background_url: profile?.background_url || '',
     theme_color: profile?.theme_color || '#e5612f',
     noindex: profile?.noindex !== undefined ? profile.noindex : true,
   })
   const [uploading, setUploading] = useState(false)
+  const [uploadingBg, setUploadingBg] = useState(false)
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -402,12 +405,65 @@ function ProfileForm({
     }
   }
 
+  const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingBg(true)
+    try {
+      const res = await apiClient.uploadImage(file)
+      if (res.data?.url) {
+        setFormData((prev) => ({ ...prev, background_url: res.data!.url }))
+      }
+    } catch {
+      // Upload failure handled silently
+    } finally {
+      setUploadingBg(false)
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t('admin.bioLinksProfile')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Background Image */}
+        <div>
+          <label className="text-sm font-medium mb-2 block">{t('admin.bioLinksBackground')}</label>
+          {getImageUrl(formData.background_url) && (
+            <div className="mb-2 rounded-lg overflow-hidden h-24 relative">
+              <img
+                src={getImageUrl(formData.background_url) || undefined}
+                alt="Background preview"
+                className="w-full h-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, background_url: '' }))}
+                className="absolute top-1 right-1 bg-black/60 rounded-full p-1 text-white hover:bg-black/80 transition-colors"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+          <input
+            ref={bgInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleBgUpload}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => bgInputRef.current?.click()}
+            disabled={uploadingBg}
+          >
+            <ImagePlus className="w-4 h-4 mr-2" />
+            {uploadingBg ? 'Uploading...' : formData.background_url ? t('admin.bioLinksChangeBg') : t('admin.bioLinksBackground')}
+          </Button>
+        </div>
+
         {/* Avatar */}
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full overflow-hidden border-2 bg-muted flex items-center justify-center flex-shrink-0">
