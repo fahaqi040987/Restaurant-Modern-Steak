@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageSquare,
-  Package
+  Package,
+  Link2
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
 
@@ -102,6 +103,13 @@ const adminSections: AdminSection[] = [
     icon: <LayoutGrid className="w-5 h-5" />,
     descriptionKey: 'admin.tablesDescription',
     href: '/admin/tables'
+  },
+  {
+    id: 'links',
+    labelKey: 'admin.bioLinks',
+    icon: <Link2 className="w-5 h-5" />,
+    descriptionKey: 'admin.bioLinksDescription',
+    href: '/admin/links'
   },
   {
     id: 'reports',

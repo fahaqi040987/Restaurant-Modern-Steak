@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReservationRouteImport } from './routes/reservation'
 import { Route as MenuRouteImport } from './routes/menu'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LinksRouteImport } from './routes/links'
 import { Route as KitchenRouteImport } from './routes/kitchen'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -36,6 +37,7 @@ import { Route as AdminReportsRouteImport } from './routes/admin/reports'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminMenuRouteImport } from './routes/admin/menu'
+import { Route as AdminLinksRouteImport } from './routes/admin/links'
 import { Route as AdminKitchenRouteImport } from './routes/admin/kitchen'
 import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
 import { Route as AdminIngredientsRouteImport } from './routes/admin/ingredients'
@@ -56,6 +58,11 @@ const MenuRoute = MenuRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinksRoute = LinksRouteImport.update({
+  id: '/links',
+  path: '/links',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KitchenRoute = KitchenRouteImport.update({
@@ -178,6 +185,11 @@ const AdminMenuRoute = AdminMenuRouteImport.update({
   path: '/menu',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLinksRoute = AdminLinksRouteImport.update({
+  id: '/links',
+  path: '/links',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminKitchenRoute = AdminKitchenRouteImport.update({
   id: '/kitchen',
   path: '/kitchen',
@@ -215,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
   '/kitchen': typeof KitchenRoute
+  '/links': typeof LinksRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/reservation': typeof ReservationRoute
@@ -224,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/admin/ingredients': typeof AdminIngredientsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
+  '/admin/links': typeof AdminLinksRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/profile': typeof AdminProfileRoute
@@ -249,6 +263,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/kitchen': typeof KitchenRoute
+  '/links': typeof LinksRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/reservation': typeof ReservationRoute
@@ -258,6 +273,7 @@ export interface FileRoutesByTo {
   '/admin/ingredients': typeof AdminIngredientsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
+  '/admin/links': typeof AdminLinksRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/profile': typeof AdminProfileRoute
@@ -285,6 +301,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
   '/kitchen': typeof KitchenRoute
+  '/links': typeof LinksRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/reservation': typeof ReservationRoute
@@ -294,6 +311,7 @@ export interface FileRoutesById {
   '/admin/ingredients': typeof AdminIngredientsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
+  '/admin/links': typeof AdminLinksRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/profile': typeof AdminProfileRoute
@@ -322,6 +340,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contact'
     | '/kitchen'
+    | '/links'
     | '/login'
     | '/menu'
     | '/reservation'
@@ -331,6 +350,7 @@ export interface FileRouteTypes {
     | '/admin/ingredients'
     | '/admin/inventory'
     | '/admin/kitchen'
+    | '/admin/links'
     | '/admin/menu'
     | '/admin/notifications'
     | '/admin/profile'
@@ -356,6 +376,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/kitchen'
+    | '/links'
     | '/login'
     | '/menu'
     | '/reservation'
@@ -365,6 +386,7 @@ export interface FileRouteTypes {
     | '/admin/ingredients'
     | '/admin/inventory'
     | '/admin/kitchen'
+    | '/admin/links'
     | '/admin/menu'
     | '/admin/notifications'
     | '/admin/profile'
@@ -391,6 +413,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/contact'
     | '/kitchen'
+    | '/links'
     | '/login'
     | '/menu'
     | '/reservation'
@@ -400,6 +423,7 @@ export interface FileRouteTypes {
     | '/admin/ingredients'
     | '/admin/inventory'
     | '/admin/kitchen'
+    | '/admin/links'
     | '/admin/menu'
     | '/admin/notifications'
     | '/admin/profile'
@@ -427,6 +451,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   ContactRoute: typeof ContactRoute
   KitchenRoute: typeof KitchenRoute
+  LinksRoute: typeof LinksRoute
   LoginRoute: typeof LoginRoute
   MenuRoute: typeof MenuRoute
   ReservationRoute: typeof ReservationRoute
@@ -463,6 +488,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/links': {
+      id: '/links'
+      path: '/links'
+      fullPath: '/links'
+      preLoaderRoute: typeof LinksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kitchen': {
@@ -633,6 +665,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMenuRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/links': {
+      id: '/admin/links'
+      path: '/links'
+      fullPath: '/admin/links'
+      preLoaderRoute: typeof AdminLinksRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/kitchen': {
       id: '/admin/kitchen'
       path: '/kitchen'
@@ -685,6 +724,7 @@ interface AdminRouteChildren {
   AdminIngredientsRoute: typeof AdminIngredientsRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminKitchenRoute: typeof AdminKitchenRoute
+  AdminLinksRoute: typeof AdminLinksRoute
   AdminMenuRoute: typeof AdminMenuRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminProfileRoute: typeof AdminProfileRoute
@@ -703,6 +743,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIngredientsRoute: AdminIngredientsRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminKitchenRoute: AdminKitchenRoute,
+  AdminLinksRoute: AdminLinksRoute,
   AdminMenuRoute: AdminMenuRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminProfileRoute: AdminProfileRoute,
@@ -722,6 +763,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   ContactRoute: ContactRoute,
   KitchenRoute: KitchenRoute,
+  LinksRoute: LinksRoute,
   LoginRoute: LoginRoute,
   MenuRoute: MenuRoute,
   ReservationRoute: ReservationRoute,

@@ -1330,6 +1330,110 @@ class APIClient {
     });
   }
 
+  // ── Bio Link API endpoints ──────────────────────────────────────────────────
+
+  async getPublicBioLinks(): Promise<APIResponse<import('@/types').PublicBioLinksResponse>> {
+    return this.request({
+      method: "GET",
+      url: "/public/links",
+      requireAuth: false,
+    });
+  }
+
+  async trackBioLinkClick(id: string): Promise<APIResponse<{ url: string }>> {
+    return this.request({
+      method: "POST",
+      url: `/public/links/${id}/click`,
+      requireAuth: false,
+    });
+  }
+
+  async getBioLinks(): Promise<APIResponse<import('@/types').BioLink[]>> {
+    return this.request({
+      method: "GET",
+      url: "/admin/links",
+    });
+  }
+
+  async createBioLink(data: {
+    title: string;
+    url: string;
+    icon?: string;
+    is_active?: boolean;
+    sort_order?: number;
+  }): Promise<APIResponse<import('@/types').BioLink>> {
+    return this.request({
+      method: "POST",
+      url: "/admin/links",
+      data,
+    });
+  }
+
+  async updateBioLink(
+    id: string,
+    data: {
+      title?: string;
+      url?: string;
+      icon?: string;
+      is_active?: boolean;
+      sort_order?: number;
+    }
+  ): Promise<APIResponse<import('@/types').BioLink>> {
+    return this.request({
+      method: "PUT",
+      url: `/admin/links/${id}`,
+      data,
+    });
+  }
+
+  async deleteBioLink(id: string): Promise<APIResponse> {
+    return this.request({
+      method: "DELETE",
+      url: `/admin/links/${id}`,
+    });
+  }
+
+  async reorderBioLinks(
+    items: { id: string; sort_order: number }[]
+  ): Promise<APIResponse<import('@/types').BioLink[]>> {
+    return this.request({
+      method: "PUT",
+      url: "/admin/links/reorder",
+      data: { items },
+    });
+  }
+
+  async getBioLinkProfile(): Promise<APIResponse<import('@/types').BioLinkProfile>> {
+    return this.request({
+      method: "GET",
+      url: "/admin/links/profile",
+    });
+  }
+
+  async updateBioLinkProfile(
+    data: Partial<import('@/types').BioLinkProfile>
+  ): Promise<APIResponse<import('@/types').BioLinkProfile>> {
+    return this.request({
+      method: "PUT",
+      url: "/admin/links/profile",
+      data,
+    });
+  }
+
+  async getBioLinkAnalytics(
+    id: string
+  ): Promise<
+    APIResponse<{
+      link: Pick<import('@/types').BioLink, 'id' | 'title' | 'click_count'>;
+      daily_clicks: import('@/types').BioLinkClickAnalytics[];
+    }>
+  > {
+    return this.request({
+      method: "GET",
+      url: `/admin/links/${id}/analytics`,
+    });
+  }
+
   // Utility methods
   setAuthToken(token: string): void {
     localStorage.setItem("pos_token", token);
