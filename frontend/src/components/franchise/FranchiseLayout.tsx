@@ -29,7 +29,7 @@ export function FranchiseLayout({ children }: FranchiseLayoutProps) {
         {children}
       </main>
 
-      <Footer restaurantInfo={restaurantInfo} />
+      <Footer restaurantInfo={restaurantInfo} showReservation={false} />
     </div>
   )
 }
