@@ -916,6 +916,7 @@
     "about": "Tentang",
     "reservation": "Reservasi",
     "contact": "Kontak",
+    "franchise": "Franchise",
     "staffLogin": "Login Staf",
     "openNow": "Buka Sekarang",
     "closedNow": "Tutup Sekarang",
@@ -1179,6 +1180,101 @@
       "502": "Gateway error. Server sedang tidak tersedia.",
       "503": "Layanan tidak tersedia. Silakan coba lagi nanti.",
       "504": "Gateway timeout. Server tidak merespon."
+    }
+  },
+  "franchise": {
+    "nav": {
+      "gerai": "Gerai",
+      "menu": "Menu",
+      "plan": "Plan",
+      "register": "Daftar Sekarang",
+      "backToWebsite": "Kembali ke Website"
+    },
+    "hero": {
+      "title": "Lingkungan yang dirancang untuk",
+      "titleHighlight": "bersantai",
+      "subtitle": "Tempat perlindungan modern yang dikurasi untuk pengalaman kuliner mewah dan berkesan.",
+      "subtitleHighlight1": "pengalaman kuliner mewah",
+      "subtitleHighlight2": "berkesan",
+      "cta": "Lihat Paket Franchise"
+    },
+    "atmosphere": {
+      "title": "Suasana Outlet Kami",
+      "subtitle": "Rasakan pengalaman bersantap yang mewah dan nyaman di setiap outlet Steak Kenangan.",
+      "outletDay": "Foto Outlet Siang",
+      "indoor": "Foto Area Indoor",
+      "outletNight": "Foto Outlet Malam",
+      "outdoor": "Foto Area Outdoor"
+    },
+    "menu": {
+      "title": "Paket Franchise",
+      "subtitle": "Pilih paket franchise yang sesuai dengan visi bisnis Anda.",
+      "starter": {
+        "name": "Paket Starter",
+        "description": "Ideal untuk memulai bisnis restoran steak pertama Anda dengan dukungan penuh dari tim kami.",
+        "highlights": "10 menu unggulan, pelatihan staff, desain interior standar"
+      },
+      "premium": {
+        "name": "Paket Premium",
+        "description": "Pengalaman franchise lengkap dengan branding premium dan dukungan operasional menyeluruh.",
+        "highlights": "20 menu lengkap, pelatihan intensif, desain interior premium, marketing support"
+      },
+      "signature": {
+        "name": "Paket Signature",
+        "description": "Pengalaman eksklusif untuk mitra pilihan dengan hak istimewa dan dukungan penuh waktu.",
+        "highlights": "Full menu, chef dedicated, desain custom, marketing premium, priority support"
+      }
+    },
+    "investment": {
+      "title": "Investasi & Keuntungan",
+      "subtitle": "Lihat mengapa bergabung dengan Steak Kenangan adalah keputusan bisnis yang cerdas.",
+      "initialCapital": {
+        "label": "Modal Awal",
+        "starter": "Rp 500 Juta - Rp 750 Juta",
+        "premium": "Rp 750 Juta - Rp 1.2 Miliar",
+        "signature": "Rp 1.2 Miliar - Rp 2 Miliar"
+      },
+      "roi": {
+        "label": "Estimasi ROI",
+        "value": "18-24 Bulan"
+      },
+      "benefits": {
+        "title": "Keuntungan Mitra",
+        "items": {
+          "brand": "Brand recognition yang sudah terbukti",
+          "training": "Pelatihan operasional & manajemen",
+          "supply": "Sistem supply chain terintegrasi",
+          "marketing": "Dukungan marketing & promosi",
+          "tech": "Sistem POS & teknologi modern",
+          "support": "Tim support dedicated 24/7"
+        }
+      }
+    },
+    "apply": {
+      "title": "Daftar Franchise",
+      "subtitle": "Isi formulir di bawah ini dan tim kami akan menghubungi Anda segera.",
+      "name": "Nama Lengkap",
+      "namePlaceholder": "Masukkan nama lengkap Anda",
+      "email": "Alamat Email",
+      "emailPlaceholder": "Masukkan alamat email Anda",
+      "phone": "Nomor Telepon",
+      "phonePlaceholder": "Masukkan nomor telepon Anda",
+      "location": "Lokasi Pilihan",
+      "locationPlaceholder": "Kota atau daerah yang diinginkan",
+      "message": "Pesan Tambahan",
+      "messagePlaceholder": "Ceritakan tentang minat Anda dalam franchise Steak Kenangan...",
+      "submit": "Kirim Pendaftaran",
+      "submitting": "Mengirim...",
+      "success": "Pendaftaran Berhasil!",
+      "successMessage": "Terima kasih atas minat Anda. Tim franchise kami akan menghubungi Anda dalam 1-2 hari kerja.",
+      "validation": {
+        "nameRequired": "Nama lengkap wajib diisi",
+        "emailRequired": "Alamat email wajib diisi",
+        "emailInvalid": "Format email tidak valid",
+        "phoneRequired": "Nomor telepon wajib diisi",
+        "phoneInvalid": "Format nomor telepon tidak valid",
+        "locationRequired": "Lokasi pilihan wajib diisi"
+      }
     }
   }
 }
