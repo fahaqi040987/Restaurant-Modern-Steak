@@ -44,6 +44,11 @@ import { Route as AdminIngredientsRouteImport } from './routes/admin/ingredients
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminCounterRouteImport } from './routes/admin/counter'
 import { Route as AdminContactsRouteImport } from './routes/admin/contacts'
+import { Route as SiteFranchiseIndexRouteImport } from './routes/site/franchise/index'
+import { Route as SiteFranchiseMenuRouteImport } from './routes/site/franchise/menu'
+import { Route as SiteFranchiseInvestmentRouteImport } from './routes/site/franchise/investment'
+import { Route as SiteFranchiseAtmosphereRouteImport } from './routes/site/franchise/atmosphere'
+import { Route as SiteFranchiseApplyRouteImport } from './routes/site/franchise/apply'
 
 const ReservationRoute = ReservationRouteImport.update({
   id: '/reservation',
@@ -220,6 +225,31 @@ const AdminContactsRoute = AdminContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => AdminRoute,
 } as any)
+const SiteFranchiseIndexRoute = SiteFranchiseIndexRouteImport.update({
+  id: '/site/franchise/',
+  path: '/site/franchise/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteFranchiseMenuRoute = SiteFranchiseMenuRouteImport.update({
+  id: '/site/franchise/menu',
+  path: '/site/franchise/menu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteFranchiseInvestmentRoute = SiteFranchiseInvestmentRouteImport.update({
+  id: '/site/franchise/investment',
+  path: '/site/franchise/investment',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteFranchiseAtmosphereRoute = SiteFranchiseAtmosphereRouteImport.update({
+  id: '/site/franchise/atmosphere',
+  path: '/site/franchise/atmosphere',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteFranchiseApplyRoute = SiteFranchiseApplyRouteImport.update({
+  id: '/site/franchise/apply',
+  path: '/site/franchise/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -257,6 +287,11 @@ export interface FileRoutesByFullPath {
   '/site/terms': typeof SiteTermsRoute
   '/admin/': typeof AdminIndexRoute
   '/site': typeof SiteIndexRoute
+  '/site/franchise/apply': typeof SiteFranchiseApplyRoute
+  '/site/franchise/atmosphere': typeof SiteFranchiseAtmosphereRoute
+  '/site/franchise/investment': typeof SiteFranchiseInvestmentRoute
+  '/site/franchise/menu': typeof SiteFranchiseMenuRoute
+  '/site/franchise': typeof SiteFranchiseIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -293,6 +328,11 @@ export interface FileRoutesByTo {
   '/site/terms': typeof SiteTermsRoute
   '/admin': typeof AdminIndexRoute
   '/site': typeof SiteIndexRoute
+  '/site/franchise/apply': typeof SiteFranchiseApplyRoute
+  '/site/franchise/atmosphere': typeof SiteFranchiseAtmosphereRoute
+  '/site/franchise/investment': typeof SiteFranchiseInvestmentRoute
+  '/site/franchise/menu': typeof SiteFranchiseMenuRoute
+  '/site/franchise': typeof SiteFranchiseIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -331,6 +371,11 @@ export interface FileRoutesById {
   '/site/terms': typeof SiteTermsRoute
   '/admin/': typeof AdminIndexRoute
   '/site/': typeof SiteIndexRoute
+  '/site/franchise/apply': typeof SiteFranchiseApplyRoute
+  '/site/franchise/atmosphere': typeof SiteFranchiseAtmosphereRoute
+  '/site/franchise/investment': typeof SiteFranchiseInvestmentRoute
+  '/site/franchise/menu': typeof SiteFranchiseMenuRoute
+  '/site/franchise/': typeof SiteFranchiseIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -370,6 +415,11 @@ export interface FileRouteTypes {
     | '/site/terms'
     | '/admin/'
     | '/site'
+    | '/site/franchise/apply'
+    | '/site/franchise/atmosphere'
+    | '/site/franchise/investment'
+    | '/site/franchise/menu'
+    | '/site/franchise'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -406,6 +456,11 @@ export interface FileRouteTypes {
     | '/site/terms'
     | '/admin'
     | '/site'
+    | '/site/franchise/apply'
+    | '/site/franchise/atmosphere'
+    | '/site/franchise/investment'
+    | '/site/franchise/menu'
+    | '/site/franchise'
   id:
     | '__root__'
     | '/'
@@ -443,6 +498,11 @@ export interface FileRouteTypes {
     | '/site/terms'
     | '/admin/'
     | '/site/'
+    | '/site/franchise/apply'
+    | '/site/franchise/atmosphere'
+    | '/site/franchise/investment'
+    | '/site/franchise/menu'
+    | '/site/franchise/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -465,6 +525,11 @@ export interface RootRouteChildren {
   SiteReservationRoute: typeof SiteReservationRoute
   SiteTermsRoute: typeof SiteTermsRoute
   SiteIndexRoute: typeof SiteIndexRoute
+  SiteFranchiseApplyRoute: typeof SiteFranchiseApplyRoute
+  SiteFranchiseAtmosphereRoute: typeof SiteFranchiseAtmosphereRoute
+  SiteFranchiseInvestmentRoute: typeof SiteFranchiseInvestmentRoute
+  SiteFranchiseMenuRoute: typeof SiteFranchiseMenuRoute
+  SiteFranchiseIndexRoute: typeof SiteFranchiseIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -714,6 +779,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminContactsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/site/franchise/': {
+      id: '/site/franchise/'
+      path: '/site/franchise'
+      fullPath: '/site/franchise'
+      preLoaderRoute: typeof SiteFranchiseIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/site/franchise/menu': {
+      id: '/site/franchise/menu'
+      path: '/site/franchise/menu'
+      fullPath: '/site/franchise/menu'
+      preLoaderRoute: typeof SiteFranchiseMenuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/site/franchise/investment': {
+      id: '/site/franchise/investment'
+      path: '/site/franchise/investment'
+      fullPath: '/site/franchise/investment'
+      preLoaderRoute: typeof SiteFranchiseInvestmentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/site/franchise/atmosphere': {
+      id: '/site/franchise/atmosphere'
+      path: '/site/franchise/atmosphere'
+      fullPath: '/site/franchise/atmosphere'
+      preLoaderRoute: typeof SiteFranchiseAtmosphereRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/site/franchise/apply': {
+      id: '/site/franchise/apply'
+      path: '/site/franchise/apply'
+      fullPath: '/site/franchise/apply'
+      preLoaderRoute: typeof SiteFranchiseApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -777,6 +877,11 @@ const rootRouteChildren: RootRouteChildren = {
   SiteReservationRoute: SiteReservationRoute,
   SiteTermsRoute: SiteTermsRoute,
   SiteIndexRoute: SiteIndexRoute,
+  SiteFranchiseApplyRoute: SiteFranchiseApplyRoute,
+  SiteFranchiseAtmosphereRoute: SiteFranchiseAtmosphereRoute,
+  SiteFranchiseInvestmentRoute: SiteFranchiseInvestmentRoute,
+  SiteFranchiseMenuRoute: SiteFranchiseMenuRoute,
+  SiteFranchiseIndexRoute: SiteFranchiseIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
