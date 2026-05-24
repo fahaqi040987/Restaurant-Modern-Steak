@@ -52,11 +52,11 @@ export function FranchiseNavbar() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 bg-[var(--public-primary)]/95 backdrop-blur-md border-b border-[var(--public-border)]"
+      className="fixed top-0 left-0 right-0 z-50 bg-[var(--public-primary)]/95 backdrop-blur-md"
       role="banner"
     >
       <nav
-        className="public-container flex items-center justify-between h-16"
+        className="public-container flex items-center justify-between"
         aria-label="Franchise navigation"
       >
         {/* Logo + Back Link */}
@@ -71,7 +71,7 @@ export function FranchiseNavbar() {
               alt={restaurantInfo.name || 'Steak Kenangan'}
               width={80}
               height={80}
-              className="h-10 w-auto object-contain"
+              className="h-28 md:h-30 lg:h-32 w-auto object-contain transition-[height,opacity] duration-300"
             />
           ) : (
             <span
