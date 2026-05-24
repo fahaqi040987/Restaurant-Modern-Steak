@@ -46,7 +46,7 @@ export function ApplicationForm() {
         <CheckCircle className="h-16 w-16 text-[var(--public-accent)] mx-auto mb-4" aria-hidden="true" />
         <h3
           className="text-2xl font-bold text-[var(--public-text-primary)] mb-2"
-          style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+          style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
         >
           {t('franchise.apply.success')}
         </h3>

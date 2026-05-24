@@ -32,7 +32,7 @@ export function HeroSection() {
             'inline-block text-[var(--public-accent)] text-sm uppercase tracking-[0.2em] font-semibold mb-6',
             'animate-[fadeInUp_0.6s_ease-out]'
           )}
-          style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+          style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
         >
           Steak Kenangan Franchise
         </span>
@@ -43,7 +43,7 @@ export function HeroSection() {
             'text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-6',
             'animate-[fadeInUp_0.6s_ease-out_0.2s_both]'
           )}
-          style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+          style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
         >
           {t('franchise.hero.title')}{' '}
           <span className="text-[var(--public-accent)]">

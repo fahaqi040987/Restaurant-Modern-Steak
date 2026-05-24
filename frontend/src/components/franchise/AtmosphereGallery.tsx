@@ -27,13 +27,13 @@ export function AtmosphereGallery() {
         >
           <span
             className="text-[var(--public-accent)] text-sm uppercase tracking-[0.2em] font-semibold"
-            style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+            style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
             Steak Kenangan
           </span>
           <h2
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--public-text-primary)] mt-3 mb-4"
-            style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+            style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
             {t('franchise.atmosphere.title')}
           </h2>

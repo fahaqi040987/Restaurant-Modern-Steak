@@ -75,7 +75,10 @@ export function FranchiseNavbar() {
             />
           ) : (
             <span
-              className="font-accent text-lg text-[var(--public-accent)]"
+              className={cn(
+                'font-accent text-2xl md:text-3xl transition-colors duration-300',
+                'text-[var(--public-accent)]'
+              )}
               style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
             >
               Steak Kenangan
@@ -92,7 +95,7 @@ export function FranchiseNavbar() {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  'text-sm font-medium tracking-wide uppercase transition-colors duration-300',
+                  'text-sm font-medium tracking-wide transition-colors duration-300',
                   isActive
                     ? 'text-[var(--public-accent)]'
                     : 'text-[var(--public-text-secondary)] hover:text-[var(--public-accent)]',
@@ -197,7 +200,10 @@ export function FranchiseNavbar() {
               <SheetHeader>
                 <SheetTitle className="text-left">
                   <span
-                    className="font-accent text-lg text-[var(--public-accent)]"
+                    className={cn(
+                      'font-accent text-2xl md:text-3xl transition-colors duration-300',
+                      'text-[var(--public-accent)]'
+                    )}
                     style={{ fontFamily: 'var(--font-accent, Pacifico, cursive)' }}
                   >
                     Steak Kenangan

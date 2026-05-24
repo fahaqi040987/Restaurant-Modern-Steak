@@ -31,14 +31,14 @@ export function VisionMission() {
               </div>
               <span
                 className="text-[var(--public-accent)] text-sm uppercase tracking-[0.2em] font-semibold"
-                style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+                style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
               >
                 {t('franchise.visionMission.missionLabel')}
               </span>
             </div>
             <p
               className="text-xl md:text-2xl font-semibold text-[var(--public-text-primary)] leading-relaxed"
-              style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+              style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
             >
               "{t('franchise.visionMission.missionText')}"
             </p>
@@ -52,7 +52,7 @@ export function VisionMission() {
               </div>
               <span
                 className="text-[var(--public-accent)] text-sm uppercase tracking-[0.2em] font-semibold"
-                style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+                style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
               >
                 {t('franchise.visionMission.visionLabel')}
               </span>
@@ -62,7 +62,7 @@ export function VisionMission() {
                 <li key={index} className="flex gap-4">
                   <span
                     className="text-[var(--public-accent)] text-2xl font-bold flex-shrink-0 mt-0.5"
-                    style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+                    style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
                   >
                     {point.num}
                   </span>

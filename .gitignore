@@ -178,3 +178,9 @@ metrics/
 .agents/
 MIGRATION_NOTE.md
 docker-compose.prod.back.yml
+
+# =============================================================================
+# Update Menu
+# =============================================================================
+frenchise_page/*
+docs/superpowers/*

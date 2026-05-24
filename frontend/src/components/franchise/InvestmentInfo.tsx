@@ -29,13 +29,13 @@ export function InvestmentInfo() {
         >
           <span
             className="text-[var(--public-accent)] text-sm uppercase tracking-[0.2em] font-semibold"
-            style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+            style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
             Opportunity
           </span>
           <h2
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--public-text-primary)] mt-3 mb-4"
-            style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+            style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
             {t('franchise.investment.title')}
           </h2>
@@ -79,7 +79,7 @@ function InvestmentCards() {
               'text-sm uppercase tracking-wider font-semibold',
               tier.key === 'premium' ? 'text-[var(--public-accent)]' : 'text-[var(--public-text-muted)]'
             )}
-            style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+            style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
             {t(`franchise.menu.${tier.key}.name`)}
           </span>
@@ -103,7 +103,7 @@ function BenefitsGrid() {
     <div>
       <h3
         className="text-2xl md:text-3xl font-bold text-[var(--public-text-primary)] text-center mb-10"
-        style={{ fontFamily: 'var(--font-heading, Playfair Display, serif)' }}
+        style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
       >
         {t('franchise.investment.benefits.title')}
       </h3>
