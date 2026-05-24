@@ -1275,6 +1275,14 @@
         "phoneInvalid": "Format nomor telepon tidak valid",
         "locationRequired": "Lokasi pilihan wajib diisi"
       }
+    },
+    "visionMission": {
+      "missionLabel": "Misi Kami",
+      "missionText": "Menjadi destinasi utama pilihan masyarakat Indonesia untuk menikmati pengalaman bersantap steak berkualitas premium dengan rasa yang lezat, harga yang ramah dan suasana tempat yang nyaman serta modern.",
+      "visionLabel": "Visi Kami",
+      "vision1": "Menyajikan Steak berkualitas tinggi yang diolah dengan bahan baku pilihan serta dengan rasa berkelas dan harga terjangkau.",
+      "vision2": "Menghadirkan kemudahan akses pada tempat steak kenangan, selalu hadir disekitaran tempat tinggal masyarakat.",
+      "vision3": "Menciptakan suasana yang nyaman dan modern, dengan menyediakan tempat yang didesain secara yang estetik dan menarik."
     }
   }
 }
