@@ -1,25 +1,42 @@
 import { useTranslation } from 'react-i18next'
-import { TrendingUp, Shield, Award, Truck, Megaphone, Headphones } from 'lucide-react'
+import { TrendingUp, Shield, Award, Truck, Megaphone, Headphones, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
+import { useFranchiseContent, type InvestmentData, type FranchisePackage, type PackagesData } from '@/hooks/useFranchiseContent'
 
 const benefitIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  brand: Shield,
-  training: Award,
-  supply: Truck,
-  marketing: Megaphone,
-  tech: TrendingUp,
-  support: Headphones,
+  shield: Shield,
+  award: Award,
+  truck: Truck,
+  megaphone: Megaphone,
+  'trending-up': TrendingUp,
+  headphones: Headphones,
 }
 
 export function InvestmentInfo() {
   const { t } = useTranslation()
   const { ref: titleRef, isVisible: titleVisible } = useScrollAnimation({ threshold: 0.1, triggerOnce: true })
+  const { data, isLoading, locale, getText } = useFranchiseContent()
+
+  if (isLoading) {
+    return (
+      <section className="py-20 md:py-32 bg-[var(--public-primary)]">
+        <div className="public-container flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-[var(--public-accent)]" />
+        </div>
+      </section>
+    )
+  }
+
+  const inv = data?.investment as InvestmentData | undefined
+  const pkgData = data?.packages as PackagesData | undefined
+
+  const title = inv ? getText(inv.title, locale) : t('franchise.investment.title')
+  const subtitle = inv ? getText(inv.subtitle, locale) : t('franchise.investment.subtitle')
 
   return (
     <section className="py-20 md:py-32 bg-[var(--public-primary)]">
       <div className="public-container">
-        {/* Section Header */}
         <div
           ref={titleRef}
           className={cn(
@@ -37,67 +54,99 @@ export function InvestmentInfo() {
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--public-text-primary)] mt-3 mb-4"
             style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            {t('franchise.investment.title')}
+            {title}
           </h2>
           <p className="text-[var(--public-text-secondary)] max-w-xl mx-auto">
-            {t('franchise.investment.subtitle')}
+            {subtitle}
           </p>
         </div>
 
-        {/* Investment Cards */}
-        <InvestmentCards />
-
-        {/* Benefits Grid */}
-        <BenefitsGrid />
+        <InvestmentCards pkgData={pkgData} locale={locale} getText={getText} />
+        <BenefitsGrid inv={inv} locale={locale} getText={getText} />
       </div>
     </section>
   )
 }
 
-function InvestmentCards() {
+function InvestmentCards({
+  pkgData,
+  locale,
+  getText,
+}: {
+  pkgData?: PackagesData;
+  locale: 'id' | 'en';
+  getText: (field: { id: string; en: string }, locale: 'id' | 'en') => string;
+}) {
   const { t } = useTranslation()
 
-  const tiers = [
-    { key: 'starter', color: 'border-[var(--public-border)]' },
-    { key: 'premium', color: 'border-[var(--public-accent)]' },
-    { key: 'signature', color: 'border-[var(--public-border)]' },
-  ]
+  const tiers = pkgData?.packages
+    ? pkgData.packages
+        .filter((p) => p.isActive)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+    : [
+        { slug: 'starter', isFeatured: false },
+        { slug: 'premium', isFeatured: true },
+        { slug: 'signature', isFeatured: false },
+      ]
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-      {tiers.map((tier) => (
-        <div
-          key={tier.key}
-          className={cn(
-            'rounded-lg p-6 bg-[var(--public-bg-elevated)] border',
-            tier.color,
-            'text-center'
-          )}
-        >
-          <span
+      {tiers.map((tier) => {
+        const pkg = tier as FranchisePackage
+        const isPremium = pkg.isFeatured ?? (pkg.slug === 'premium')
+        const name = pkg.name ? getText(pkg.name, locale) : t(`franchise.menu.${pkg.slug}.name`)
+        const priceRange = pkg.priceRange ? getText(pkg.priceRange, locale) : t(`franchise.investment.initialCapital.${pkg.slug}`)
+
+        return (
+          <div
+            key={pkg.slug}
             className={cn(
-              'text-sm uppercase tracking-wider font-semibold',
-              tier.key === 'premium' ? 'text-[var(--public-accent)]' : 'text-[var(--public-text-muted)]'
+              'rounded-lg p-6 bg-[var(--public-bg-elevated)] border',
+              isPremium ? 'border-[var(--public-accent)]' : 'border-[var(--public-border)]',
+              'text-center'
             )}
-            style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
           >
-            {t(`franchise.menu.${tier.key}.name`)}
-          </span>
-          <p className="text-2xl md:text-3xl font-bold text-[var(--public-text-primary)] mt-2">
-            {t(`franchise.investment.initialCapital.${tier.key}`)}
-          </p>
-          <span className="text-xs text-[var(--public-text-muted)] mt-1 block">
-            {t('franchise.investment.initialCapital.label')}
-          </span>
-        </div>
-      ))}
+            <span
+              className={cn(
+                'text-sm uppercase tracking-wider font-semibold',
+                isPremium ? 'text-[var(--public-accent)]' : 'text-[var(--public-text-muted)]'
+              )}
+              style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
+            >
+              {name}
+            </span>
+            <p className="text-2xl md:text-3xl font-bold text-[var(--public-text-primary)] mt-2">
+              {priceRange}
+            </p>
+            <span className="text-xs text-[var(--public-text-muted)] mt-1 block">
+              {t('franchise.investment.initialCapital.label')}
+            </span>
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-function BenefitsGrid() {
+function BenefitsGrid({
+  inv,
+  locale,
+  getText,
+}: {
+  inv?: InvestmentData;
+  locale: 'id' | 'en';
+  getText: (field: { id: string; en: string }, locale: 'id' | 'en') => string;
+}) {
   const { t } = useTranslation()
-  const benefitKeys = Object.keys(benefitIcons)
+
+  const benefitItems = inv
+    ? inv.benefits
+    : Object.keys(benefitIcons).map((key) => ({
+        id: '',
+        en: '',
+        icon: key,
+        _fallbackText: t(`franchise.investment.benefits.items.${key}`),
+      }))
 
   return (
     <div>
@@ -109,10 +158,13 @@ function BenefitsGrid() {
       </h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {benefitKeys.map((key, index) => {
-          const Icon = benefitIcons[key]
+        {benefitItems.map((item, index) => {
+          const Icon = benefitIcons[item.icon] || Shield
+          const text = inv
+            ? getText({ id: item.id, en: item.en }, locale)
+            : (item as { _fallbackText: string })._fallbackText
           return (
-            <BenefitCard key={key} icon={Icon} label={t(`franchise.investment.benefits.items.${key}`)} index={index} />
+            <BenefitCard key={item.icon + '-' + index} icon={Icon} label={text} index={index} />
           )
         })}
       </div>

@@ -1,17 +1,34 @@
 import { useTranslation } from 'react-i18next'
-import { Target, Eye } from 'lucide-react'
+import { Target, Eye, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
+import { useFranchiseContent, type VisionMissionData } from '@/hooks/useFranchiseContent'
 
 export function VisionMission() {
   const { t } = useTranslation()
   const { ref: ref, isVisible } = useScrollAnimation({ threshold: 0.1, triggerOnce: true })
+  const { data, isLoading, locale, getText } = useFranchiseContent()
 
-  const visionPoints = [
-    { num: '01', text: t('franchise.visionMission.vision1') },
-    { num: '02', text: t('franchise.visionMission.vision2') },
-    { num: '03', text: t('franchise.visionMission.vision3') },
-  ]
+  const vm = data?.vision_mission as VisionMissionData | undefined
+
+  const missionText = vm ? getText(vm.mission, locale) : t('franchise.visionMission.missionText')
+  const visionPoints = vm
+    ? vm.visions.map((v, i) => ({ num: String(i + 1).padStart(2, '0'), text: getText(v, locale) }))
+    : [
+        { num: '01', text: t('franchise.visionMission.vision1') },
+        { num: '02', text: t('franchise.visionMission.vision2') },
+        { num: '03', text: t('franchise.visionMission.vision3') },
+      ]
+
+  if (isLoading) {
+    return (
+      <section className="py-20 md:py-32 bg-[var(--public-bg-secondary)]">
+        <div className="public-container flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-[var(--public-accent)]" />
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="py-20 md:py-32 bg-[var(--public-bg-secondary)]">
@@ -40,7 +57,7 @@ export function VisionMission() {
               className="text-xl md:text-2xl font-semibold text-[var(--public-text-primary)] leading-relaxed"
               style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
             >
-              "{t('franchise.visionMission.missionText')}"
+              &ldquo;{missionText}&rdquo;
             </p>
           </div>
 
