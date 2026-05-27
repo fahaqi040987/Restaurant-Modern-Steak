@@ -1434,6 +1434,32 @@ class APIClient {
     });
   }
 
+  // ===========================================
+  // Franchise Content endpoints
+  // ===========================================
+
+  async getFranchiseContent(): Promise<APIResponse<Record<string, unknown>>> {
+    return this.request({
+      method: "GET",
+      url: "/public/franchise/content",
+    });
+  }
+
+  async getFranchiseContentBySection(section: string): Promise<APIResponse<unknown>> {
+    return this.request({
+      method: "GET",
+      url: `/public/franchise/content/${section}`,
+    });
+  }
+
+  async updateFranchiseContent(section: string, content: unknown): Promise<APIResponse> {
+    return this.request({
+      method: "PUT",
+      url: `/admin/franchise/content/${section}`,
+      data: content,
+    });
+  }
+
   // Utility methods
   setAuthToken(token: string): void {
     localStorage.setItem("pos_token", token);
