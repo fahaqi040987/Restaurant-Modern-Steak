@@ -184,3 +184,5 @@ docker-compose.prod.back.yml
 # =============================================================================
 frenchise_page/*
 docs/superpowers/*
+!docs/superpowers/specs/
+!docs/superpowers/specs/**
