@@ -761,7 +761,9 @@
     "bioLinksSaveProfile": "Simpan Profil",
     "bioLinksViewPage": "Lihat Halaman",
     "bioLinksBackground": "Background",
-    "bioLinksChangeBg": "Ganti Background"
+    "bioLinksChangeBg": "Ganti Background",
+    "franchiseContent": "Konten Franchise",
+    "franchiseContentDescription": "Kelola konten halaman franchise"
   },
   "navigation": {
     "home": "Beranda",

@@ -17,7 +17,8 @@ import {
   ChevronRight,
   MessageSquare,
   Package,
-  Link2
+  Link2,
+  Store
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
 
@@ -110,6 +111,13 @@ const adminSections: AdminSection[] = [
     icon: <Link2 className="w-5 h-5" />,
     descriptionKey: 'admin.bioLinksDescription',
     href: '/admin/links'
+  },
+  {
+    id: 'franchise-content',
+    labelKey: 'admin.franchiseContent',
+    icon: <Store className="w-5 h-5" />,
+    descriptionKey: 'admin.franchiseContentDescription',
+    href: '/admin/franchise-content'
   },
   {
     id: 'reports',

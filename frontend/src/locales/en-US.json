@@ -761,7 +761,9 @@
     "bioLinksSaveProfile": "Save Profile",
     "bioLinksViewPage": "View Page",
     "bioLinksBackground": "Background",
-    "bioLinksChangeBg": "Change Background"
+    "bioLinksChangeBg": "Change Background",
+    "franchiseContent": "Franchise Content",
+    "franchiseContentDescription": "Manage franchise page content"
   },
   "navigation": {
     "home": "Home",
