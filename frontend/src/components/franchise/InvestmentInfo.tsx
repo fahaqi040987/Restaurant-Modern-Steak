@@ -162,7 +162,7 @@ function BenefitsGrid({
           const Icon = benefitIcons[item.icon] || Shield
           const text = inv
             ? getText({ id: item.id, en: item.en }, locale)
-            : (item as { _fallbackText: string })._fallbackText
+            : (item as unknown as { _fallbackText: string })._fallbackText
           return (
             <BenefitCard key={item.icon + '-' + index} icon={Icon} label={text} index={index} />
           )
