@@ -41,6 +41,7 @@ import { Route as AdminLinksRouteImport } from './routes/admin/links'
 import { Route as AdminKitchenRouteImport } from './routes/admin/kitchen'
 import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
 import { Route as AdminIngredientsRouteImport } from './routes/admin/ingredients'
+import { Route as AdminFranchiseContentRouteImport } from './routes/admin/franchise-content'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminCounterRouteImport } from './routes/admin/counter'
 import { Route as AdminContactsRouteImport } from './routes/admin/contacts'
@@ -210,6 +211,11 @@ const AdminIngredientsRoute = AdminIngredientsRouteImport.update({
   path: '/ingredients',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFranchiseContentRoute = AdminFranchiseContentRouteImport.update({
+  id: '/franchise-content',
+  path: '/franchise-content',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -264,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/franchise-content': typeof AdminFranchiseContentRoute
   '/admin/ingredients': typeof AdminIngredientsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/franchise-content': typeof AdminFranchiseContentRoute
   '/admin/ingredients': typeof AdminIngredientsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/admin/contacts': typeof AdminContactsRoute
   '/admin/counter': typeof AdminCounterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/franchise-content': typeof AdminFranchiseContentRoute
   '/admin/ingredients': typeof AdminIngredientsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
@@ -392,6 +401,7 @@ export interface FileRouteTypes {
     | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
+    | '/admin/franchise-content'
     | '/admin/ingredients'
     | '/admin/inventory'
     | '/admin/kitchen'
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
+    | '/admin/franchise-content'
     | '/admin/ingredients'
     | '/admin/inventory'
     | '/admin/kitchen'
@@ -475,6 +486,7 @@ export interface FileRouteTypes {
     | '/admin/contacts'
     | '/admin/counter'
     | '/admin/dashboard'
+    | '/admin/franchise-content'
     | '/admin/ingredients'
     | '/admin/inventory'
     | '/admin/kitchen'
@@ -758,6 +770,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIngredientsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/franchise-content': {
+      id: '/admin/franchise-content'
+      path: '/franchise-content'
+      fullPath: '/admin/franchise-content'
+      preLoaderRoute: typeof AdminFranchiseContentRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/dashboard': {
       id: '/admin/dashboard'
       path: '/dashboard'
@@ -821,6 +840,7 @@ interface AdminRouteChildren {
   AdminContactsRoute: typeof AdminContactsRoute
   AdminCounterRoute: typeof AdminCounterRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminFranchiseContentRoute: typeof AdminFranchiseContentRoute
   AdminIngredientsRoute: typeof AdminIngredientsRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminKitchenRoute: typeof AdminKitchenRoute
@@ -840,6 +860,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminContactsRoute: AdminContactsRoute,
   AdminCounterRoute: AdminCounterRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminFranchiseContentRoute: AdminFranchiseContentRoute,
   AdminIngredientsRoute: AdminIngredientsRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminKitchenRoute: AdminKitchenRoute,
