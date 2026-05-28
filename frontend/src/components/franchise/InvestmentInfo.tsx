@@ -18,16 +18,6 @@ export function InvestmentInfo() {
   const { ref: titleRef, isVisible: titleVisible } = useScrollAnimation({ threshold: 0.1, triggerOnce: true })
   const { data, isLoading, locale, getText } = useFranchiseContent()
 
-  if (isLoading) {
-    return (
-      <section className="py-20 md:py-32 bg-[var(--public-primary)]">
-        <div className="public-container flex justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-[var(--public-accent)]" />
-        </div>
-      </section>
-    )
-  }
-
   const inv = data?.investment as InvestmentData | undefined
   const pkgData = data?.packages as PackagesData | undefined
 
@@ -37,6 +27,12 @@ export function InvestmentInfo() {
   return (
     <section className="py-20 md:py-32 bg-[var(--public-primary)]">
       <div className="public-container">
+        {isLoading ? (
+          <div className="flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-[var(--public-accent)]" />
+          </div>
+        ) : (
+        <>
         <div
           ref={titleRef}
           className={cn(
@@ -63,6 +59,8 @@ export function InvestmentInfo() {
 
         <InvestmentCards pkgData={pkgData} locale={locale} getText={getText} />
         <BenefitsGrid inv={inv} locale={locale} getText={getText} />
+        </>
+        )}
       </div>
     </section>
   )

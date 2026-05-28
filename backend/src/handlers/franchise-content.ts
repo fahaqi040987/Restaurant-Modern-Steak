@@ -11,12 +11,12 @@ function isValidSection(section: string): section is Section {
 
 function validateVisionMission(content: unknown): string | null {
   const c = content as Record<string, unknown>;
-  if (!c.mission || typeof c.mission !== 'object') return 'mission is required and must be an object';
-  const m = c.mission as Record<string, unknown>;
-  if (!m.id || !m.en) return 'mission must have id and en fields';
-  if (!Array.isArray(c.visions) || c.visions.length === 0) return 'visions must be a non-empty array';
-  for (const v of c.visions) {
-    if (!v.id || !v.en) return 'each vision must have id and en fields';
+  if (!c.vision || typeof c.vision !== 'object') return 'vision is required and must be an object';
+  const v = c.vision as Record<string, unknown>;
+  if (!v.id || !v.en) return 'vision must have id and en fields';
+  if (!Array.isArray(c.missions) || c.missions.length === 0) return 'missions must be a non-empty array';
+  for (const m of c.missions) {
+    if (!m.id || !m.en) return 'each mission must have id and en fields';
   }
   return null;
 }

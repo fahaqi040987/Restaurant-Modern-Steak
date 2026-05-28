@@ -10,14 +10,14 @@ export function VisionMissionTab() {
   const { data, isLoading } = useFranchiseContent();
   const updateMutation = useUpdateFranchiseContent('vision_mission');
 
-  const [mission, setMission] = useState<{ id: string; en: string }>({ id: '', en: '' });
-  const [visions, setVisions] = useState<{ id: string; en: string }[]>([{ id: '', en: '' }]);
+  const [vision, setVision] = useState<{ id: string; en: string }>({ id: '', en: '' });
+  const [missions, setMissions] = useState<{ id: string; en: string }[]>([{ id: '', en: '' }]);
 
   useEffect(() => {
     const vm = data?.vision_mission as VisionMissionData | undefined;
     if (vm) {
-      setMission(vm.mission);
-      setVisions(vm.visions);
+      setVision(vm.vision);
+      setMissions(vm.missions);
     }
   }, [data]);
 
@@ -25,45 +25,45 @@ export function VisionMissionTab() {
     return <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
 
-  const addVision = () => setVisions([...visions, { id: '', en: '' }]);
+  const addMission = () => setMissions([...missions, { id: '', en: '' }]);
 
-  const removeVision = (index: number) => {
-    if (visions.length > 1) {
-      setVisions(visions.filter((_, i) => i !== index));
+  const removeMission = (index: number) => {
+    if (missions.length > 1) {
+      setMissions(missions.filter((_, i) => i !== index));
     }
   };
 
-  const updateVision = (index: number, field: 'id' | 'en', value: string) => {
-    const updated = [...visions];
+  const updateMission = (index: number, field: 'id' | 'en', value: string) => {
+    const updated = [...missions];
     updated[index] = { ...updated[index], [field]: value };
-    setVisions(updated);
+    setMissions(updated);
   };
 
   const handleSave = () => {
-    updateMutation.mutate({ mission, visions });
+    updateMutation.mutate({ vision, missions });
   };
 
   return (
     <div className="space-y-6">
       <BilingualInput
-        label="Misi"
-        idValue={mission.id}
-        enValue={mission.en}
-        onIdChange={(v) => setMission({ ...mission, id: v })}
-        onEnChange={(v) => setMission({ ...mission, en: v })}
+        label="Visi"
+        idValue={vision.id}
+        enValue={vision.en}
+        onIdChange={(v) => setVision({ ...vision, id: v })}
+        onEnChange={(v) => setVision({ ...vision, en: v })}
         multiline
-        placeholder={{ id: 'Tulis misi dalam Bahasa Indonesia...', en: 'Write mission in English...' }}
+        placeholder={{ id: 'Tulis visi dalam Bahasa Indonesia...', en: 'Write vision in English...' }}
       />
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Visi Points</Label>
-          <Button variant="outline" size="sm" onClick={addVision}>
+          <Label className="text-sm font-medium">Misi Points</Label>
+          <Button variant="outline" size="sm" onClick={addMission}>
             <Plus className="h-4 w-4 mr-1" /> Tambah
           </Button>
         </div>
 
-        {visions.map((vision, index) => (
+        {missions.map((mission, index) => (
           <div key={index} className="flex items-start gap-3">
             <span className="text-muted-foreground text-sm font-mono mt-2 w-6">
               {String(index + 1).padStart(2, '0')}
@@ -72,18 +72,18 @@ export function VisionMissionTab() {
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">ID</Label>
                 <Textarea
-                  value={vision.id}
-                  onChange={(e) => updateVision(index, 'id', e.target.value)}
-                  placeholder="Visi dalam Bahasa Indonesia..."
+                  value={mission.id}
+                  onChange={(e) => updateMission(index, 'id', e.target.value)}
+                  placeholder="Misi dalam Bahasa Indonesia..."
                   rows={2}
                 />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">EN</Label>
                 <Textarea
-                  value={vision.en}
-                  onChange={(e) => updateVision(index, 'en', e.target.value)}
-                  placeholder="Vision in English..."
+                  value={mission.en}
+                  onChange={(e) => updateMission(index, 'en', e.target.value)}
+                  placeholder="Mission in English..."
                   rows={2}
                 />
               </div>
@@ -91,8 +91,8 @@ export function VisionMissionTab() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => removeVision(index)}
-              disabled={visions.length <= 1}
+              onClick={() => removeMission(index)}
+              disabled={missions.length <= 1}
               className="mt-6"
             >
               <Trash2 className="h-4 w-4 text-destructive" />

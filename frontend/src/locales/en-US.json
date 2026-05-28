@@ -1279,12 +1279,12 @@
       }
     },
     "visionMission": {
-      "missionLabel": "Our Mission",
-      "missionText": "To become the primary destination of choice for Indonesians to enjoy a premium quality steak dining experience with delicious flavors, affordable prices, and a comfortable, modern atmosphere.",
       "visionLabel": "Our Vision",
-      "vision1": "Serving high-quality steaks prepared with selected ingredients, exceptional taste, and affordable prices.",
-      "vision2": "Providing easy access to Steak Kenangan, always present near where people live.",
-      "vision3": "Creating a comfortable and modern atmosphere with aesthetically designed and attractive spaces."
+      "visionText": "To become the primary destination of choice for Indonesians to enjoy a premium quality steak dining experience with delicious flavors, affordable prices, and a comfortable, modern atmosphere.",
+      "missionLabel": "Our Mission",
+      "mission1": "Serving high-quality steaks prepared with selected ingredients, exceptional taste, and affordable prices.",
+      "mission2": "Providing easy access to Steak Kenangan, always present near where people live.",
+      "mission3": "Creating a comfortable and modern atmosphere with aesthetically designed and attractive spaces."
     }
   }
 }

@@ -8,14 +8,9 @@ interface BilingualText {
   en: string;
 }
 
-interface VisionPoint {
-  id: string;
-  en: string;
-}
-
 interface VisionMissionData {
-  mission: BilingualText;
-  visions: VisionPoint[];
+  vision: BilingualText;
+  missions: BilingualText[];
 }
 
 interface FranchisePackage {
@@ -105,7 +100,6 @@ export function useUpdateFranchiseContent(section: string) {
 
 export type {
   BilingualText,
-  VisionPoint,
   VisionMissionData,
   FranchisePackage,
   PackagesData,
