@@ -26,7 +26,11 @@ export function AtmosphereTab() {
   useEffect(() => {
     const atm = data?.atmosphere as AtmosphereData | undefined;
     if (atm?.items) {
-      setItems(atm.items);
+      setItems(atm.items.map(item => ({
+        ...createEmptyItem(),
+        ...item,
+        caption: item.caption || { id: '', en: '' },
+      })));
     }
   }, [data]);
 

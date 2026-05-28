@@ -16,8 +16,8 @@ export function VisionMissionTab() {
   useEffect(() => {
     const vm = data?.vision_mission as VisionMissionData | undefined;
     if (vm) {
-      setVision(vm.vision);
-      setMissions(vm.missions);
+      setVision(vm.vision || { id: '', en: '' });
+      setMissions(vm.missions || [{ id: '', en: '' }]);
     }
   }, [data]);
 
