@@ -10,9 +10,9 @@ function isValidSection(section: string): section is Section {
 }
 
 function validateVisionMission(content: unknown): string | null {
-  const c = content as Record<string, unknown>;
+  const c = content as any;
   if (!c.vision || typeof c.vision !== 'object') return 'vision is required and must be an object';
-  const v = c.vision as Record<string, unknown>;
+  const v = c.vision as any;
   if (!v.id || !v.en) return 'vision must have id and en fields';
   if (!Array.isArray(c.missions) || c.missions.length === 0) return 'missions must be a non-empty array';
   for (const m of c.missions) {
@@ -22,7 +22,7 @@ function validateVisionMission(content: unknown): string | null {
 }
 
 function validatePackages(content: unknown): string | null {
-  const c = content as Record<string, unknown>;
+  const c = content as any;
   if (!Array.isArray(c.packages) || c.packages.length === 0) return 'packages must be a non-empty array';
   for (const pkg of c.packages) {
     if (!pkg.slug) return 'each package must have a slug';
@@ -35,7 +35,7 @@ function validatePackages(content: unknown): string | null {
 }
 
 function validateInvestment(content: unknown): string | null {
-  const c = content as Record<string, unknown>;
+  const c = content as any;
   if (!c.title?.id || !c.title?.en) return 'title must have id and en fields';
   if (!c.subtitle?.id || !c.subtitle?.en) return 'subtitle must have id and en fields';
   if (!c.roiEstimate?.id || !c.roiEstimate?.en) return 'roiEstimate must have id and en fields';
@@ -47,7 +47,7 @@ function validateInvestment(content: unknown): string | null {
 }
 
 function validateAtmosphere(content: unknown): string | null {
-  const c = content as Record<string, unknown>;
+  const c = content as any;
   if (!Array.isArray(c.items) || c.items.length === 0) return 'items must be a non-empty array';
   for (const item of c.items) {
     if (!item.id || typeof item.id !== 'string') return 'each item must have an id string';
