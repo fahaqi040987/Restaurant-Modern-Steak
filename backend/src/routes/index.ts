@@ -25,6 +25,7 @@ import { uploadImage, deleteImage } from '../handlers/upload.js';
 import { getDashboardStats, getSalesReport, getOrdersReport, getIncomeReport } from '../handlers/dashboard.js';
 import { getPublicMenu, getPublicCategories, getRestaurantInfo, submitContactForm, getCSRFToken, getTableByQRCode, createCustomerOrder } from '../handlers/public.js';
 import { getPublicBioLinks, trackBioLinkClick, getBioLinks, createBioLink, updateBioLink, deleteBioLink, reorderBioLinks, getBioLinkProfile, updateBioLinkProfile, getBioLinkAnalytics } from '../handlers/bio-links.js';
+import { getFranchiseContent, getFranchiseContentBySection, updateFranchiseContent } from '../handlers/franchise-content.js';
 import { getAdminCategories, createCategory, updateCategory, deleteCategory, getAdminTables, createTable, updateTable, deleteTable, getAdminUsers, createUser, updateUser, deleteUser } from '../handlers/admin.js';
 import { getSystemHealth } from '../handlers/health.js';
 
@@ -56,6 +57,8 @@ export function setupRoutes(app: Hono) {
   publicAPI.post('/reservations', contactFormRateLimiter(), csrfProtection, createReservation);
   publicAPI.get('/links', getPublicBioLinks);
   publicAPI.post('/links/:id/click', trackBioLinkClick);
+  publicAPI.get('/franchise/content', getFranchiseContent);
+  publicAPI.get('/franchise/content/:section', getFranchiseContentBySection);
 
   api.route('/public', publicAPI);
 
@@ -243,6 +246,11 @@ export function setupRoutes(app: Hono) {
   adminRoutes.put('/links/:id', updateBioLink);
   adminRoutes.delete('/links/:id', deleteBioLink);
   adminRoutes.get('/links/:id/analytics', getBioLinkAnalytics);
+
+  // Franchise content management
+  adminRoutes.get('/franchise/content', getFranchiseContent);
+  adminRoutes.get('/franchise/content/:section', getFranchiseContentBySection);
+  adminRoutes.put('/franchise/content/:section', updateFranchiseContent);
 
   api.route('/admin', adminRoutes);
 

@@ -54,6 +54,7 @@ const navLinkKeys = [
   { to: '/site/about', labelKey: 'public.aboutUs' },
   { to: '/site/reservation', labelKey: 'public.reservation' },
   { to: '/site/contact', labelKey: 'public.contact' },
+  { to: '/site/franchise', labelKey: 'public.franchise' },
 ]
 
 const languages = [

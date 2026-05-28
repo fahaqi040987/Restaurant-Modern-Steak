@@ -761,7 +761,9 @@
     "bioLinksSaveProfile": "Save Profile",
     "bioLinksViewPage": "View Page",
     "bioLinksBackground": "Background",
-    "bioLinksChangeBg": "Change Background"
+    "bioLinksChangeBg": "Change Background",
+    "franchiseContent": "Franchise Content",
+    "franchiseContentDescription": "Manage franchise page content"
   },
   "navigation": {
     "home": "Home",
@@ -916,6 +918,7 @@
     "about": "About",
     "reservation": "Reservation",
     "contact": "Contact",
+    "franchise": "Franchise",
     "staffLogin": "Staff Login",
     "openNow": "Open Now",
     "closedNow": "Closed Now",
@@ -1179,6 +1182,109 @@
       "502": "Gateway error. Server is unavailable.",
       "503": "Service unavailable. Please try again later.",
       "504": "Gateway timeout. Server not responding."
+    }
+  },
+  "franchise": {
+    "nav": {
+      "gerai": "Outlets",
+      "menu": "Menu",
+      "plan": "Plan",
+      "register": "Register Now",
+      "backToWebsite": "Back to Website"
+    },
+    "hero": {
+      "title": "An environment designed to",
+      "titleHighlight": "relax",
+      "subtitle": "A modern sanctuary curated for luxurious and memorable culinary experiences.",
+      "subtitleHighlight1": "luxurious culinary experiences",
+      "subtitleHighlight2": "memorable",
+      "cta": "View Franchise Packages"
+    },
+    "atmosphere": {
+      "title": "Our Outlet Atmosphere",
+      "subtitle": "Experience luxurious and comfortable dining at every Steak Kenangan outlet.",
+      "outletDay": "Daytime Outlet Photo",
+      "indoor": "Indoor Area Photo",
+      "outletNight": "Nighttime Outlet Photo",
+      "outdoor": "Outdoor Area Photo"
+    },
+    "menu": {
+      "title": "Franchise Packages",
+      "subtitle": "Choose the franchise package that fits your business vision.",
+      "starter": {
+        "name": "Starter Package",
+        "description": "Ideal for starting your first steak restaurant business with full support from our team.",
+        "highlights": "10 featured menus, staff training, standard interior design"
+      },
+      "premium": {
+        "name": "Premium Package",
+        "description": "Complete franchise experience with premium branding and comprehensive operational support.",
+        "highlights": "20 full menus, intensive training, premium interior design, marketing support"
+      },
+      "signature": {
+        "name": "Signature Package",
+        "description": "Exclusive experience for selected partners with privileges and full-time support.",
+        "highlights": "Full menu, dedicated chef, custom design, premium marketing, priority support"
+      }
+    },
+    "investment": {
+      "title": "Investment & Returns",
+      "subtitle": "See why joining Steak Kenangan is a smart business decision.",
+      "initialCapital": {
+        "label": "Initial Capital",
+        "starter": "IDR 500M - IDR 750M",
+        "premium": "IDR 750M - IDR 1.2B",
+        "signature": "IDR 1.2B - IDR 2B"
+      },
+      "roi": {
+        "label": "Estimated ROI",
+        "value": "18-24 Months"
+      },
+      "benefits": {
+        "title": "Partner Benefits",
+        "items": {
+          "brand": "Proven brand recognition",
+          "training": "Operational & management training",
+          "supply": "Integrated supply chain system",
+          "marketing": "Marketing & promotion support",
+          "tech": "Modern POS & technology system",
+          "support": "Dedicated 24/7 support team"
+        }
+      }
+    },
+    "apply": {
+      "title": "Franchise Application",
+      "subtitle": "Fill out the form below and our team will contact you shortly.",
+      "name": "Full Name",
+      "namePlaceholder": "Enter your full name",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email address",
+      "phone": "Phone Number",
+      "phonePlaceholder": "Enter your phone number",
+      "location": "Preferred Location",
+      "locationPlaceholder": "City or area of interest",
+      "message": "Additional Message",
+      "messagePlaceholder": "Tell us about your interest in the Steak Kenangan franchise...",
+      "submit": "Submit Application",
+      "submitting": "Submitting...",
+      "success": "Application Submitted!",
+      "successMessage": "Thank you for your interest. Our franchise team will contact you within 1-2 business days.",
+      "validation": {
+        "nameRequired": "Full name is required",
+        "emailRequired": "Email address is required",
+        "emailInvalid": "Invalid email format",
+        "phoneRequired": "Phone number is required",
+        "phoneInvalid": "Invalid phone number format",
+        "locationRequired": "Preferred location is required"
+      }
+    },
+    "visionMission": {
+      "visionLabel": "Our Vision",
+      "visionText": "To become the primary destination of choice for Indonesians to enjoy a premium quality steak dining experience with delicious flavors, affordable prices, and a comfortable, modern atmosphere.",
+      "missionLabel": "Our Mission",
+      "mission1": "Serving high-quality steaks prepared with selected ingredients, exceptional taste, and affordable prices.",
+      "mission2": "Providing easy access to Steak Kenangan, always present near where people live.",
+      "mission3": "Creating a comfortable and modern atmosphere with aesthetically designed and attractive spaces."
     }
   }
 }

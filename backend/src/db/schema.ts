@@ -614,3 +614,21 @@ export const bioLinkClicks = pgTable(
     clickedAtIdx: index('idx_bio_link_clicks_clicked_at').on(table.clickedAt),
   }),
 );
+
+// ---------------------------------------------------------------------------
+// franchise_content
+// ---------------------------------------------------------------------------
+export const franchiseContent = pgTable(
+  'franchise_content',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    section: varchar('section', { length: 50 }).unique().notNull(),
+    content: jsonb('content').notNull().default({}),
+    updatedBy: uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+  },
+  (table) => ({
+    sectionIdx: index('idx_franchise_content_section').on(table.section),
+  }),
+);

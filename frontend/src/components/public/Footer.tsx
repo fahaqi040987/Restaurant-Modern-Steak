@@ -17,6 +17,7 @@ import type { RestaurantInfo, OperatingHours } from '@/types'
 
 interface FooterProps {
   restaurantInfo?: RestaurantInfo | null
+  showReservation?: boolean
   className?: string
 }
 
@@ -29,7 +30,7 @@ interface FooterProps {
  * <Footer restaurantInfo={restaurantInfo} />
  * ```
  */
-export function Footer({ restaurantInfo, className }: FooterProps) {
+export function Footer({ restaurantInfo, showReservation = true, className }: FooterProps) {
   const { t } = useTranslation()
 
   const formatOperatingHours = (hours: OperatingHours[]): JSX.Element => {
@@ -191,6 +192,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
       role="contentinfo"
     >
       {/* Reservation Box Overlay */}
+      {showReservation && (
       <div className="relative -mt-20 mb-12 px-4">
         <div className="public-container">
           <div
@@ -241,6 +243,7 @@ export function Footer({ restaurantInfo, className }: FooterProps) {
           </div>
         </div>
       </div>
+      )}
 
       {/* Main Footer Content */}
       <div className="public-container py-12">
