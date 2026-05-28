@@ -3,7 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VisionMissionTab } from './VisionMissionTab';
 import { PackagesTab } from './PackagesTab';
 import { InvestmentTab } from './InvestmentTab';
-import { Target, Package, TrendingUp } from 'lucide-react';
+import { AtmosphereTab } from './AtmosphereTab';
+import { Target, Package, TrendingUp, Image } from 'lucide-react';
 
 export function FranchiseContentEditor() {
   const [activeTab, setActiveTab] = useState('vision-mission');
@@ -13,12 +14,12 @@ export function FranchiseContentEditor() {
       <div>
         <h1 className="text-2xl font-bold">Franchise Content Management</h1>
         <p className="text-muted-foreground mt-1">
-          Kelola konten halaman franchise — Visi & Misi, Paket, dan Investasi.
+          Kelola konten halaman franchise — Visi & Misi, Paket, Investasi, dan Galeri Outlet.
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="vision-mission" className="flex items-center gap-2">
             <Target className="h-4 w-4" />
             Visi & Misi
@@ -31,6 +32,10 @@ export function FranchiseContentEditor() {
             <TrendingUp className="h-4 w-4" />
             Investasi
           </TabsTrigger>
+          <TabsTrigger value="atmosphere" className="flex items-center gap-2">
+            <Image className="h-4 w-4" />
+            Galeri Outlet
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="vision-mission" className="mt-6">
@@ -41,6 +46,9 @@ export function FranchiseContentEditor() {
         </TabsContent>
         <TabsContent value="investment" className="mt-6">
           <InvestmentTab />
+        </TabsContent>
+        <TabsContent value="atmosphere" className="mt-6">
+          <AtmosphereTab />
         </TabsContent>
       </Tabs>
     </div>

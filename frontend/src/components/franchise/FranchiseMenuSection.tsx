@@ -115,6 +115,17 @@ function DynamicPackageCard({
         >
           {getText(pkg.name, locale)}
         </h3>
+        <div className="mt-2 mb-4">
+          <p className={cn(
+            'text-xl font-bold',
+            pkg.isFeatured ? 'text-[var(--public-accent)]' : 'text-[var(--public-text-primary)]'
+          )}>
+            {getText(pkg.priceRange, locale)}
+          </p>
+          <span className="text-xs text-[var(--public-text-muted)]">
+            {locale === 'id' ? 'Investasi Awal' : 'Initial Investment'}
+          </span>
+        </div>
         <p className="text-[var(--public-text-secondary)] mb-6 leading-relaxed">
           {getText(pkg.description, locale)}
         </p>
@@ -185,6 +196,17 @@ function FallbackPackageCard({ packageKey, index, isFeatured }: { packageKey: st
         >
           {t(`franchise.menu.${packageKey}.name`)}
         </h3>
+        <div className="mt-2 mb-4">
+          <p className={cn(
+            'text-xl font-bold',
+            isFeatured ? 'text-[var(--public-accent)]' : 'text-[var(--public-text-primary)]'
+          )}>
+            {t(`franchise.investment.initialCapital.${packageKey}`)}
+          </p>
+          <span className="text-xs text-[var(--public-text-muted)]">
+            {t('franchise.investment.initialCapital.label')}
+          </span>
+        </div>
         <p className="text-[var(--public-text-secondary)] mb-6 leading-relaxed">
           {t(`franchise.menu.${packageKey}.description`)}
         </p>

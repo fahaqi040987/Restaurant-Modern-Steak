@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { TrendingUp, Shield, Award, Truck, Megaphone, Headphones, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
-import { useFranchiseContent, type InvestmentData, type FranchisePackage, type PackagesData } from '@/hooks/useFranchiseContent'
+import { useFranchiseContent, type InvestmentData } from '@/hooks/useFranchiseContent'
 
 const benefitIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   shield: Shield,
@@ -19,7 +19,6 @@ export function InvestmentInfo() {
   const { data, isLoading, locale, getText } = useFranchiseContent()
 
   const inv = data?.investment as InvestmentData | undefined
-  const pkgData = data?.packages as PackagesData | undefined
 
   const title = inv ? getText(inv.title, locale) : t('franchise.investment.title')
   const subtitle = inv ? getText(inv.subtitle, locale) : t('franchise.investment.subtitle')
@@ -57,7 +56,7 @@ export function InvestmentInfo() {
           </p>
         </div>
 
-        <InvestmentCards pkgData={pkgData} locale={locale} getText={getText} />
+        <RoiSection inv={inv} locale={locale} getText={getText} />
         <BenefitsGrid inv={inv} locale={locale} getText={getText} />
         </>
         )}
@@ -66,62 +65,38 @@ export function InvestmentInfo() {
   )
 }
 
-function InvestmentCards({
-  pkgData,
+function RoiSection({
+  inv,
   locale,
   getText,
 }: {
-  pkgData?: PackagesData;
+  inv?: InvestmentData;
   locale: 'id' | 'en';
   getText: (field: { id: string; en: string }, locale: 'id' | 'en') => string;
 }) {
-  const { t } = useTranslation()
-
-  const tiers = pkgData?.packages
-    ? pkgData.packages
-        .filter((p) => p.isActive)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-    : [
-        { slug: 'starter', isFeatured: false },
-        { slug: 'premium', isFeatured: true },
-        { slug: 'signature', isFeatured: false },
-      ]
+  const roiValue = inv
+    ? getText(inv.roiEstimate, locale)
+    : locale === 'id' ? '18-24 Bulan' : '18-24 Months'
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-      {tiers.map((tier) => {
-        const pkg = tier as FranchisePackage
-        const isPremium = pkg.isFeatured ?? (pkg.slug === 'premium')
-        const name = pkg.name ? getText(pkg.name, locale) : t(`franchise.menu.${pkg.slug}.name`)
-        const priceRange = pkg.priceRange ? getText(pkg.priceRange, locale) : t(`franchise.investment.initialCapital.${pkg.slug}`)
-
-        return (
-          <div
-            key={pkg.slug}
-            className={cn(
-              'rounded-lg p-6 bg-[var(--public-bg-elevated)] border',
-              isPremium ? 'border-[var(--public-accent)]' : 'border-[var(--public-border)]',
-              'text-center'
-            )}
-          >
-            <span
-              className={cn(
-                'text-sm uppercase tracking-wider font-semibold',
-                isPremium ? 'text-[var(--public-accent)]' : 'text-[var(--public-text-muted)]'
-              )}
-              style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
-            >
-              {name}
-            </span>
-            <p className="text-2xl md:text-3xl font-bold text-[var(--public-text-primary)] mt-2">
-              {priceRange}
-            </p>
-            <span className="text-xs text-[var(--public-text-muted)] mt-1 block">
-              {t('franchise.investment.initialCapital.label')}
-            </span>
-          </div>
-        )
-      })}
+    <div className="text-center mb-16">
+      <div className="inline-block rounded-xl bg-[var(--public-accent)]/10 border border-[var(--public-accent)]/20 px-10 py-8">
+        <span
+          className="text-sm uppercase tracking-[0.2em] text-[var(--public-accent)] font-semibold"
+          style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
+        >
+          {locale === 'id' ? 'Estimasi Periode Balik Modal' : 'Estimated Payback Period'}
+        </span>
+        <p
+          className="text-4xl md:text-5xl font-bold text-[var(--public-accent)] mt-3"
+          style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
+        >
+          {roiValue}
+        </p>
+        <span className="text-sm text-[var(--public-text-muted)] mt-2 block">
+          {locale === 'id' ? 'Perkiraan pengembalian dari investasi awal Anda' : 'Estimated return on your initial investment'}
+        </span>
+      </div>
     </div>
   )
 }

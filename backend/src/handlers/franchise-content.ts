@@ -2,7 +2,7 @@ import type { Context } from 'hono';
 import { sql } from 'drizzle-orm';
 import { db, pool } from '../db/connection.js';
 
-const VALID_SECTIONS = ['vision_mission', 'packages', 'investment'] as const;
+const VALID_SECTIONS = ['vision_mission', 'packages', 'investment', 'atmosphere'] as const;
 type Section = (typeof VALID_SECTIONS)[number];
 
 function isValidSection(section: string): section is Section {
@@ -46,10 +46,23 @@ function validateInvestment(content: unknown): string | null {
   return null;
 }
 
+function validateAtmosphere(content: unknown): string | null {
+  const c = content as Record<string, unknown>;
+  if (!Array.isArray(c.items) || c.items.length === 0) return 'items must be a non-empty array';
+  for (const item of c.items) {
+    if (!item.id || typeof item.id !== 'string') return 'each item must have an id string';
+    if (typeof item.image !== 'string') return `item "${item.id}" must have an image string`;
+    if (!item.caption?.id || !item.caption?.en) return `item "${item.id}" must have caption with id and en`;
+    if (typeof item.sortOrder !== 'number') return `item "${item.id}" must have sortOrder number`;
+  }
+  return null;
+}
+
 const validators: Record<Section, (content: unknown) => string | null> = {
   vision_mission: validateVisionMission,
   packages: validatePackages,
   investment: validateInvestment,
+  atmosphere: validateAtmosphere,
 };
 
 // ── Get all franchise content ──────────────────────────────────────────────────

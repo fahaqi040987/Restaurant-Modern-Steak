@@ -41,10 +41,22 @@ interface InvestmentData {
   benefits: Benefit[];
 }
 
+interface AtmosphereItem {
+  id: string;
+  image: string;
+  caption: BilingualText;
+  sortOrder: number;
+}
+
+interface AtmosphereData {
+  items: AtmosphereItem[];
+}
+
 interface AllFranchiseContent {
   vision_mission?: VisionMissionData;
   packages?: PackagesData;
   investment?: InvestmentData;
+  atmosphere?: AtmosphereData;
 }
 
 type Locale = 'id' | 'en';
@@ -105,6 +117,8 @@ export type {
   PackagesData,
   Benefit,
   InvestmentData,
+  AtmosphereItem,
+  AtmosphereData,
   AllFranchiseContent,
   Locale,
 };
