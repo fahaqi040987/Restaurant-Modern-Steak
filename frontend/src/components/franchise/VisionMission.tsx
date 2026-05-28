@@ -12,7 +12,7 @@ export function VisionMission() {
   const vm = data?.vision_mission as VisionMissionData | undefined
 
   const visionText = vm ? getText(vm.vision, locale) : t('franchise.visionMission.visionText')
-  const missionPoints = vm
+  const missionPoints = vm?.missions
     ? vm.missions.map((m, i) => ({ num: String(i + 1).padStart(2, '0'), text: getText(m, locale) }))
     : [
         { num: '01', text: t('franchise.visionMission.mission1') },

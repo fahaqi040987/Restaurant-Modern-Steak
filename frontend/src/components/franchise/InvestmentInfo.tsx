@@ -112,7 +112,7 @@ function BenefitsGrid({
 }) {
   const { t } = useTranslation()
 
-  const benefitItems = inv
+  const benefitItems = inv?.benefits
     ? inv.benefits
     : Object.keys(benefitIcons).map((key) => ({
         id: '',

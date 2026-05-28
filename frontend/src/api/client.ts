@@ -1336,7 +1336,6 @@ class APIClient {
     return this.request({
       method: "GET",
       url: "/public/links",
-      requireAuth: false,
     });
   }
 
@@ -1344,7 +1343,6 @@ class APIClient {
     return this.request({
       method: "POST",
       url: `/public/links/${id}/click`,
-      requireAuth: false,
     });
   }
 
