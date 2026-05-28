@@ -34,10 +34,10 @@ export function InvestmentTab() {
   useEffect(() => {
     const inv = data?.investment as InvestmentData | undefined;
     if (inv) {
-      setTitle(inv.title);
-      setSubtitle(inv.subtitle);
-      setRoiEstimate(inv.roiEstimate);
-      setBenefits(inv.benefits);
+      setTitle(inv.title || { id: '', en: '' });
+      setSubtitle(inv.subtitle || { id: '', en: '' });
+      setRoiEstimate(inv.roiEstimate || { id: '', en: '' });
+      setBenefits(inv.benefits || [{ id: '', en: '', icon: 'shield' }]);
     }
   }, [data]);
 

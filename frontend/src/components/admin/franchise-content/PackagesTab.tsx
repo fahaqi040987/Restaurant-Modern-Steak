@@ -30,7 +30,14 @@ export function PackagesTab() {
   useEffect(() => {
     const pkgData = data?.packages as PackagesData | undefined;
     if (pkgData?.packages) {
-      setPackages(pkgData.packages);
+      setPackages(pkgData.packages.map(p => ({
+        ...createEmptyPackage(),
+        ...p,
+        name: p.name || { id: '', en: '' },
+        description: p.description || { id: '', en: '' },
+        highlights: p.highlights || { id: '', en: '' },
+        priceRange: p.priceRange || { id: '', en: '' },
+      })));
     }
   }, [data]);
 
