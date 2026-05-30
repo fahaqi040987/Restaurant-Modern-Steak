@@ -67,13 +67,9 @@ function BioLinkPage() {
       : 'Steak Kenangan | Links'
   }, [profile?.account_name])
 
-  const handleClick = async (link: { id: string; url: string }) => {
-    try {
-      await apiClient.trackBioLinkClick(link.id)
-    } catch {
-      // Tracking failure should not block navigation
-    }
-    window.open(link.url, '_blank', 'noopener,noreferrer')
+  const handleClick = (e: React.MouseEvent, link: { id: string }) => {
+    // Don't prevent default - let the anchor tag work naturally
+    trackClick(link.id)
   }
 
   if (isLoading) {
