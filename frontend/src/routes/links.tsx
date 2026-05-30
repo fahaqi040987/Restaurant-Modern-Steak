@@ -67,8 +67,7 @@ function BioLinkPage() {
       : 'Steak Kenangan | Links'
   }, [profile?.account_name])
 
-  const handleClick = (e: React.MouseEvent, link: { id: string }) => {
-    // Don't prevent default - let the anchor tag work naturally
+  const handleClick = (link: { id: string }) => {
     trackClick(link.id)
   }
 
