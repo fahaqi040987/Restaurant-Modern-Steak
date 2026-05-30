@@ -67,7 +67,7 @@ function BioLinkPage() {
       : 'Steak Kenangan | Links'
   }, [profile?.account_name])
 
-  const handleClick = (link: { id: string }) => {
+  const handleClick = (e: React.MouseEvent, link: { id: string }) => {
     trackClick(link.id)
   }
 
@@ -124,10 +124,17 @@ function BioLinkPage() {
         {/* Link Buttons */}
         <div className="w-full space-y-3 flex-1">
           {links.map((link) => (
-            <button
+            <a
               key={link.id}
-              onClick={() => handleClick(link)}
-              className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-xl font-medium text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => handleClick(e, link)}
+              onTouchStart={() => trackClick(link.id)}
+              className="w-full flex items-center justify-between gap-3 px-5 py-4
+                rounded-xl font-medium text-white transition-all duration-200
+                hover:scale-[1.02] active:scale-[0.98]
+                touch-action: manipulation cursor: pointer no-underline"
               style={{
                 background: `linear-gradient(135deg, ${themeColor}dd, ${themeColor}99)`,
                 border: `1px solid ${themeColor}40`,
@@ -135,7 +142,7 @@ function BioLinkPage() {
             >
               <span className="truncate">{link.title}</span>
               <ExternalLink className="w-4 h-4 flex-shrink-0 opacity-60" />
-            </button>
+            </a>
           ))}
 
           {links.length === 0 && (
