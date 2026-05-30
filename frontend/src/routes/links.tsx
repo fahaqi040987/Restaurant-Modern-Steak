@@ -20,6 +20,14 @@ function getImageUrl(url: string | null | undefined): string | null {
   return url
 }
 
+async function trackClick(linkId: string) {
+  try {
+    await apiClient.trackBioLinkClick(linkId)
+  } catch {
+    // Silent fail - tracking should never block user navigation
+  }
+}
+
 function BioLinkPage() {
   const { data: bioData, isLoading } = useQuery({
     queryKey: ['publicBioLinks'],
