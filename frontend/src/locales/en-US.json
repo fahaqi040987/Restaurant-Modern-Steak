@@ -755,6 +755,26 @@
     "bioLinksLinkIcon": "Icon",
     "bioLinksActive": "Active",
     "bioLinksInactive": "Inactive",
+    "menuConfig": "Menu Config",
+    "menuConfigDescription": "Configure public website menu items",
+    "menuConfigDetails": {
+      "title": "Menu Configuration",
+      "description": "Manage which menu items appear in the public website header",
+      "enabled": "Visible",
+      "disabled": "Hidden (Maintenance)",
+      "showInMenu": "Show in Menu",
+      "maintenanceText": "Maintenance Text",
+      "maintenancePlaceholder": "e.g., 'Under Maintenance' or 'Coming Soon'",
+      "maintenanceHint": "This text will be shown instead of the menu label when the item is disabled",
+      "saveSuccess": "Menu configuration has been saved successfully",
+      "saveError": "Failed to save menu configuration: {{error}}",
+      "validationError": "Please provide maintenance text for all disabled menu items",
+      "infoBox": {
+        "text1": "Disabled menu items will show the maintenance text in the header instead of a clickable link.",
+        "text2": "The actual pages remain accessible if users navigate directly to the URL.",
+        "text3": "Use this to temporarily hide links during maintenance or updates."
+      }
+    },
     "bioLinksClickCount": "Click Count",
     "bioLinksSortOrder": "Order",
     "bioLinksAvatar": "Profile Photo",

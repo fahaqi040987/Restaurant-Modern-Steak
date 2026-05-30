@@ -340,6 +340,16 @@ export interface RestaurantInfo {
 }
 
 /**
+ * Menu item configuration for public website header
+ * Part of GET /api/v1/public/menu-config response
+ */
+export interface MenuItemConfig {
+  id: string;
+  enabled: boolean;
+  maintenanceText: string;
+}
+
+/**
  * Contact form submission data for POST /api/v1/public/contact
  */
 export interface ContactFormData {

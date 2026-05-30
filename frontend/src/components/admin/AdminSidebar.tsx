@@ -18,7 +18,8 @@ import {
   MessageSquare,
   Package,
   Link2,
-  Store
+  Store,
+  Navigation
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
 
@@ -111,6 +112,13 @@ const adminSections: AdminSection[] = [
     icon: <Link2 className="w-5 h-5" />,
     descriptionKey: 'admin.bioLinksDescription',
     href: '/admin/links'
+  },
+  {
+    id: 'menu-config',
+    labelKey: 'admin.menuConfig',
+    icon: <Navigation className="w-5 h-5" />,
+    descriptionKey: 'admin.menuConfigDescription',
+    href: '/admin/menu-config'
   },
   {
     id: 'franchise-content',

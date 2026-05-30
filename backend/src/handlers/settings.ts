@@ -2,6 +2,44 @@ import type { Context } from 'hono';
 import { sql } from 'drizzle-orm';
 import { db, pool } from '../db/connection.js';
 
+// ── GetPublicMenuConfig ───────────────────────────────────────────────────────────
+
+export async function getPublicMenuConfig(c: Context) {
+  try {
+    const res = await db.execute<{
+      setting_value: string;
+    }>(sql`
+      SELECT setting_value
+      FROM system_settings
+      WHERE setting_key = 'public_menu_config'
+    `);
+
+    const defaultValue = [
+      { id: 'home', enabled: true, maintenanceText: '' },
+      { id: 'menu', enabled: true, maintenanceText: '' },
+      { id: 'about', enabled: true, maintenanceText: '' },
+      { id: 'reservation', enabled: true, maintenanceText: '' },
+      { id: 'contact', enabled: true, maintenanceText: '' },
+      { id: 'franchise', enabled: true, maintenanceText: '' },
+    ];
+
+    const configValue = res.rows[0]?.setting_value;
+    const parsedConfig = configValue ? JSON.parse(configValue) : defaultValue;
+
+    return c.json({
+      success: true,
+      message: 'Menu configuration retrieved successfully',
+      data: parsedConfig,
+    });
+  } catch (err) {
+    return c.json({
+      success: false,
+      message: 'Failed to fetch menu configuration',
+      error: (err as Error).message,
+    }, 500);
+  }
+}
+
 // ── GetSettings ──────────────────────────────────────────────────────────────
 
 export async function getSettings(c: Context) {

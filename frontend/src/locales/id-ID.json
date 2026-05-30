@@ -755,6 +755,26 @@
     "bioLinksLinkIcon": "Ikon",
     "bioLinksActive": "Aktif",
     "bioLinksInactive": "Nonaktif",
+    "menuConfig": "Konfigurasi Menu",
+    "menuConfigDescription": "Konfigurasi item menu website publik",
+    "menuConfigDetails": {
+      "title": "Konfigurasi Menu",
+      "description": "Kelola item mana yang muncul di header website publik",
+      "enabled": "Tampil",
+      "disabled": "Tersembunyi (Maintenance)",
+      "showInMenu": "Tampilkan di Menu",
+      "maintenanceText": "Teks Maintenance",
+      "maintenancePlaceholder": "misalnya: 'Dalam Maintenance' atau 'Segera Hadir'",
+      "maintenanceHint": "Teks ini akan ditampilkan menggantikan label menu saat item dinonaktifkan",
+      "saveSuccess": "Konfigurasi menu telah berhasil disimpan",
+      "saveError": "Gagal menyimpan konfigurasi menu: {{error}}",
+      "validationError": "Mohon berikan teks maintenance untuk semua menu yang dinonaktifkan",
+      "infoBox": {
+        "text1": "Item menu yang dinonaktifkan akan menampilkan teks maintenance di header menggantikan tautan yang dapat diklik.",
+        "text2": "Halaman aslinya tetap dapat diakses jika pengguna menavigasi langsung ke URL tersebut.",
+        "text3": "Gunakan ini untuk menyembunyikan tautan sementara selama maintenance atau pembaruan."
+      }
+    },
     "bioLinksClickCount": "Jumlah Klik",
     "bioLinksSortOrder": "Urutan",
     "bioLinksAvatar": "Foto Profil",
