@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { apiClient } from '@/api/client'
 import type { PublicBioLinksResponse } from '@/types'
 import { Instagram, Twitter, MessageCircle, ExternalLink, ChefHat } from 'lucide-react'
@@ -21,8 +21,6 @@ function getImageUrl(url: string | null | undefined): string | null {
 }
 
 function BioLinkPage() {
-  const [clickedId, setClickedId] = useState<string | null>(null)
-
   const { data: bioData, isLoading } = useQuery({
     queryKey: ['publicBioLinks'],
     queryFn: async () => {
@@ -62,15 +60,12 @@ function BioLinkPage() {
   }, [profile?.account_name])
 
   const handleClick = async (link: { id: string; url: string }) => {
-    if (clickedId === link.id) return
-    setClickedId(link.id)
     try {
       await apiClient.trackBioLinkClick(link.id)
     } catch {
       // Tracking failure should not block navigation
     }
     window.open(link.url, '_blank', 'noopener,noreferrer')
-    setTimeout(() => setClickedId(null), 1000)
   }
 
   if (isLoading) {
@@ -129,8 +124,7 @@ function BioLinkPage() {
             <button
               key={link.id}
               onClick={() => handleClick(link)}
-              disabled={clickedId === link.id}
-              className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-xl font-medium text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
+              className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-xl font-medium text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               style={{
                 background: `linear-gradient(135deg, ${themeColor}dd, ${themeColor}99)`,
                 border: `1px solid ${themeColor}40`,
