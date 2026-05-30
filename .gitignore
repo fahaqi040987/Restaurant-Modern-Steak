@@ -183,6 +183,4 @@ docker-compose.prod.back.yml
 # Update Menu
 # =============================================================================
 frenchise_page/*
-docs/superpowers/*
-!docs/superpowers/specs/
-!docs/superpowers/specs/**
+docs/

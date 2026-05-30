@@ -36,6 +36,7 @@ import { Route as AdminServerRouteImport } from './routes/admin/server'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
+import { Route as AdminMenuConfigRouteImport } from './routes/admin/menu-config'
 import { Route as AdminMenuRouteImport } from './routes/admin/menu'
 import { Route as AdminLinksRouteImport } from './routes/admin/links'
 import { Route as AdminKitchenRouteImport } from './routes/admin/kitchen'
@@ -186,6 +187,11 @@ const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMenuConfigRoute = AdminMenuConfigRouteImport.update({
+  id: '/menu-config',
+  path: '/menu-config',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMenuRoute = AdminMenuRouteImport.update({
   id: '/menu',
   path: '/menu',
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/admin/kitchen': typeof AdminKitchenRoute
   '/admin/links': typeof AdminLinksRoute
   '/admin/menu': typeof AdminMenuRoute
+  '/admin/menu-config': typeof AdminMenuConfigRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -318,6 +325,7 @@ export interface FileRoutesByTo {
   '/admin/kitchen': typeof AdminKitchenRoute
   '/admin/links': typeof AdminLinksRoute
   '/admin/menu': typeof AdminMenuRoute
+  '/admin/menu-config': typeof AdminMenuConfigRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/admin/kitchen': typeof AdminKitchenRoute
   '/admin/links': typeof AdminLinksRoute
   '/admin/menu': typeof AdminMenuRoute
+  '/admin/menu-config': typeof AdminMenuConfigRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/reports': typeof AdminReportsRoute
@@ -407,6 +416,7 @@ export interface FileRouteTypes {
     | '/admin/kitchen'
     | '/admin/links'
     | '/admin/menu'
+    | '/admin/menu-config'
     | '/admin/notifications'
     | '/admin/profile'
     | '/admin/reports'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/admin/kitchen'
     | '/admin/links'
     | '/admin/menu'
+    | '/admin/menu-config'
     | '/admin/notifications'
     | '/admin/profile'
     | '/admin/reports'
@@ -492,6 +503,7 @@ export interface FileRouteTypes {
     | '/admin/kitchen'
     | '/admin/links'
     | '/admin/menu'
+    | '/admin/menu-config'
     | '/admin/notifications'
     | '/admin/profile'
     | '/admin/reports'
@@ -735,6 +747,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminNotificationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/menu-config': {
+      id: '/admin/menu-config'
+      path: '/menu-config'
+      fullPath: '/admin/menu-config'
+      preLoaderRoute: typeof AdminMenuConfigRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/menu': {
       id: '/admin/menu'
       path: '/menu'
@@ -846,6 +865,7 @@ interface AdminRouteChildren {
   AdminKitchenRoute: typeof AdminKitchenRoute
   AdminLinksRoute: typeof AdminLinksRoute
   AdminMenuRoute: typeof AdminMenuRoute
+  AdminMenuConfigRoute: typeof AdminMenuConfigRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminProfileRoute: typeof AdminProfileRoute
   AdminReportsRoute: typeof AdminReportsRoute
@@ -866,6 +886,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminKitchenRoute: AdminKitchenRoute,
   AdminLinksRoute: AdminLinksRoute,
   AdminMenuRoute: AdminMenuRoute,
+  AdminMenuConfigRoute: AdminMenuConfigRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminProfileRoute: AdminProfileRoute,
   AdminReportsRoute: AdminReportsRoute,

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -49,12 +49,12 @@ function NavLink({ to, children, onClick, className }: NavLinkProps) {
 }
 
 const navLinkKeys = [
-  { to: '/site', labelKey: 'public.home' },
-  { to: '/site/menu', labelKey: 'public.menu' },
-  { to: '/site/about', labelKey: 'public.aboutUs' },
-  { to: '/site/reservation', labelKey: 'public.reservation' },
-  { to: '/site/contact', labelKey: 'public.contact' },
-  { to: '/site/franchise', labelKey: 'public.franchise' },
+  { id: 'home', to: '/site', labelKey: 'public.home' },
+  { id: 'menu', to: '/site/menu', labelKey: 'public.menu' },
+  { id: 'about', to: '/site/about', labelKey: 'public.aboutUs' },
+  { id: 'reservation', to: '/site/reservation', labelKey: 'public.reservation' },
+  { id: 'contact', to: '/site/contact', labelKey: 'public.contact' },
+  { id: 'franchise', to: '/site/franchise', labelKey: 'public.franchise' },
 ]
 
 const languages = [
@@ -84,8 +84,27 @@ export function Header() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 
+  // Fetch menu config
+  const { data: menuConfig = [] } = useQuery({
+    queryKey: ['publicMenuConfig'],
+    queryFn: () => apiClient.getPublicMenuConfig(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+
   // Get current language
   const currentLang = languages.find(l => l.code === i18n.language) || languages[0]
+
+  // Merge nav links with menu config
+  const processedNavLinks = useMemo(() => {
+    return navLinkKeys.map(link => {
+      const config = menuConfig.find(c => c.id === link.id)
+      return {
+        ...link,
+        enabled: config?.enabled ?? true,
+        maintenanceText: config?.maintenanceText || '',
+      }
+    })
+  }, [menuConfig])
 
   // Handle language change
   const changeLanguage = (langCode: string) => {
@@ -133,11 +152,24 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8">
-          {navLinkKeys.map((link) => (
-            <NavLink key={link.to} to={link.to}>
-              {t(link.labelKey)}
-            </NavLink>
-          ))}
+          {processedNavLinks.map((link) => {
+            if (!link.enabled) {
+              return (
+                <span
+                  key={link.to}
+                  className="text-sm font-medium text-muted-foreground cursor-not-allowed"
+                  title={link.maintenanceText}
+                >
+                  {link.maintenanceText || t(link.labelKey)}
+                </span>
+              )
+            }
+            return (
+              <NavLink key={link.to} to={link.to}>
+                {t(link.labelKey)}
+              </NavLink>
+            )
+          })}
         </div>
 
         {/* Desktop Actions */}
@@ -241,20 +273,35 @@ export function Header() {
               className="mt-8 flex flex-col gap-1"
               aria-label="Mobile navigation"
             >
-              {navLinkKeys.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={closeMobileMenu}
-                  className={cn(
-                    'text-lg py-3 px-4 rounded-md transition-colors',
-                    'hover:bg-[var(--public-bg-hover)] hover:text-[var(--public-accent)]',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]'
-                  )}
-                >
-                  {t(link.labelKey)}
-                </Link>
-              ))}
+              {processedNavLinks.map((link) => {
+                if (!link.enabled) {
+                  return (
+                    <div
+                      key={link.to}
+                      className={cn(
+                        'text-lg py-3 px-4 rounded-md text-muted-foreground cursor-not-allowed'
+                      )}
+                      title={link.maintenanceText}
+                    >
+                      {link.maintenanceText || t(link.labelKey)}
+                    </div>
+                  )
+                }
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={closeMobileMenu}
+                    className={cn(
+                      'text-lg py-3 px-4 rounded-md transition-colors',
+                      'hover:bg-[var(--public-bg-hover)] hover:text-[var(--public-accent)]',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]'
+                    )}
+                  >
+                    {t(link.labelKey)}
+                  </Link>
+                )
+              })}
 
               {/* Mobile Language Switcher */}
               <div className="mt-6 pt-6 border-t border-[var(--public-border)]">
@@ -299,22 +346,24 @@ export function Header() {
               </div>
 
               {/* Mobile Reservation CTA */}
-              <div className="mt-4">
-                <Button
-                  asChild
-                  className={cn(
-                    'w-full gap-2',
-                    'bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
-                    'text-white font-medium'
-                  )}
-                  onClick={closeMobileMenu}
-                >
-                  <Link to="/site/reservation">
-                    <Calendar className="h-4 w-4" aria-hidden="true" />
-                    <span>{t('public.bookATable')}</span>
-                  </Link>
-                </Button>
-              </div>
+              {processedNavLinks.find(l => l.id === 'reservation')?.enabled && (
+                <div className="mt-4">
+                  <Button
+                    asChild
+                    className={cn(
+                      'w-full gap-2',
+                      'bg-[var(--public-accent)] hover:bg-[var(--public-accent-dark)]',
+                      'text-white font-medium'
+                    )}
+                    onClick={closeMobileMenu}
+                  >
+                    <Link to="/site/reservation">
+                      <Calendar className="h-4 w-4" aria-hidden="true" />
+                      <span>{t('public.bookATable')}</span>
+                    </Link>
+                  </Button>
+                </div>
+              )}
 
               {/* Contact Info */}
               <div className="mt-6 pt-6 border-t border-[var(--public-border)]">

@@ -26,6 +26,7 @@ import type {
   PublicMenuItem,
   PublicCategory,
   RestaurantInfo,
+  MenuItemConfig,
   ContactFormData,
   ContactFormResponse,
   CreateReservationRequest,
@@ -822,6 +823,18 @@ class APIClient {
       throw new Error("Restaurant information not found");
     }
     return response.data;
+  }
+
+  /**
+   * Get public menu configuration
+   * @returns Menu configuration for website header
+   */
+  async getPublicMenuConfig(): Promise<MenuItemConfig[]> {
+    const response = await this.request<APIResponse<MenuItemConfig[]>>({
+      method: "GET",
+      url: "/public/menu-config",
+    });
+    return response.data || [];
   }
 
   /**

@@ -19,7 +19,7 @@ import { getNotifications, getUnreadCounts, markNotificationRead, deleteNotifica
 import { createReservation, getReservations, getReservation, updateReservationStatus, deleteReservation, getPendingReservationsCount } from '../handlers/reservations.js';
 import { getContactSubmissions, getContactSubmission, getNewContactsCount, updateContactStatus, deleteContactSubmission } from '../handlers/contact.js';
 import { updateRestaurantInfo, updateOperatingHours } from '../handlers/restaurant-info.js';
-import { getSettings, updateSettings, getSystemHealth as getAdminSystemHealth } from '../handlers/settings.js';
+import { getSettings, updateSettings, getSystemHealth as getAdminSystemHealth, getPublicMenuConfig } from '../handlers/settings.js';
 import { createSurvey, getSurveyStats } from '../handlers/surveys.js';
 import { uploadImage, deleteImage } from '../handlers/upload.js';
 import { getDashboardStats, getSalesReport, getOrdersReport, getIncomeReport } from '../handlers/dashboard.js';
@@ -59,6 +59,7 @@ export function setupRoutes(app: Hono) {
   publicAPI.post('/links/:id/click', trackBioLinkClick);
   publicAPI.get('/franchise/content', getFranchiseContent);
   publicAPI.get('/franchise/content/:section', getFranchiseContentBySection);
+  publicAPI.get('/menu-config', getPublicMenuConfig);
 
   api.route('/public', publicAPI);
 
