@@ -42,10 +42,6 @@ docs/
 # Config files (use repo defaults)
 .prettierrc*
 .eslintrc*
-tsconfig.json
-vite.config.ts
-vitest.config.ts
-playwright.config.ts
 
 # Temporary files
 *.tmp
