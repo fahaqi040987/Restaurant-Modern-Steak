@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import { db, pool } from '../db/connection.js';
 import { successResponse, errorResponse } from '../lib/response.js';
 import { randomUUID } from 'node:crypto';
+import { internalAutoDeduct } from './logistics.js';
 
 // ── CSRF Token Management ────────────────────────────────────────────────────
 
@@ -425,14 +426,18 @@ export async function createCustomerOrder(c: Context) {
     item.special_instructions = stripHTMLTags(item.special_instructions || '');
   }
 
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
+
     // Verify table exists
-    const tableRes = await pool.query(
+    const tableRes = await client.query(
       `SELECT table_number FROM dining_tables WHERE id = $1`,
       [body.table_id],
     );
 
     if (tableRes.rows.length === 0) {
+      await client.query('ROLLBACK');
       return errorResponse(c, 'Invalid table ID', 'table_not_found', 400);
     }
 
@@ -447,12 +452,13 @@ export async function createCustomerOrder(c: Context) {
     // Calculate subtotal
     let subtotal = 0;
     for (const item of body.items) {
-      const productRes = await pool.query(
+      const productRes = await client.query(
         `SELECT price FROM products WHERE id = $1 AND is_available = true`,
         [item.product_id],
       );
 
       if (productRes.rows.length === 0) {
+        await client.query('ROLLBACK');
         return errorResponse(c, 'Product not found or unavailable', 'product_not_found', 400);
       }
 
@@ -461,7 +467,7 @@ export async function createCustomerOrder(c: Context) {
 
     // Get tax rate from settings (default 11%)
     let taxRate = 11.0;
-    const taxRes = await pool.query(
+    const taxRes = await client.query(
       `SELECT setting_value FROM system_settings WHERE setting_key = 'tax_rate'`,
     );
     if (taxRes.rows.length > 0) {
@@ -473,7 +479,7 @@ export async function createCustomerOrder(c: Context) {
     const totalAmount = subtotal + taxAmount;
 
     // Create order
-    const orderRes = await pool.query(
+    const orderRes = await client.query(
       `INSERT INTO orders (order_number, table_id, customer_name, order_type, status, subtotal, tax_amount, total_amount, notes)
        VALUES ($1, $2, $3, 'dine_in', 'pending', $4, $5, $6, $7)
        RETURNING id`,
@@ -484,10 +490,10 @@ export async function createCustomerOrder(c: Context) {
 
     // Create order items
     for (const item of body.items) {
-      const priceRes = await pool.query(`SELECT price FROM products WHERE id = $1`, [item.product_id]);
+      const priceRes = await client.query(`SELECT price FROM products WHERE id = $1`, [item.product_id]);
       const price = Number(priceRes.rows[0].price);
 
-      await pool.query(
+      await client.query(
         `INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price, special_instructions)
          VALUES ($1, $2, $3, $4, $5, $6)`,
         [orderId, item.product_id, item.quantity, price, price * item.quantity, item.special_instructions || null],
@@ -495,7 +501,12 @@ export async function createCustomerOrder(c: Context) {
     }
 
     // Mark table as occupied
-    await pool.query(`UPDATE dining_tables SET is_occupied = true WHERE id = $1`, [body.table_id]);
+    await client.query(`UPDATE dining_tables SET is_occupied = true WHERE id = $1`, [body.table_id]);
+
+    // Deduct stock for ingredients
+    await internalAutoDeduct(client, body.items);
+
+    await client.query('COMMIT');
 
     return successResponse(c, 'Order placed successfully! Your order will be prepared shortly.', {
       order_id: orderId,
@@ -506,7 +517,14 @@ export async function createCustomerOrder(c: Context) {
       total_amount: totalAmount,
     }, 201);
   } catch (err) {
-    return errorResponse(c, 'Failed to create order', (err as Error).message);
+    await client.query('ROLLBACK');
+    const message = (err as Error).message;
+    if (message.startsWith('Insufficient stock')) {
+      return errorResponse(c, message, 'insufficient_stock', 400);
+    }
+    return errorResponse(c, 'Failed to create order', message);
+  } finally {
+    client.release();
   }
 }
 

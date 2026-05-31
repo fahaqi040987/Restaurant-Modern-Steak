@@ -4,6 +4,7 @@ import { db, pool } from '../db/connection.js';
 import { orders, orderItems, products, diningTables, users, orderStatusHistory, orderNotifications, systemSettings } from '../db/schema.js';
 import { successResponse, errorResponse, paginatedResponse } from '../lib/response.js';
 import { parsePagination, buildMeta } from '../lib/pagination.js';
+import { internalAutoDeduct } from './logistics.js';
 
 function generateOrderNumber(): string {
   const now = new Date();
@@ -450,6 +451,9 @@ export async function createOrder(c: Context) {
     if (body.order_type === 'dine_in' && body.table_id) {
       await client.query('UPDATE dining_tables SET is_occupied = true WHERE id = $1', [body.table_id]);
     }
+
+    // Deduct stock for ingredients based on the recipe
+    await internalAutoDeduct(client, body.items);
 
     await client.query('COMMIT');
 
