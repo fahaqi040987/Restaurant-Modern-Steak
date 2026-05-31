@@ -31,6 +31,11 @@ export const users = pgTable(
     isActive: boolean('is_active').default(true),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+    googleId: uuid('google_id'),
+    approvalStatus: text('approval_status').$type<'pending' | 'approved' | 'rejected'>().default('pending'),
+    rejectionCount: integer('rejection_count').default(0),
+    lastRejectionAt: timestamp('last_rejection_at', { withTimezone: true, mode: 'string' }),
+    googleLinkedAt: timestamp('google_linked_at', { withTimezone: true, mode: 'string' }),
   },
   (table) => ({
     // No additional indexes beyond the unique constraints on username/email
