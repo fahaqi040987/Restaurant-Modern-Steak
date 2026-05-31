@@ -1,7 +1,7 @@
 # POS System - Development Makefile
 # Usage: make <command>
 
-.PHONY: help dev prod up down build logs clean backup restore create-admin remove-data db-shell test test-coverage test-e2e lint format build-prod preview-prod deploy-prod sync-prod rollback-prod
+.PHONY: help dev prod up down build logs clean backup restore create-admin remove-data db-shell test test-coverage test-e2e lint format build-prod preview-prod deploy-prod sync-prod rollback-prod approve-user
 
 # Default target
 .DEFAULT_GOAL := help
@@ -35,6 +35,7 @@ help:
 	@echo "  make create-demo-users - Create all demo users for testing"
 	@echo "  make list-users        - List all existing users in the database"
 	@echo "  make create-admin      - Create a custom super admin user"
+	@echo "  make approve-user      - Approve Google SSO user (EMAIL=user@example.com)"
 	@echo "  make remove-data       - Remove all data from database (DESTRUCTIVE)"
 	@echo "  make backup            - Backup database and uploads"
 	@echo "  make restore           - Restore database from backup"
@@ -242,6 +243,20 @@ migrate-prod:
 	@echo "$(GREEN)🔄 Applying database migrations (production)...$(NC)"
 	@./scripts/apply-migrations.sh --prod
 	@echo "$(GREEN)✅ Production migrations completed!$(NC)"
+
+# Approve Google SSO user
+approve-user:
+	@echo "$(GREEN)✅ Approving Google SSO user...$(NC)"
+	@if [ -z "$(EMAIL)" ]; then \
+		echo "$(RED)❌ Error: EMAIL parameter is required$(NC)"; \
+		echo "Usage: make approve-user EMAIL=user@example.com"; \
+		exit 1; \
+	fi
+	@if [ -z "$$(docker ps -q -f name=pos-backend)" ]; then \
+		echo "$(RED)❌ Backend container is not running. Please run 'make up' first.$(NC)"; \
+		exit 1; \
+	fi
+	@docker exec pos-backend node src/scripts/approve-user.js $(EMAIL)
 
 ## Utility Commands
 
