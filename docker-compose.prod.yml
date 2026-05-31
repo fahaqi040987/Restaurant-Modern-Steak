@@ -91,6 +91,9 @@ services:
       - DB_PORT=${DB_PORT}
       - JWT_SECRET=${JWT_SECRET}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
       - GIN_MODE=release
     volumes:
       - steak_uploads:/app/uploads
@@ -112,6 +115,9 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL:-/api/v1}
         - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
+        - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+        - VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
+        - VITE_ENVIRONMENT=${VITE_ENVIRONMENT:-production}
     restart: always
     labels:
       - "app.project=steak-kenangan"
