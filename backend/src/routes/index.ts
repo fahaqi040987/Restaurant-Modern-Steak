@@ -15,6 +15,7 @@ import { getKitchenOrders, updateOrderItemStatus } from '../handlers/kitchen.js'
 import { getInventory, getProductInventory, adjustStock, getLowStock, getStockHistory } from '../handlers/inventory.js';
 import { getIngredients, getIngredient, createIngredient, updateIngredient, deleteIngredient, restockIngredient, getLowStockIngredients, getIngredientHistory } from '../handlers/ingredients.js';
 import { getProductIngredients, addProductIngredient, updateProductIngredient, deleteProductIngredient } from '../handlers/recipes.js';
+import { autoDeductIngredients } from '../handlers/logistics.js';
 import { getNotifications, getUnreadCounts, markNotificationRead, deleteNotification, getNotificationPreferences, updateNotificationPreferences, getOrderNotifications, markOrderNotificationAsRead } from '../handlers/notifications.js';
 import { createReservation, getReservations, getReservation, updateReservationStatus, deleteReservation, getPendingReservationsCount } from '../handlers/reservations.js';
 import { getContactSubmissions, getContactSubmission, getNewContactsCount, updateContactStatus, deleteContactSubmission } from '../handlers/contact.js';
@@ -201,6 +202,9 @@ export function setupRoutes(app: Hono) {
   adminRoutes.delete('/ingredients/:id', deleteIngredient);
   adminRoutes.post('/ingredients/restock', restockIngredient);
   adminRoutes.get('/ingredients/:id/history', getIngredientHistory);
+
+  // Logistics auto-deduct (called by order system)
+  adminRoutes.post('/logistics/auto-deduct', autoDeductIngredients);
 
   // Menu management (admin paginated versions)
   adminRoutes.get('/products', getProducts);

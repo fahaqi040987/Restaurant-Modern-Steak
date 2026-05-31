@@ -38,9 +38,9 @@ import { Route as AdminProfileRouteImport } from './routes/admin/profile'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminMenuConfigRouteImport } from './routes/admin/menu-config'
 import { Route as AdminMenuRouteImport } from './routes/admin/menu'
+import { Route as AdminLogisticsRouteImport } from './routes/admin/logistics'
 import { Route as AdminLinksRouteImport } from './routes/admin/links'
 import { Route as AdminKitchenRouteImport } from './routes/admin/kitchen'
-import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
 import { Route as AdminIngredientsRouteImport } from './routes/admin/ingredients'
 import { Route as AdminFranchiseContentRouteImport } from './routes/admin/franchise-content'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
@@ -197,6 +197,11 @@ const AdminMenuRoute = AdminMenuRouteImport.update({
   path: '/menu',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLogisticsRoute = AdminLogisticsRouteImport.update({
+  id: '/logistics',
+  path: '/logistics',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLinksRoute = AdminLinksRouteImport.update({
   id: '/links',
   path: '/links',
@@ -205,11 +210,6 @@ const AdminLinksRoute = AdminLinksRouteImport.update({
 const AdminKitchenRoute = AdminKitchenRouteImport.update({
   id: '/kitchen',
   path: '/kitchen',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminInventoryRoute = AdminInventoryRouteImport.update({
-  id: '/inventory',
-  path: '/inventory',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminIngredientsRoute = AdminIngredientsRouteImport.update({
@@ -278,9 +278,9 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/franchise-content': typeof AdminFranchiseContentRoute
   '/admin/ingredients': typeof AdminIngredientsRoute
-  '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
   '/admin/links': typeof AdminLinksRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/menu-config': typeof AdminMenuConfigRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -321,9 +321,9 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/franchise-content': typeof AdminFranchiseContentRoute
   '/admin/ingredients': typeof AdminIngredientsRoute
-  '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
   '/admin/links': typeof AdminLinksRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/menu-config': typeof AdminMenuConfigRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -366,9 +366,9 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/franchise-content': typeof AdminFranchiseContentRoute
   '/admin/ingredients': typeof AdminIngredientsRoute
-  '/admin/inventory': typeof AdminInventoryRoute
   '/admin/kitchen': typeof AdminKitchenRoute
   '/admin/links': typeof AdminLinksRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/menu-config': typeof AdminMenuConfigRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -412,9 +412,9 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/franchise-content'
     | '/admin/ingredients'
-    | '/admin/inventory'
     | '/admin/kitchen'
     | '/admin/links'
+    | '/admin/logistics'
     | '/admin/menu'
     | '/admin/menu-config'
     | '/admin/notifications'
@@ -455,9 +455,9 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/franchise-content'
     | '/admin/ingredients'
-    | '/admin/inventory'
     | '/admin/kitchen'
     | '/admin/links'
+    | '/admin/logistics'
     | '/admin/menu'
     | '/admin/menu-config'
     | '/admin/notifications'
@@ -499,9 +499,9 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/franchise-content'
     | '/admin/ingredients'
-    | '/admin/inventory'
     | '/admin/kitchen'
     | '/admin/links'
+    | '/admin/logistics'
     | '/admin/menu'
     | '/admin/menu-config'
     | '/admin/notifications'
@@ -761,6 +761,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMenuRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/logistics': {
+      id: '/admin/logistics'
+      path: '/logistics'
+      fullPath: '/admin/logistics'
+      preLoaderRoute: typeof AdminLogisticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/links': {
       id: '/admin/links'
       path: '/links'
@@ -773,13 +780,6 @@ declare module '@tanstack/react-router' {
       path: '/kitchen'
       fullPath: '/admin/kitchen'
       preLoaderRoute: typeof AdminKitchenRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/inventory': {
-      id: '/admin/inventory'
-      path: '/inventory'
-      fullPath: '/admin/inventory'
-      preLoaderRoute: typeof AdminInventoryRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/ingredients': {
@@ -861,9 +861,9 @@ interface AdminRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminFranchiseContentRoute: typeof AdminFranchiseContentRoute
   AdminIngredientsRoute: typeof AdminIngredientsRoute
-  AdminInventoryRoute: typeof AdminInventoryRoute
   AdminKitchenRoute: typeof AdminKitchenRoute
   AdminLinksRoute: typeof AdminLinksRoute
+  AdminLogisticsRoute: typeof AdminLogisticsRoute
   AdminMenuRoute: typeof AdminMenuRoute
   AdminMenuConfigRoute: typeof AdminMenuConfigRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
@@ -882,9 +882,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminFranchiseContentRoute: AdminFranchiseContentRoute,
   AdminIngredientsRoute: AdminIngredientsRoute,
-  AdminInventoryRoute: AdminInventoryRoute,
   AdminKitchenRoute: AdminKitchenRoute,
   AdminLinksRoute: AdminLinksRoute,
+  AdminLogisticsRoute: AdminLogisticsRoute,
   AdminMenuRoute: AdminMenuRoute,
   AdminMenuConfigRoute: AdminMenuConfigRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,

@@ -79,11 +79,11 @@ const adminSections: AdminSection[] = [
     href: '/admin/contacts'
   },
   {
-    id: 'inventory',
-    labelKey: 'admin.inventory',
+    id: 'logistics',
+    labelKey: 'logistics.title',
     icon: <Package className="w-5 h-5" />,
     descriptionKey: 'admin.inventoryDescription',
-    href: '/admin/inventory'
+    href: '/admin/logistics'
   },
   {
     id: 'staff',
