@@ -26,6 +26,6 @@ COMMENT ON COLUMN users.google_linked_at IS 'When the Google account was linked 
 -- Update existing admin users to be approved
 UPDATE users
 SET approval_status = 'approved'
-WHERE role = 'admin' AND approval_status IS NULL;
+WHERE role = 'admin' AND approval_status = 'pending';
 
 COMMIT;
