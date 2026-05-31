@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
 CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL CHECK (type IN ('order_update', 'low_stock', 'payment', 'system_alert', 'daily_report')),
+    type VARCHAR(50) NOT NULL CHECK (type IN ('order_update', 'low_stock', 'payment', 'system_alert', 'daily_report', 'user_approved', 'user_rejected')),
     title VARCHAR(200) NOT NULL,
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT false,
