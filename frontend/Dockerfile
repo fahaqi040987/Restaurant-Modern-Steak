@@ -16,6 +16,7 @@ RUN npm config set fetch-retry-maxtimeout 60000 && \
 
 # Copy source code
 COPY . .
+ENV NODE_OPTIONS="--max-old-space-size=1024"
 
 # ==========================================
 # TAMBAHAN KRUSIAL: Tangkap variabel dari docker-compose
