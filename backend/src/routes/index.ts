@@ -13,7 +13,7 @@ import { getOrders, getOrder, createOrder, updateOrderStatus, getOrderStatusHist
 import { processPayment, getPayments, getPaymentSummary, createCustomerPayment } from '../handlers/payments.js';
 import { getKitchenOrders, updateOrderItemStatus } from '../handlers/kitchen.js';
 import { getInventory, getProductInventory, adjustStock, getLowStock, getStockHistory } from '../handlers/inventory.js';
-import { getIngredients, getIngredient, createIngredient, updateIngredient, deleteIngredient, restockIngredient, getLowStockIngredients, getIngredientHistory } from '../handlers/ingredients.js';
+import { getIngredients, getIngredient, createIngredient, updateIngredient, deleteIngredient, restockIngredient, getLowStockIngredients, getIngredientHistory, adjustStockIngredient } from '../handlers/ingredients.js';
 import { getProductIngredients, addProductIngredient, updateProductIngredient, deleteProductIngredient } from '../handlers/recipes.js';
 import { autoDeductIngredients } from '../handlers/logistics.js';
 import { getNotifications, getUnreadCounts, markNotificationRead, deleteNotification, getNotificationPreferences, updateNotificationPreferences, getOrderNotifications, markOrderNotificationAsRead } from '../handlers/notifications.js';
@@ -200,8 +200,9 @@ export function setupRoutes(app: Hono) {
   adminRoutes.post('/ingredients', createIngredient);
   adminRoutes.put('/ingredients/:id', updateIngredient);
   adminRoutes.delete('/ingredients/:id', deleteIngredient);
-  adminRoutes.post('/ingredients/restock', restockIngredient);
   adminRoutes.get('/ingredients/:id/history', getIngredientHistory);
+  adminRoutes.post('/ingredients/:id/adjust', adjustStockIngredient);
+  adminRoutes.post('/ingredients/:id/restock', restockIngredient);
 
   // Logistics auto-deduct (called by order system)
   adminRoutes.post('/logistics/auto-deduct', autoDeductIngredients);

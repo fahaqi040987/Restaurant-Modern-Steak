@@ -19,7 +19,8 @@ import {
   Package,
   Link2,
   Store,
-  Navigation
+  Navigation,
+  BookOpen
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
 
@@ -80,10 +81,17 @@ const adminSections: AdminSection[] = [
   },
   {
     id: 'logistics',
-    labelKey: 'logistics.title',
+    labelKey: 'admin.bahanBaku',
     icon: <Package className="w-5 h-5" />,
     descriptionKey: 'admin.inventoryDescription',
     href: '/admin/logistics'
+  },
+  {
+    id: 'recipes',
+    labelKey: 'admin.resep',
+    icon: <BookOpen className="w-5 h-5" />,
+    descriptionKey: 'admin.recipesDescription',
+    href: '/admin/recipes'
   },
   {
     id: 'staff',

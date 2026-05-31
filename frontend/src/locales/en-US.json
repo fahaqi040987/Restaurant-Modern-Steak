@@ -783,7 +783,9 @@
     "bioLinksBackground": "Background",
     "bioLinksChangeBg": "Change Background",
     "franchiseContent": "Franchise Content",
-    "franchiseContentDescription": "Manage franchise page content"
+    "franchiseContentDescription": "Manage franchise page content",
+    "bahanBaku": "Raw Materials",
+    "resep": "Recipes"
   },
   "navigation": {
     "home": "Home",

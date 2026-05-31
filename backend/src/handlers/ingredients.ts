@@ -363,8 +363,11 @@ export async function deleteIngredient(c: Context) {
 // ── RestockIngredient ──────────────────────────────────────────────────────────
 
 export async function restockIngredient(c: Context) {
+  // Accept ingredient_id from URL param (:id) or from request body
+  const paramId = c.req.param('id');
+
   let body: {
-    ingredient_id: string;
+    ingredient_id?: string;
     quantity: number;
     notes?: string;
   };
@@ -375,7 +378,10 @@ export async function restockIngredient(c: Context) {
     return c.json({ error: 'Invalid request body' }, 400);
   }
 
-  if (!body.ingredient_id) {
+  // URL param takes priority, fall back to body
+  const ingredientId = paramId || body.ingredient_id;
+
+  if (!ingredientId) {
     return c.json({ error: 'ingredient_id is required' }, 400);
   }
   if (!body.quantity || body.quantity <= 0) {
@@ -391,7 +397,7 @@ export async function restockIngredient(c: Context) {
     // Get current stock
     const ingRes = await client.query(
       'SELECT current_stock, name FROM ingredients WHERE id = $1',
-      [body.ingredient_id],
+      [ingredientId],
     );
 
     if (ingRes.rows.length === 0) {
@@ -405,14 +411,14 @@ export async function restockIngredient(c: Context) {
     // Update stock
     await client.query(
       'UPDATE ingredients SET current_stock = $1, last_restocked_at = NOW(), updated_at = NOW() WHERE id = $2',
-      [newStock, body.ingredient_id],
+      [newStock, ingredientId],
     );
 
     // Create history record
     await client.query(
       `INSERT INTO ingredient_history (ingredient_id, operation, quantity, previous_stock, new_stock, reason, notes, adjusted_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [body.ingredient_id, 'restock', body.quantity, currentStock, newStock, 'restock', body.notes || null, userId],
+      [ingredientId, 'restock', body.quantity, currentStock, newStock, 'restock', body.notes || null, userId],
     );
 
     await client.query('COMMIT');
@@ -433,8 +439,11 @@ export async function restockIngredient(c: Context) {
 // ── AdjustStockIngredient ──────────────────────────────────────────────────────────
 
 export async function adjustStockIngredient(c: Context) {
+  // Accept ingredient_id from URL param (:id) or from request body
+  const paramId = c.req.param('id');
+
   let body: {
-    ingredient_id: string;
+    ingredient_id?: string;
     quantity: number;
     operation: 'add' | 'remove';
     reason: string;
@@ -447,7 +456,10 @@ export async function adjustStockIngredient(c: Context) {
     return c.json({ error: 'Invalid request body' }, 400);
   }
 
-  if (!body.ingredient_id) {
+  // URL param takes priority, fall back to body
+  const ingredientId = paramId || body.ingredient_id;
+
+  if (!ingredientId) {
     return c.json({ error: 'ingredient_id is required' }, 400);
   }
   if (!body.quantity || body.quantity <= 0) {
@@ -474,7 +486,7 @@ export async function adjustStockIngredient(c: Context) {
     // Get current stock
     const ingRes = await client.query(
       'SELECT current_stock, name FROM ingredients WHERE id = $1',
-      [body.ingredient_id],
+      [ingredientId],
     );
 
     if (ingRes.rows.length === 0) {
@@ -495,14 +507,14 @@ export async function adjustStockIngredient(c: Context) {
     // Update stock
     await client.query(
       'UPDATE ingredients SET current_stock = $1, updated_at = NOW() WHERE id = $2',
-      [newStock, body.ingredient_id],
+      [newStock, ingredientId],
     );
 
     // Create history record - use the operation field directly
     await client.query(
       `INSERT INTO ingredient_history (ingredient_id, operation, quantity, previous_stock, new_stock, reason, notes, adjusted_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [body.ingredient_id, body.operation, body.quantity, currentStock, newStock, body.reason, body.notes || null, userId],
+      [ingredientId, body.operation, body.quantity, currentStock, newStock, body.reason, body.notes || null, userId],
     );
 
     await client.query('COMMIT');

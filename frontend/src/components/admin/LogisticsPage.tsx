@@ -41,7 +41,8 @@ import {
   Download,
   TrendingUp,
   TrendingDown,
-  PackageOpen
+  PackageOpen,
+  Trash2
 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { format } from 'date-fns'
@@ -90,6 +91,7 @@ export default function LogisticsPage() {
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<IngredientItem | null>(null)
   const [adjustForm, setAdjustForm] = useState({
     operation: 'add',
@@ -122,7 +124,7 @@ export default function LogisticsPage() {
     queryKey: ['ingredients'],
     queryFn: async () => {
       const response = await apiClient.get<IngredientItem[]>('/admin/ingredients')
-      return response.data
+      return Array.isArray(response) ? response : (response as any).data ?? []
     },
   })
 
@@ -131,7 +133,7 @@ export default function LogisticsPage() {
     queryKey: ['lowStockIngredients'],
     queryFn: async () => {
       const response = await apiClient.get<IngredientItem[]>('/admin/ingredients/low-stock')
-      return response.data
+      return Array.isArray(response) ? response : (response as any).data ?? []
     },
   })
 
@@ -141,7 +143,7 @@ export default function LogisticsPage() {
     queryFn: async () => {
       if (!selectedItem) return []
       const response = await apiClient.get<HistoryRecord[]>(`/admin/ingredients/${selectedItem.id}/history`)
-      return response.data
+      return Array.isArray(response) ? response : (response as any).data ?? []
     },
     enabled: !!selectedItem && historyDialogOpen,
   })
@@ -149,8 +151,11 @@ export default function LogisticsPage() {
   // Adjust stock mutation
   const adjustStockMutation = useMutation({
     mutationFn: async (data: { id: string; operation: string; quantity: number; reason: string; notes: string }) => {
-      const response = await apiClient.post<{ previous_stock: number; new_stock: number }>(`/admin/ingredients/${data.id}/adjust`, data)
-      return response.data
+      const response = await apiClient.post<{ previous_stock: number; new_stock: number }>(
+        `/admin/ingredients/${data.id}/adjust`,
+        { ingredient_id: data.id, operation: data.operation, quantity: data.quantity, reason: data.reason, notes: data.notes }
+      )
+      return response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredients'] })
@@ -168,7 +173,7 @@ export default function LogisticsPage() {
   const createMutation = useMutation({
     mutationFn: async (data: typeof createForm) => {
       const response = await apiClient.post<IngredientItem>('/admin/ingredients', data)
-      return response.data
+      return response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredients'] })
@@ -178,6 +183,23 @@ export default function LogisticsPage() {
     },
     onError: () => {
       showErrorToast(t('logistics.createFailed', 'Gagal membuat bahan baku'))
+    },
+  })
+
+  // Delete ingredient mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(`/admin/ingredients/${id}`)
+      return response
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ingredients'] })
+      queryClient.invalidateQueries({ queryKey: ['lowStockIngredients'] })
+      showSuccessToast(t('logistics.ingredientDeletedSuccess', 'Bahan baku berhasil dihapus'))
+      setDeleteDialogOpen(false)
+    },
+    onError: () => {
+      showErrorToast(t('logistics.ingredientDeletedError', 'Gagal menghapus bahan baku'))
     },
   })
 
@@ -224,6 +246,16 @@ export default function LogisticsPage() {
   const handleAdjustClick = (item: IngredientItem) => {
     setSelectedItem(item)
     setAdjustDialogOpen(true)
+  }
+
+  const handleDeleteClick = (item: IngredientItem) => {
+    setSelectedItem(item)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (!selectedItem) return
+    deleteMutation.mutate(selectedItem.id)
   }
 
   const handleCreateIngredient = () => {
@@ -478,6 +510,14 @@ export default function LogisticsPage() {
                       onClick={() => handleViewHistory(item)}
                     >
                       <History size={14} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => handleDeleteClick(item)}
+                    >
+                      <Trash2 size={14} />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -794,6 +834,27 @@ export default function LogisticsPage() {
             <Button onClick={handleCreateIngredient} disabled={createMutation.isPending}>
               {createMutation.isPending && <span className="animate-spin mr-2">⏳</span>}
               {t('common.save', 'Simpan')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('common.confirmDelete', 'Konfirmasi Hapus')}</DialogTitle>
+            <DialogDescription>
+              {t('logistics.confirmDeleteIngredient', 'Apakah Anda yakin ingin menghapus {{name}}?', { name: selectedItem?.name })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {t('common.cancel', 'Batal')}
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending && <span className="animate-spin mr-2">⏳</span>}
+              {t('common.delete', 'Hapus')}
             </Button>
           </DialogFooter>
         </DialogContent>

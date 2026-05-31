@@ -783,7 +783,9 @@
     "bioLinksBackground": "Background",
     "bioLinksChangeBg": "Ganti Background",
     "franchiseContent": "Konten Franchise",
-    "franchiseContentDescription": "Kelola konten halaman franchise"
+    "franchiseContentDescription": "Kelola konten halaman franchise",
+    "bahanBaku": "Bahan Baku",
+    "resep": "Resep"
   },
   "navigation": {
     "home": "Beranda",
