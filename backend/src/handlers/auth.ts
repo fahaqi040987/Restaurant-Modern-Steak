@@ -46,6 +46,8 @@ export async function login(c: Context) {
       is_active: user.isActive,
       created_at: user.createdAt,
       updated_at: user.updatedAt,
+      google_id: user.googleId,
+      approval_status: user.approvalStatus,
     };
 
     return successResponse(c, 'Login successful', { token, user: userData });
@@ -69,6 +71,8 @@ export async function getCurrentUser(c: Context) {
         isActive: users.isActive,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
+        googleId: users.googleId,
+        approvalStatus: users.approvalStatus,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -88,6 +92,8 @@ export async function getCurrentUser(c: Context) {
       is_active: user.isActive,
       created_at: user.createdAt,
       updated_at: user.updatedAt,
+      google_id: user.googleId,
+      approval_status: user.approvalStatus,
     });
   } catch (err) {
     return errorResponse(c, 'Database error', (err as Error).message);
