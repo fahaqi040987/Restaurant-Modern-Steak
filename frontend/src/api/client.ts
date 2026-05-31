@@ -484,6 +484,21 @@ class APIClient {
     });
   }
 
+  async approveUser(id: string, role: string): Promise<APIResponse<{ userId: string; email: string; role: string }>> {
+    return this.request({
+      method: "POST",
+      url: `/admin/users/${id}/approve`,
+      data: { role },
+    });
+  }
+
+  async rejectUser(id: string): Promise<APIResponse<{ userId: string; email: string }>> {
+    return this.request({
+      method: "POST",
+      url: `/admin/users/${id}/reject`,
+    });
+  }
+
   // Admin-specific product management
   async createProduct(productData: {
     category_id: string;

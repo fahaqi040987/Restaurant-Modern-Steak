@@ -412,9 +412,12 @@ export async function getAdminUsers(c: Context) {
 
     // Fetch (exclude password_hash)
     const dataRes = await pool.query(
-      `SELECT id, username, email, first_name, last_name, role, is_active, created_at
+      `SELECT id, username, email, first_name, last_name, role, is_active,
+              approval_status, google_id, created_at
        FROM users ${whereClause}
-       ORDER BY created_at DESC
+       ORDER BY
+         CASE WHEN approval_status = 'pending' THEN 0 ELSE 1 END ASC,
+         created_at DESC
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
       [...params, perPage, offset],
     );

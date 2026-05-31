@@ -150,9 +150,7 @@ function handleExistingUser(c: Context, user: any) {
     const retryAfter = calculateRetryAfter(user.lastRejectionAt);
 
     if (new Date() < retryAfter) {
-      return errorResponse(c, 'Your account was previously rejected', 'user_rejected', 403, {
-        retry_after: retryAfter.toISOString(),
-      });
+      return errorResponse(c, 'Your account was previously rejected', 'user_rejected', 403);
     }
 
     // Cooldown passed - reset to pending
@@ -167,8 +165,9 @@ function handleExistingUser(c: Context, user: any) {
  */
 async function createPendingUser(c: Context, googleUser: GoogleUserInfo, googleUuid: string) {
   try {
-    // Generate username from email
-    const username = googleUser.email.split('@')[0];
+    // Generate username from email + random suffix to prevent collisions
+    const baseUsername = googleUser.email.split('@')[0];
+    const username = `${baseUsername}_${Math.floor(Math.random() * 100000)}`;
 
     const [newUser] = await db
       .insert(users)
@@ -183,7 +182,7 @@ async function createPendingUser(c: Context, googleUser: GoogleUserInfo, googleU
         isActive: false, // Inactive until approved
         googleId: googleUuid,
         approvalStatus: 'pending',
-        googleLinkedAt: new Date(),
+        googleLinkedAt: new Date().toISOString(),
       })
       .returning();
 
@@ -221,13 +220,6 @@ async function createApprovalNotification(newUser: any) {
         type: 'user_approval_pending',
         title: 'New user awaiting approval',
         message: `${newUser.firstName} ${newUser.lastName} (${newUser.email}) requested access via Google SSO`,
-        metadata: {
-          userId: newUser.id,
-          userName: `${newUser.firstName} ${newUser.lastName}`,
-          userEmail: newUser.email,
-          loginTime: new Date().toISOString(),
-          googleId: newUser.googleId,
-        },
       });
     }
   } catch (err) {
@@ -245,7 +237,7 @@ async function resetUserToPending(c: Context, userId: string) {
       .update(users)
       .set({
         approvalStatus: 'pending',
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(users.id, userId));
 
@@ -350,8 +342,8 @@ export async function linkGoogleAccount(c: Context) {
       .set({
         googleId: googleUuid,
         approvalStatus: 'approved', // Auto-approve for existing users
-        googleLinkedAt: new Date(),
-        updatedAt: new Date(),
+        googleLinkedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(users.id, userId));
 
@@ -390,7 +382,7 @@ export async function unlinkGoogleAccount(c: Context) {
       .set({
         googleId: null,
         googleLinkedAt: null,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(users.id, userId));
 

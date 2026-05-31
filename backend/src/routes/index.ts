@@ -29,6 +29,7 @@ import { getPublicMenu, getPublicCategories, getRestaurantInfo, submitContactFor
 import { getPublicBioLinks, trackBioLinkClick, getBioLinks, createBioLink, updateBioLink, deleteBioLink, reorderBioLinks, getBioLinkProfile, updateBioLinkProfile, getBioLinkAnalytics } from '../handlers/bio-links.js';
 import { getFranchiseContent, getFranchiseContentBySection, updateFranchiseContent } from '../handlers/franchise-content.js';
 import { getAdminCategories, createCategory, updateCategory, deleteCategory, getAdminTables, createTable, updateTable, deleteTable, getAdminUsers, createUser, updateUser, deleteUser } from '../handlers/admin.js';
+import { approveUser, rejectUser } from '../handlers/users.js';
 import { getSystemHealth } from '../handlers/health.js';
 
 // Middleware that sets force_order_type so createOrder forces dine_in
@@ -243,6 +244,10 @@ export function setupRoutes(app: Hono) {
   adminRoutes.post('/users', createUser);
   adminRoutes.put('/users/:id', updateUser);
   adminRoutes.delete('/users/:id', deleteUser);
+
+  // Google SSO user approval
+  adminRoutes.post('/users/:id/approve', approveUser);
+  adminRoutes.post('/users/:id/reject', rejectUser);
 
   // Advanced order management (admins can create any order + process payments)
   adminRoutes.post('/orders', createOrder);

@@ -7,7 +7,6 @@ export async function createNotification(input: {
   type: string;
   title: string;
   message: string;
-  metadata?: Record<string, any>;
 }) {
   const [notification] = await db
     .insert(notifications)
@@ -17,9 +16,8 @@ export async function createNotification(input: {
       type: input.type,
       title: input.title,
       message: input.message,
-      metadata: input.metadata || {},
       isRead: false,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     })
     .returning();
 

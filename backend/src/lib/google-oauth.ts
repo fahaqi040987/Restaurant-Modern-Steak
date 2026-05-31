@@ -1,5 +1,5 @@
-// File: backend/src/lib/google-oauth.ts
 import { google } from 'googleapis';
+import crypto from 'crypto';
 
 export interface GoogleUserInfo {
   id: string;
@@ -87,7 +87,7 @@ export class GoogleOAuthClient {
   static googleIdToUuid(googleId: string): string {
     // Create a deterministic UUID from the Google ID
     // This ensures the same Google ID always maps to the same UUID
-    const hash = require('crypto')
+    const hash = crypto
       .createHash('sha256')
       .update(googleId)
       .digest('hex');
