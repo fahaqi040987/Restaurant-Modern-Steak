@@ -6,6 +6,7 @@ import { csrfProtection } from '../middleware/security.js';
 
 // Handlers
 import { login, getCurrentUser, logout } from '../handlers/auth.js';
+import { googleAuth, googleCallback, linkGoogleAccount, unlinkGoogleAccount } from '../handlers/auth-google.js';
 import { getProfile, updateProfile, changePassword } from '../handlers/profile.js';
 import { getProducts, getProduct, getCategories, getProductsByCategory, createProduct, updateProduct, deleteProduct } from '../handlers/products.js';
 import { getTables, getTable, getTablesByLocation, getTableStatus } from '../handlers/tables.js';
@@ -44,6 +45,10 @@ export function setupRoutes(app: Hono) {
 
   api.post('/auth/login', strictRateLimiter(), login);
   api.post('/auth/logout', logout);
+
+  // Google SSO routes (public for OAuth flow)
+  api.get('/auth/google', googleAuth);
+  api.get('/auth/google/callback', googleCallback);
 
   // ── Public website API (/public/*) ──────────────────────────────────────────
 
@@ -89,6 +94,10 @@ export function setupRoutes(app: Hono) {
 
   // Auth
   protectedRoutes.get('/auth/me', getCurrentUser);
+
+  // Google account linking
+  protectedRoutes.post('/auth/link-google', linkGoogleAccount);
+  protectedRoutes.delete('/auth/unlink-google', unlinkGoogleAccount);
 
   // Profile
   protectedRoutes.get('/profile', getProfile);
