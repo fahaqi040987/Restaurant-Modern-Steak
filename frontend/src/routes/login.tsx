@@ -10,6 +10,9 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { apiClient } from '@/api/client'
 import type { LoginRequest, LoginResponse, APIResponse } from '@/types'
 import '@/styles/public-theme.css'
+import { GoogleLoginButton } from '@/features/auth/google'
+import { PendingApprovalPage } from '@/features/auth/google'
+import { RejectedPage } from '@/features/auth/google'
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -21,6 +24,13 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
+
+  // Google SSO state
+  const [googleAuthResult, setGoogleAuthResult] = useState<{
+    requiresApproval: boolean
+    user?: any
+    rejectedUntil?: string
+  } | null>(null)
 
   // Check if already authenticated and redirect
   useEffect(() => {
@@ -141,6 +151,36 @@ function LoginPage() {
         </CardHeader>
 
         <CardContent>
+          {/* Google SSO - Primary Login Method */}
+          <div className="mb-6">
+            <GoogleLoginButton
+              onSuccess={(user) => {
+                // Handle successful Google login
+                if (user.requiresApproval) {
+                  setGoogleAuthResult({ requiresApproval: true, user: user.user })
+                } else {
+                  // Store token and redirect
+                  apiClient.setAuthToken(user.token)
+                  localStorage.setItem('pos_user', JSON.stringify(user.user))
+                  redirectByRole(user.user.role)
+                }
+              }}
+              onError={(error) => {
+                setError(error)
+              }}
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[var(--public-border)]" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-[var(--public-bg-elevated)] text-[var(--public-text-muted)]">or use username/password</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Error Alert */}
             {error && (
@@ -244,6 +284,15 @@ function LoginPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Conditional rendering for approval/rejected pages */}
+      {googleAuthResult?.requiresApproval && (
+        <PendingApprovalPage user={googleAuthResult.user} />
+      )}
+
+      {googleAuthResult?.rejectedUntil && (
+        <RejectedPage retryAfter={googleAuthResult.rejectedUntil} />
+      )}
     </div>
   )
 }

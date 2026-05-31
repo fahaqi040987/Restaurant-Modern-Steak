@@ -184,3 +184,27 @@ docker-compose.prod.back.yml
 # =============================================================================
 frenchise_page/*
 docs/
+# =============================================================================
+# Clean Repository Exclusions (Added via Brainstorming)
+# =============================================================================
+# Ignore all markdown files except README.md
+*.md
+!README.md
+
+# Ignore all E2E and other root-level test scripts
+e2e/
+playwright.config.ts
+test_users.js
+test_users.ts
+
+# Ignore AI/Agents, vector DB, and skill-related files
+.agents/
+.claudesignore
+.mcp.json
+.opencode/
+.specify/
+.swarm/
+agent-os/
+opencode.json
+skills-lock.json
+vectors.db

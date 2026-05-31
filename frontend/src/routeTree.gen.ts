@@ -52,6 +52,7 @@ import { Route as SiteFranchiseMenuRouteImport } from './routes/site/franchise/m
 import { Route as SiteFranchiseInvestmentRouteImport } from './routes/site/franchise/investment'
 import { Route as SiteFranchiseAtmosphereRouteImport } from './routes/site/franchise/atmosphere'
 import { Route as SiteFranchiseApplyRouteImport } from './routes/site/franchise/apply'
+import { Route as AuthGoogleCallbackRouteImport } from './routes/auth/google/callback'
 
 const ReservationRoute = ReservationRouteImport.update({
   id: '/reservation',
@@ -268,6 +269,11 @@ const SiteFranchiseApplyRoute = SiteFranchiseApplyRouteImport.update({
   path: '/site/franchise/apply',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
+  id: '/auth/google/callback',
+  path: '/auth/google/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -308,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/site/terms': typeof SiteTermsRoute
   '/admin/': typeof AdminIndexRoute
   '/site': typeof SiteIndexRoute
+  '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/site/franchise/apply': typeof SiteFranchiseApplyRoute
   '/site/franchise/atmosphere': typeof SiteFranchiseAtmosphereRoute
   '/site/franchise/investment': typeof SiteFranchiseInvestmentRoute
@@ -352,6 +359,7 @@ export interface FileRoutesByTo {
   '/site/terms': typeof SiteTermsRoute
   '/admin': typeof AdminIndexRoute
   '/site': typeof SiteIndexRoute
+  '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/site/franchise/apply': typeof SiteFranchiseApplyRoute
   '/site/franchise/atmosphere': typeof SiteFranchiseAtmosphereRoute
   '/site/franchise/investment': typeof SiteFranchiseInvestmentRoute
@@ -398,6 +406,7 @@ export interface FileRoutesById {
   '/site/terms': typeof SiteTermsRoute
   '/admin/': typeof AdminIndexRoute
   '/site/': typeof SiteIndexRoute
+  '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/site/franchise/apply': typeof SiteFranchiseApplyRoute
   '/site/franchise/atmosphere': typeof SiteFranchiseAtmosphereRoute
   '/site/franchise/investment': typeof SiteFranchiseInvestmentRoute
@@ -445,6 +454,7 @@ export interface FileRouteTypes {
     | '/site/terms'
     | '/admin/'
     | '/site'
+    | '/auth/google/callback'
     | '/site/franchise/apply'
     | '/site/franchise/atmosphere'
     | '/site/franchise/investment'
@@ -489,6 +499,7 @@ export interface FileRouteTypes {
     | '/site/terms'
     | '/admin'
     | '/site'
+    | '/auth/google/callback'
     | '/site/franchise/apply'
     | '/site/franchise/atmosphere'
     | '/site/franchise/investment'
@@ -534,6 +545,7 @@ export interface FileRouteTypes {
     | '/site/terms'
     | '/admin/'
     | '/site/'
+    | '/auth/google/callback'
     | '/site/franchise/apply'
     | '/site/franchise/atmosphere'
     | '/site/franchise/investment'
@@ -561,6 +573,7 @@ export interface RootRouteChildren {
   SiteReservationRoute: typeof SiteReservationRoute
   SiteTermsRoute: typeof SiteTermsRoute
   SiteIndexRoute: typeof SiteIndexRoute
+  AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
   SiteFranchiseApplyRoute: typeof SiteFranchiseApplyRoute
   SiteFranchiseAtmosphereRoute: typeof SiteFranchiseAtmosphereRoute
   SiteFranchiseInvestmentRoute: typeof SiteFranchiseInvestmentRoute
@@ -871,6 +884,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SiteFranchiseApplyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/google/callback': {
+      id: '/auth/google/callback'
+      path: '/auth/google/callback'
+      fullPath: '/auth/google/callback'
+      preLoaderRoute: typeof AuthGoogleCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -940,6 +960,7 @@ const rootRouteChildren: RootRouteChildren = {
   SiteReservationRoute: SiteReservationRoute,
   SiteTermsRoute: SiteTermsRoute,
   SiteIndexRoute: SiteIndexRoute,
+  AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
   SiteFranchiseApplyRoute: SiteFranchiseApplyRoute,
   SiteFranchiseAtmosphereRoute: SiteFranchiseAtmosphereRoute,
   SiteFranchiseInvestmentRoute: SiteFranchiseInvestmentRoute,

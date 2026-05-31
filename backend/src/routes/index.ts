@@ -6,6 +6,7 @@ import { csrfProtection } from '../middleware/security.js';
 
 // Handlers
 import { login, getCurrentUser, logout } from '../handlers/auth.js';
+import { googleAuth, googleCallback, linkGoogleAccount, unlinkGoogleAccount } from '../handlers/auth-google.js';
 import { getProfile, updateProfile, changePassword } from '../handlers/profile.js';
 import { getProducts, getProduct, getCategories, getProductsByCategory, createProduct, updateProduct, deleteProduct } from '../handlers/products.js';
 import { getTables, getTable, getTablesByLocation, getTableStatus } from '../handlers/tables.js';
@@ -28,6 +29,7 @@ import { getPublicMenu, getPublicCategories, getRestaurantInfo, submitContactFor
 import { getPublicBioLinks, trackBioLinkClick, getBioLinks, createBioLink, updateBioLink, deleteBioLink, reorderBioLinks, getBioLinkProfile, updateBioLinkProfile, getBioLinkAnalytics } from '../handlers/bio-links.js';
 import { getFranchiseContent, getFranchiseContentBySection, updateFranchiseContent } from '../handlers/franchise-content.js';
 import { getAdminCategories, createCategory, updateCategory, deleteCategory, getAdminTables, createTable, updateTable, deleteTable, getAdminUsers, createUser, updateUser, deleteUser } from '../handlers/admin.js';
+import { approveUser, rejectUser } from '../handlers/users.js';
 import { getSystemHealth } from '../handlers/health.js';
 
 // Middleware that sets force_order_type so createOrder forces dine_in
@@ -44,6 +46,10 @@ export function setupRoutes(app: Hono) {
 
   api.post('/auth/login', strictRateLimiter(), login);
   api.post('/auth/logout', logout);
+
+  // Google SSO routes (public for OAuth flow)
+  api.get('/auth/google', googleAuth);
+  api.get('/auth/google/callback', googleCallback);
 
   // ── Public website API (/public/*) ──────────────────────────────────────────
 
@@ -89,6 +95,10 @@ export function setupRoutes(app: Hono) {
 
   // Auth
   protectedRoutes.get('/auth/me', getCurrentUser);
+
+  // Google account linking
+  protectedRoutes.post('/auth/link-google', linkGoogleAccount);
+  protectedRoutes.delete('/auth/unlink-google', unlinkGoogleAccount);
 
   // Profile
   protectedRoutes.get('/profile', getProfile);
@@ -234,6 +244,10 @@ export function setupRoutes(app: Hono) {
   adminRoutes.post('/users', createUser);
   adminRoutes.put('/users/:id', updateUser);
   adminRoutes.delete('/users/:id', deleteUser);
+
+  // Google SSO user approval
+  adminRoutes.post('/users/:id/approve', approveUser);
+  adminRoutes.post('/users/:id/reject', rejectUser);
 
   // Advanced order management (admins can create any order + process payments)
   adminRoutes.post('/orders', createOrder);

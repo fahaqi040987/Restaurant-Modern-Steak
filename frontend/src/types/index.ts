@@ -27,8 +27,10 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: 'admin' | 'manager' | 'cashier' | 'kitchen';
+  role: 'admin' | 'manager' | 'cashier' | 'kitchen' | 'server' | 'counter';
   is_active: boolean;
+  approval_status?: 'pending' | 'approved' | 'rejected';
+  google_id?: string | null;
   created_at: string;
   updated_at: string;
 }
