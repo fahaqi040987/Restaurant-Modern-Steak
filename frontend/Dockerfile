@@ -1,7 +1,7 @@
 # Multi-stage build for React frontend
 
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY package*.json ./
 RUN npm config set fetch-retry-maxtimeout 60000 && \
   npm config set fetch-retry-mintimeout 10000 && \
   npm config set fetch-retries 5 && \
-  npm ci --prefer-offline --no-audit
+  npm install --prefer-offline --no-audit
 
 # Copy source code
 COPY . .
