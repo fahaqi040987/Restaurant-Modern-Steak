@@ -225,7 +225,9 @@ export interface KitchenOrder {
   order_type: string;
   status: string;
   customer_name?: string;
+  notes?: string;
   created_at: string;
+  updated_at?: string;
   items?: OrderItem[];
 }
 

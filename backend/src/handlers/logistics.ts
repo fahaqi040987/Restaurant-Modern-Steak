@@ -82,6 +82,18 @@ export async function autoDeductIngredients(c: Context) {
     return c.json({ error: 'order_items is required and must be an array' }, 400);
   }
 
+  // Validate item payloads before opening a transaction: a zero/negative
+  // quantity would silently deduct nothing (or reverse-deduct) and a missing
+  // product id would match no recipe.
+  for (const item of body.order_items) {
+    if (!item || typeof item.product_id !== 'string' || item.product_id.trim() === '') {
+      return c.json({ error: 'Each order item must have a product_id' }, 400);
+    }
+    if (!Number.isFinite(item.quantity) || item.quantity <= 0) {
+      return c.json({ error: 'Each order item must have a quantity greater than 0' }, 400);
+    }
+  }
+
   const client = await pool.connect();
 
   try {

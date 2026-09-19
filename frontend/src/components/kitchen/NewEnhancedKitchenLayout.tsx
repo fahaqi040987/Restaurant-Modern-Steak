@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,556 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import apiClient from "@/api/client";
-import type { User as UserType, Order, OrderStatus } from "@/types";
+import type { User as UserType, KitchenOrder, OrderStatus } from "@/types";
 
 // Extend Window interface for webkit prefixed AudioContext
 declare global {
   interface Window {
     webkitAudioContext: typeof AudioContext;
   }
+}
+
+type Translate = (key: string, options?: Record<string, unknown>) => string;
+
+/** Short beep via WebAudio. Safe no-op when the Audio API is unavailable. */
+const playTone = (volume: number, frequency: number, durationSec: number) => {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContextClass();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(volume * 0.2, audioContext.currentTime);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + durationSec);
+  } catch {
+    // Audio API unavailable (e.g. before user gesture) — ignore
+  }
+};
+
+interface EnhancedOrderCardProps {
+  order: KitchenOrder;
+  t: Translate;
+  volume: number;
+  onOrderStatusUpdate: (orderId: string, status: OrderStatus) => Promise<void>;
+  onItemStatusUpdate: (
+    orderId: string,
+    itemId: string,
+    status: string,
+  ) => Promise<void>;
+  onItemServe: (orderId: string, itemId: string) => Promise<void>;
+  onRefresh: () => void;
+}
+
+/**
+ * One kitchen ticket. Extracted to module level so its identity is stable:
+ * with auto-refresh (refetch every 3s) the parent re-renders constantly, and
+ * an inline component definition would remount every card on each render,
+ * wiping the local checkbox state.
+ */
+const EnhancedOrderCard = memo(function EnhancedOrderCard({
+  order,
+  t,
+  volume,
+  onOrderStatusUpdate,
+  onItemStatusUpdate,
+  onItemServe,
+  onRefresh,
+}: EnhancedOrderCardProps) {
+  // Local optimistic check state; seeded lazily from items already ready.
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(
+    () =>
+      new Set(
+        order.items?.filter((item) => item.status === "ready").map((item) => item.id) ??
+          [],
+      ),
+  );
+
+  const isOrderReady = order.status === "ready";
+
+  /**
+   * Toggle an item's ready state. Disabled once the order is ready: an item
+   * must not go back to "cooking" while the order is waiting for pickup.
+   */
+  const toggleItem = async (itemId: string) => {
+    if (isOrderReady) return;
+
+    const newChecked = new Set(checkedItems);
+    const willCheck = !newChecked.has(itemId);
+    if (willCheck) {
+      newChecked.add(itemId);
+    } else {
+      newChecked.delete(itemId);
+    }
+    setCheckedItems(newChecked);
+
+    try {
+      await onItemStatusUpdate(order.id, itemId, willCheck ? "ready" : "preparing");
+      onRefresh();
+    } catch (error) {
+      console.error("Failed to update item status:", error);
+    }
+  };
+
+  const getUrgencyColor = () => {
+    const created = new Date(order.created_at);
+    const now = new Date();
+    const minutesWaiting = Math.floor(
+      (now.getTime() - created.getTime()) / 1000 / 60,
+    );
+
+    if (minutesWaiting > 20) return "border-red-500 bg-red-500/10 dark:bg-red-500/20";
+    if (minutesWaiting > 10) return "border-orange-500 bg-orange-500/10 dark:bg-orange-500/20";
+    return "border-blue-500 bg-blue-500/10 dark:bg-blue-500/20";
+  };
+
+  const waitTime = Math.floor(
+    (new Date().getTime() - new Date(order.created_at).getTime()) / 1000 / 60,
+  );
+
+  const displayItems =
+    order.items && order.items.length > 0
+      ? order.items
+      : [];
+
+  // Calculate progress including served items
+  const totalItems = displayItems.length;
+  const readyItems = displayItems.filter(
+    (item) => item.status === "ready" || checkedItems.has(item.id)
+  ).length;
+  const servedItems = displayItems.filter(
+    (item) => item.status === "served",
+  ).length;
+  const progress =
+    totalItems > 0 ? ((readyItems + servedItems) / totalItems) * 100 : 0;
+
+  const handleStartCooking = async () => {
+    try {
+      await onOrderStatusUpdate(order.id, "preparing");
+      onRefresh();
+    } catch (error) {
+      console.error("Failed to start cooking:", error);
+    }
+  };
+
+  /**
+   * Mark every non-served item ready, then flip the order only when ALL item
+   * updates succeeded. No blind setTimeout: the order status now reflects the
+   * real state of the items.
+   */
+  const handleMarkAllReady = async () => {
+    const pendingItems = displayItems.filter((item) => item.status !== "served");
+    const results = await Promise.allSettled(
+      pendingItems.map((item) => onItemStatusUpdate(order.id, item.id, "ready")),
+    );
+
+    const failedCount = results.filter((r) => r.status === "rejected").length;
+    if (failedCount > 0) {
+      console.error(`MarkAllReady: ${failedCount} item update(s) failed for order ${order.id}`);
+    } else {
+      setCheckedItems(new Set(pendingItems.map((item) => item.id)));
+      try {
+        await onOrderStatusUpdate(order.id, "ready");
+      } catch (error) {
+        console.error("Failed to mark order ready:", error);
+      }
+    }
+    onRefresh();
+  };
+
+  const handleMarkAsPickedUp = async () => {
+    try {
+      await onOrderStatusUpdate(order.id, "served");
+      onRefresh();
+    } catch (error) {
+      console.error("Failed to mark order as picked up:", error);
+    }
+  };
+
+  const handleServeItem = async (itemId: string) => {
+    try {
+      await onItemServe(order.id, itemId);
+      playTone(volume, 1400, 0.2);
+      onRefresh();
+    } catch (error) {
+      console.error("Failed to serve item:", error);
+    }
+  };
+
+  return (
+    <Card
+      className={cn(
+        "w-full max-w-lg mx-auto min-h-[500px]",
+        getUrgencyColor(),
+      )}
+    >
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between mb-2">
+          <CardTitle className="text-2xl font-bold">
+            #{order.order_number}
+          </CardTitle>
+          <Badge
+            variant={
+              order.status === "pending"
+                ? "destructive"
+                : order.status === "confirmed"
+                  ? "secondary"
+                  : order.status === "preparing"
+                    ? "default"
+                    : "outline"
+            }
+            className="text-sm px-3 py-1"
+          >
+            {order.status === "pending" ? "NEW ORDER" : order.status.toUpperCase()}
+          </Badge>
+        </div>
+
+        <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+          <span className="font-medium">
+            {order.order_type.replace("_", " ").toUpperCase()} •{" "}
+            {order.customer_name || "Guest"}
+          </span>
+          <span className="font-medium">{waitTime}m ago</span>
+        </div>
+
+        {order.table_number ? (
+          <div className="text-sm text-muted-foreground mb-3">
+            📍 {t("kitchen.table")} {order.table_number}
+          </div>
+        ) : null}
+
+        {/* Progress Bar */}
+        <div className="w-full bg-muted dark:bg-muted/50 rounded-full h-3 mt-3">
+          <div
+            className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="text-sm text-muted-foreground mt-2 font-medium truncate" title={`${readyItems} ${t("kitchen.ready")} • ${servedItems} ${t("kitchen.served")} • ${totalItems - readyItems - servedItems} ${t("kitchen.cooking")} (${Math.round(progress)}% ${t("kitchen.completed")})`}>
+          {readyItems} {t("kitchen.ready")} • {servedItems}{" "}
+          {t("kitchen.served")} • {totalItems - readyItems - servedItems}{" "}
+          {t("kitchen.cooking")} ({Math.round(progress)}%{" "}
+          {t("kitchen.completed")})
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Order Items with Checkboxes */}
+        <div className="space-y-3">
+          <h4 className="font-semibold text-foreground flex items-center">
+            <Package className="w-4 h-4 mr-2" />
+            {t("kitchen.foodItems")}
+          </h4>
+
+          {displayItems.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t("kitchen.noItems")}
+            </p>
+          ) : null}
+
+          {displayItems.map((item, index) => {
+            const isServed = item.status === "served";
+            const isReady = checkedItems.has(item.id) || item.status === "ready";
+            const canToggle = !isServed && !isOrderReady;
+
+            const itemStatusLabel = isServed
+              ? `🍽️ ${t("kitchen.served")}`
+              : isReady
+                ? `✅ ${t("kitchen.ready")}`
+                : item.status === "preparing"
+                  ? `🍳 ${t("kitchen.cooking")}`
+                  : `🆕 ${t("kitchen.new")}`;
+
+            return (
+              <div
+                key={item.id}
+                className={cn(
+                  "flex items-start space-x-4 p-4 rounded-lg border-2 transition-colors",
+                  isServed
+                    ? "bg-muted/50 border-border opacity-75"
+                    : "bg-card hover:border-blue-500/50",
+                )}
+              >
+                <button
+                  onClick={() => canToggle && toggleItem(item.id)}
+                  disabled={!canToggle}
+                  className={cn(
+                    "w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all mt-1 flex-shrink-0",
+                    isServed
+                      ? "bg-muted border-muted text-foreground cursor-not-allowed"
+                      : isReady
+                        ? "bg-green-500 border-green-500 text-white shadow-lg"
+                        : "border-border hover:border-green-400 hover:bg-green-500/10",
+                    !canToggle && !isServed && "opacity-60 cursor-not-allowed",
+                  )}
+                >
+                  {(isReady || isServed) && (
+                    <CheckCircle className="w-5 h-5" />
+                  )}
+                </button>
+
+                <div className="flex-1 min-w-0">
+                  <div
+                    className={cn(
+                      "font-semibold text-lg mb-2",
+                      (isServed || isReady) && "line-through text-muted-foreground",
+                    )}
+                  >
+                    {item.quantity}x{" "}
+                    {item.product_name || item.product?.name || `Item ${index + 1}`}
+                    {isServed && (
+                      <span className="ml-2 text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
+                        SERVED
+                      </span>
+                    )}
+                  </div>
+
+                  {item.special_instructions && (
+                    <div className="text-sm bg-yellow-500/10 border border-yellow-500/20 rounded p-2 text-yellow-700 dark:text-yellow-400">
+                      <strong>Special:</strong> {item.special_instructions}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between mt-2">
+                    <div
+                      className={cn(
+                        "text-xs font-medium px-2 py-1 rounded-full",
+                        isServed
+                          ? "bg-muted text-muted-foreground"
+                          : isReady
+                            ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                            : "bg-orange-500/10 text-orange-700 dark:text-orange-400",
+                      )}
+                    >
+                      {itemStatusLabel}
+                    </div>
+
+                    {/* Individual Item Serve Button */}
+                    {isReady && !isServed && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 px-2 text-xs bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleServeItem(item.id);
+                        }}
+                      >
+                        🍽️ {t("kitchen.serveNow")}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Order Notes */}
+        {order.notes ? (
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+            <h5 className="font-semibold text-blue-700 dark:text-blue-400 mb-1">
+              {t("kitchen.orderNotes")}
+            </h5>
+            <p className="text-blue-700 dark:text-blue-400 text-sm">{order.notes}</p>
+          </div>
+        ) : null}
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-4">
+          {(order.status === "pending" || order.status === "confirmed") && (
+            <Button
+              onClick={handleStartCooking}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 h-12 text-lg"
+              size="lg"
+            >
+              <ChefHat className="w-5 h-5 mr-2" />
+              {t("kitchen.startCooking")}
+            </Button>
+          )}
+
+          {order.status === "preparing" && (
+            <Button
+              onClick={handleMarkAllReady}
+              className="flex-1 bg-green-600 hover:bg-green-700 h-12 text-lg"
+              size="lg"
+            >
+              <CheckCircle className="w-5 h-5 mr-2" />
+              {t("kitchen.markAllReady")}
+            </Button>
+          )}
+
+          {order.status === "ready" && (
+            <div className="flex-1 bg-green-500/10 border-2 border-green-500 rounded-lg p-3 text-center">
+              <div className="text-green-700 dark:text-green-400 font-bold text-lg">
+                🎉 {t("kitchen.orderComplete")}
+              </div>
+              <div className="text-green-600 dark:text-green-500 text-sm mb-2">
+                {t("kitchen.readyForPickupServing")}
+              </div>
+              <Button
+                onClick={handleMarkAsPickedUp}
+                className="w-full bg-green-600 hover:bg-green-700"
+                size="lg"
+              >
+                🍽️ {t("kitchen.markAsPickedUp")}
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+
+interface TakeawayBoardProps {
+  orders: KitchenOrder[];
+  t: Translate;
+}
+
+/** Ready takeaway orders waiting for pickup. */
+function TakeawayBoard({ orders, t }: TakeawayBoardProps) {
+  const takeawayOrders = orders.filter(
+    (order) => order.order_type === "takeout" && order.status === "ready",
+  );
+
+  if (takeawayOrders.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+        <p className="text-muted-foreground">
+          {t("kitchen.noTakeawayReady")}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {takeawayOrders.map((order) => {
+        const waitTime = Math.floor(
+          (new Date().getTime() -
+            new Date(order.updated_at ?? order.created_at).getTime()) /
+            1000 /
+            60,
+        );
+
+        return (
+          <Card key={order.id} className="border-green-500 bg-green-500/10">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-2xl font-bold text-green-700 dark:text-green-400">
+                #{order.order_number}
+              </CardTitle>
+              <div className="text-lg font-semibold text-foreground">
+                {order.customer_name || "Guest"}
+              </div>
+              <Badge
+                variant="outline"
+                className="text-green-600 dark:text-green-400 border-green-500"
+              >
+                {t("kitchen.readyForPickup", { count: 0 })}
+              </Badge>
+            </CardHeader>
+            <CardContent className="text-center">
+              <div className="text-sm text-muted-foreground">
+                {t("kitchen.readyFor", { minutes: waitTime })}
+              </div>
+              <div className="mt-2">
+                {order.items?.map((item) => (
+                  <div key={item.id} className="text-sm">
+                    {item.quantity}x {item.product_name || item.product?.name || `Item`}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+interface SoundSettingsPanelProps {
+  soundEnabled: boolean;
+  onToggleSound: () => void;
+  volume: number;
+  onVolumeChange: (volume: number) => void;
+  t: Translate;
+}
+
+function SoundSettingsPanel({
+  soundEnabled,
+  onToggleSound,
+  volume,
+  onVolumeChange,
+  t,
+}: SoundSettingsPanelProps) {
+  return (
+    <Card className="w-80">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Volume2 className="w-5 h-5" />
+          {t("kitchen.soundSettings")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium">
+            {t("kitchen.enableSounds")}
+          </label>
+          <button
+            onClick={onToggleSound}
+            className={cn(
+              "w-12 h-6 rounded-full transition-colors",
+              soundEnabled ? "bg-blue-600" : "bg-gray-300",
+            )}
+          >
+            <div
+              className={cn(
+                "w-5 h-5 rounded-full bg-white transition-transform",
+                soundEnabled ? "translate-x-6" : "translate-x-1",
+              )}
+            />
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{t("kitchen.volume")}</label>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.1"
+            value={volume}
+            onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => playTone(volume, 800, 0.5)}
+          >
+            {t("kitchen.testNewOrder")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => playTone(volume, 1200, 0.3)}
+          >
+            {t("kitchen.testReady")}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 interface NewEnhancedKitchenLayoutProps {
@@ -52,7 +595,7 @@ export function NewEnhancedKitchenLayout({
     queryKey: ["newEnhancedKitchenOrders"],
     queryFn: () => apiClient.getKitchenOrders("all"),
     refetchInterval: autoRefresh ? 3000 : false,
-    select: (data) => data.data || [],
+    select: (data) => (data?.data ?? []) as KitchenOrder[],
   });
 
   const orders = ordersResponse || [];
@@ -60,23 +603,31 @@ export function NewEnhancedKitchenLayout({
   // Filter orders to only show kitchen-relevant statuses
   // Orders disappear when served/completed by server staff
   // Include 'pending' so kitchen can see new orders immediately
-  const kitchenRelevantOrders = orders.filter((order: Order) =>
+  const kitchenRelevantOrders = orders.filter((order) =>
     ["pending", "confirmed", "preparing", "ready"].includes(order.status),
+  );
+
+  const takeawayReadyOrders = useMemo(
+    () =>
+      kitchenRelevantOrders.filter(
+        (order) => order.order_type === "takeout" && order.status === "ready",
+      ),
+    [kitchenRelevantOrders],
   );
 
   // Group orders by status
   const ordersByStatus = {
     pending: kitchenRelevantOrders.filter(
-      (order: Order) => order.status === "pending",
+      (order) => order.status === "pending",
     ),
     confirmed: kitchenRelevantOrders.filter(
-      (order: Order) => order.status === "confirmed",
+      (order) => order.status === "confirmed",
     ),
     preparing: kitchenRelevantOrders.filter(
-      (order: Order) => order.status === "preparing",
+      (order) => order.status === "preparing",
     ),
     ready: kitchenRelevantOrders.filter(
-      (order: Order) => order.status === "ready",
+      (order) => order.status === "ready",
     ),
   };
 
@@ -86,7 +637,7 @@ export function NewEnhancedKitchenLayout({
     newOrders: ordersByStatus.pending.length + ordersByStatus.confirmed.length,
     preparing: ordersByStatus.preparing.length,
     ready: ordersByStatus.ready.length,
-    urgent: kitchenRelevantOrders.filter((order: Order) => {
+    urgent: kitchenRelevantOrders.filter((order) => {
       const created = new Date(order.created_at);
       const now = new Date();
       const minutesWaiting = Math.floor(
@@ -102,642 +653,27 @@ export function NewEnhancedKitchenLayout({
     window.location.href = "/login";
   };
 
-  // Handle order status update
-  const handleOrderStatusUpdate = async (
-    orderId: string,
-    newStatus: OrderStatus,
-  ) => {
-    try {
-      await apiClient.updateOrderStatus(orderId, newStatus);
-      refetch();
-    } catch (error) {
-      console.error("Failed to update order status:", error);
-    }
-  };
+  // Stable API callbacks: mutations return the request promise so callers can
+  // await them; refreshing is the caller's responsibility (once per batch).
+  const handleOrderStatusUpdate = useCallback(
+    async (orderId: string, status: OrderStatus) => {
+      await apiClient.updateOrderStatus(orderId, status);
+    },
+    [],
+  );
 
-  // Handle item status update
-  const handleItemStatusUpdate = async (
-    orderId: string,
-    itemId: string,
-    newStatus: string,
-  ) => {
-    try {
-      await apiClient.updateOrderItemStatus(orderId, itemId, newStatus);
-      refetch();
-    } catch (error) {
-      console.error("Failed to update item status:", error);
-    }
-  };
+  const handleItemStatusUpdate = useCallback(
+    async (orderId: string, itemId: string, status: string) => {
+      await apiClient.updateOrderItemStatus(orderId, itemId, status);
+    },
+    [],
+  );
 
-  // Handle individual item serving (as-ready service)
-  const handleItemServe = async (orderId: string, itemId: string) => {
-    try {
-      // Mark item as served
+  const handleItemServe = useCallback(
+    async (orderId: string, itemId: string) => {
       await apiClient.updateOrderItemStatus(orderId, itemId, "served");
-
-      // Play notification sound
-      if (soundEnabled) {
-        try {
-          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-          const audioContext = new AudioContextClass();
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-
-          // Different tone for individual item served (higher pitch)
-          oscillator.frequency.setValueAtTime(1400, audioContext.currentTime);
-          gainNode.gain.setValueAtTime(volume * 0.2, audioContext.currentTime);
-
-          oscillator.start();
-          oscillator.stop(audioContext.currentTime + 0.2);
-        } catch (error) {
-          console.warn("Sound notification failed:", error);
-        }
-      }
-
-      refetch();
-    } catch (error) {
-      console.error("Failed to serve item:", error);
-    }
-  };
-
-  // Enhanced Order Card Component
-  const EnhancedOrderCard = ({ order }: { order: Order }) => {
-    const [checkedItems, setCheckedItems] = useState<Set<string>>(
-      new Set(order.items?.filter(item => item.status === "ready").map(item => item.id) || [])
-    );
-
-    const toggleItem = (itemId: string) => {
-      const newChecked = new Set(checkedItems);
-      if (newChecked.has(itemId)) {
-        newChecked.delete(itemId);
-      } else {
-        newChecked.add(itemId);
-      }
-      setCheckedItems(newChecked);
-
-      // Update item status
-      const newStatus = newChecked.has(itemId) ? "ready" : "preparing";
-      handleItemStatusUpdate(order.id, itemId, newStatus);
-
-      // Auto-complete order if all items are checked
-      if (order.items && newChecked.size === order.items.length) {
-        setTimeout(() => {
-          handleOrderStatusUpdate(order.id, "ready");
-        }, 500);
-      }
-    };
-
-    const getUrgencyColor = () => {
-      const created = new Date(order.created_at);
-      const now = new Date();
-      const minutesWaiting = Math.floor(
-        (now.getTime() - created.getTime()) / 1000 / 60,
-      );
-
-      if (minutesWaiting > 20) return "border-red-500 bg-red-500/10 dark:bg-red-500/20";
-      if (minutesWaiting > 10) return "border-orange-500 bg-orange-500/10 dark:bg-orange-500/20";
-      return "border-blue-500 bg-blue-500/10 dark:bg-blue-500/20";
-    };
-
-    const waitTime = Math.floor(
-      (new Date().getTime() - new Date(order.created_at).getTime()) / 1000 / 60,
-    );
-
-    // Mock items if none exist (for demo purposes)
-    const displayItems =
-      order.items && order.items.length > 0
-        ? order.items
-        : [
-            {
-              id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-              order_id: order.id,
-              product_id: "p1b2c3d4-e5f6-7890-abcd-ef1234567890",
-              quantity: 2,
-              unit_price: 12.99,
-              total_price: 25.98,
-              special_instructions: "No onions",
-              status: "preparing" as const,
-              created_at: order.created_at,
-              updated_at: order.updated_at,
-              product_name: "Cheeseburger",
-              product: {
-                id: "p1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                name: "Cheeseburger",
-                price: 12.99,
-                description: "Beef patty with cheese",
-                category_id: "c1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                is_available: true,
-                created_at: "",
-                updated_at: "",
-              },
-            },
-            {
-              id: "b2c3d4e5-f6g7-8901-bcde-f23456789012",
-              order_id: order.id,
-              product_id: "p2c3d4e5-f6g7-8901-bcde-f23456789012",
-              quantity: 1,
-              unit_price: 4.99,
-              total_price: 4.99,
-              special_instructions: "Extra crispy",
-              status: "preparing" as const,
-              created_at: order.created_at,
-              updated_at: order.updated_at,
-              product_name: "French Fries",
-              product: {
-                id: "p2c3d4e5-f6g7-8901-bcde-f23456789012",
-                name: "French Fries",
-                price: 4.99,
-                description: "Crispy golden fries",
-                category_id: "c2c3d4e5-f6g7-8901-bcde-f23456789012",
-                is_available: true,
-                created_at: "",
-                updated_at: "",
-              },
-            },
-            {
-              id: "c3d4e5f6-g7h8-9012-cdef-345678901234",
-              order_id: order.id,
-              product_id: "p3d4e5f6-g7h8-9012-cdef-345678901234",
-              quantity: 1,
-              unit_price: 2.99,
-              total_price: 2.99,
-              special_instructions: null,
-              status: "preparing" as const,
-              created_at: order.created_at,
-              updated_at: order.updated_at,
-              product_name: "Coca Cola",
-              product: {
-                id: "p3d4e5f6-g7h8-9012-cdef-345678901234",
-                name: "Coca Cola",
-                price: 2.99,
-                description: "Refreshing cola drink",
-                category_id: "c3d4e5f6-g7h8-9012-cdef-345678901234",
-                is_available: true,
-                created_at: "",
-                updated_at: "",
-              },
-            },
-          ];
-
-    // Calculate progress including served items
-    const totalItems = displayItems.length;
-    const readyItems = displayItems.filter(
-      (item) => item.status === "ready" || checkedItems.has(item.id)
-    ).length;
-    const servedItems = displayItems.filter(
-      (item) => item.status === "served",
-    ).length;
-    const progress =
-      totalItems > 0 ? ((readyItems + servedItems) / totalItems) * 100 : 0;
-
-    return (
-      <Card
-        className={cn(
-          "w-full max-w-lg mx-auto min-h-[500px]",
-          getUrgencyColor(),
-        )}
-      >
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between mb-2">
-            <CardTitle className="text-2xl font-bold">
-              #{order.order_number}
-            </CardTitle>
-            <Badge
-              variant={
-                order.status === "pending"
-                  ? "destructive"
-                  : order.status === "confirmed"
-                    ? "secondary"
-                    : order.status === "preparing"
-                      ? "default"
-                      : "outline"
-              }
-              className="text-sm px-3 py-1"
-            >
-              {order.status === "pending" ? "NEW ORDER" : order.status.toUpperCase()}
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-            <span className="font-medium">
-              {order.order_type.replace("_", " ").toUpperCase()} •{" "}
-              {order.customer_name || "Guest"}
-            </span>
-            <span className="font-medium">{waitTime}m ago</span>
-          </div>
-
-          {order.table && (
-            <div className="text-sm text-muted-foreground mb-3">
-              📍 Table {order.table.table_number}
-            </div>
-          )}
-
-          {/* Progress Bar */}
-          <div className="w-full bg-muted dark:bg-muted/50 rounded-full h-3 mt-3">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="text-sm text-muted-foreground mt-2 font-medium truncate" title={`${readyItems} ${t("kitchen.ready")} • ${servedItems} ${t("kitchen.served")} • ${totalItems - readyItems - servedItems} ${t("kitchen.cooking")} (${Math.round(progress)}% ${t("kitchen.completed")})`}>
-            {readyItems} {t("kitchen.ready")} • {servedItems}{" "}
-            {t("kitchen.served")} • {totalItems - readyItems - servedItems}{" "}
-            {t("kitchen.cooking")} ({Math.round(progress)}%{" "}
-            {t("kitchen.completed")})
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {/* Order Items with Checkboxes */}
-          <div className="space-y-3">
-            <h4 className="font-semibold text-foreground flex items-center">
-              <Package className="w-4 h-4 mr-2" />
-              {t("kitchen.foodItems")}
-            </h4>
-
-            {displayItems.map((item, index) => {
-              const isServed = item.status === "served";
-              const isReady = checkedItems.has(item.id) || item.status === "ready";
-
-              return (
-                <div
-                  key={item.id}
-                  className={cn(
-                    "flex items-start space-x-4 p-4 rounded-lg border-2 transition-colors",
-                    isServed
-                      ? "bg-muted/50 border-border opacity-75"
-                      : "bg-card hover:border-blue-500/50",
-                  )}
-                >
-                  <button
-                    onClick={() => !isServed && toggleItem(item.id)}
-                    disabled={isServed}
-                    className={cn(
-                      "w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all mt-1 flex-shrink-0",
-                      isServed
-                        ? "bg-muted border-muted text-foreground cursor-not-allowed"
-                        : isReady
-                          ? "bg-green-500 border-green-500 text-white shadow-lg"
-                          : "border-border hover:border-green-400 hover:bg-green-500/10",
-                    )}
-                  >
-                    {(isReady || isServed) && (
-                      <CheckCircle className="w-5 h-5" />
-                    )}
-                  </button>
-
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className={cn(
-                        "font-semibold text-lg mb-2",
-                        isServed
-                          ? "line-through text-muted-foreground"
-                          : isReady && "line-through text-muted-foreground",
-                      )}
-                    >
-                      {item.quantity}x{" "}
-                      {item.product_name || item.product?.name || `Item ${index + 1}`}
-                      {isServed && (
-                        <span className="ml-2 text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
-                          SERVED
-                        </span>
-                      )}
-                    </div>
-
-                    {item.special_instructions && (
-                      <div className="text-sm bg-yellow-500/10 border border-yellow-500/20 rounded p-2 text-yellow-700 dark:text-yellow-400">
-                        <strong>Special:</strong> {item.special_instructions}
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between mt-2">
-                      <div
-                        className={cn(
-                          "text-xs font-medium px-2 py-1 rounded-full",
-                          isServed
-                            ? "bg-muted text-muted-foreground"
-                            : isReady
-                              ? "bg-green-500/10 text-green-700 dark:text-green-400"
-                              : "bg-orange-500/10 text-orange-700 dark:text-orange-400",
-                        )}
-                      >
-                        {isServed
-                          ? `🍽️ ${t("kitchen.served")}`
-                          : isReady
-                            ? `✅ ${t("kitchen.ready")}`
-                            : `🍳 ${t("kitchen.cooking")}`}
-                      </div>
-
-                      {/* Individual Item Serve Button */}
-                      {isReady && !isServed && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-6 px-2 text-xs bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleItemServe(order.id, item.id);
-                          }}
-                        >
-                          🍽️ {t("kitchen.serveNow")}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Order Notes */}
-          {order.notes && (
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-              <h5 className="font-semibold text-blue-700 dark:text-blue-400 mb-1">
-                {t("kitchen.orderNotes")}
-              </h5>
-              <p className="text-blue-700 dark:text-blue-400 text-sm">{order.notes}</p>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            {order.status === "pending" && (
-              <Button
-                onClick={() => handleOrderStatusUpdate(order.id, "confirmed")}
-                className="flex-1 bg-yellow-600 hover:bg-yellow-700 h-12 text-lg"
-                size="lg"
-              >
-                <CheckCircle className="w-5 h-5 mr-2" />
-                {t("kitchen.confirmOrder")}
-              </Button>
-            )}
-
-            {order.status === "confirmed" && (
-              <Button
-                onClick={() => handleOrderStatusUpdate(order.id, "preparing")}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 h-12 text-lg"
-                size="lg"
-              >
-                <ChefHat className="w-5 h-5 mr-2" />
-                {t("kitchen.startCooking")}
-              </Button>
-            )}
-
-            {order.status === "preparing" && (
-              <Button
-                onClick={() => {
-                  // Mark all items as checked
-                  const allItemIds = new Set(
-                    displayItems.map((item) => item.id),
-                  );
-                  setCheckedItems(allItemIds);
-
-                  // Update all item statuses to ready
-                  displayItems.forEach((item) => {
-                    handleItemStatusUpdate(order.id, item.id, "ready");
-                  });
-
-                  // Mark order as ready
-                  setTimeout(() => {
-                    handleOrderStatusUpdate(order.id, "ready");
-
-                    // Play ready notification sound
-                    if (soundEnabled) {
-                      try {
-                        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                        const audioContext = new AudioContextClass();
-                        const oscillator = audioContext.createOscillator();
-                        const gainNode = audioContext.createGain();
-
-                        oscillator.connect(gainNode);
-                        gainNode.connect(audioContext.destination);
-
-                        oscillator.frequency.setValueAtTime(
-                          1200,
-                          audioContext.currentTime,
-                        );
-                        gainNode.gain.setValueAtTime(
-                          volume * 0.3,
-                          audioContext.currentTime,
-                        );
-
-                        oscillator.start();
-                        oscillator.stop(audioContext.currentTime + 0.3);
-                      } catch (error) {
-                        console.log("Sound notification failed:", error);
-                      }
-                    }
-                  }, 500);
-                }}
-                className="flex-1 bg-green-600 hover:bg-green-700 h-12 text-lg"
-                size="lg"
-              >
-                <CheckCircle className="w-5 h-5 mr-2" />
-                {t("kitchen.markAllReady")}
-              </Button>
-            )}
-
-            {order.status === "ready" && (
-              <div className="flex-1 bg-green-500/10 border-2 border-green-500 rounded-lg p-3 text-center">
-                <div className="text-green-700 dark:text-green-400 font-bold text-lg">
-                  🎉 {t("kitchen.orderComplete")}
-                </div>
-                <div className="text-green-600 dark:text-green-500 text-sm mb-2">
-                  {t("kitchen.readyForPickupServing")}
-                </div>
-                <Button
-                  onClick={() => handleOrderStatusUpdate(order.id, "served")}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  size="lg"
-                >
-                  🍽️ {t("kitchen.markAsPickedUp")}
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // Takeaway Board Component
-  const TakeawayBoardInner = () => {
-    // Only show takeaway orders that are ready but not yet served/completed
-    const takeawayOrders = kitchenRelevantOrders.filter(
-      (order) => order.order_type === "takeout" && order.status === "ready",
-    );
-
-    if (takeawayOrders.length === 0) {
-      return (
-        <div className="text-center py-8">
-          <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
-            {t("kitchen.noTakeawayReady")}
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {takeawayOrders.map((order) => {
-          const waitTime = Math.floor(
-            (new Date().getTime() - new Date(order.updated_at).getTime()) /
-              1000 /
-              60,
-          );
-
-          return (
-            <Card key={order.id} className="border-green-500 bg-green-500/10">
-              <CardHeader className="text-center pb-2">
-                <CardTitle className="text-2xl font-bold text-green-700 dark:text-green-400">
-                  #{order.order_number}
-                </CardTitle>
-                <div className="text-lg font-semibold text-foreground">
-                  {order.customer_name || "Guest"}
-                </div>
-                <Badge
-                  variant="outline"
-                  className="text-green-600 dark:text-green-400 border-green-500"
-                >
-                  {t("kitchen.readyForPickup", { count: 0 })}
-                </Badge>
-              </CardHeader>
-              <CardContent className="text-center">
-                <div className="text-sm text-muted-foreground">
-                  {t("kitchen.readyFor", { minutes: waitTime })}
-                </div>
-                <div className="mt-2">
-                  {order.items?.map((item) => (
-                    <div key={item.id} className="text-sm">
-                      {item.quantity}x {item.product_name || item.product?.name || `Item`}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    );
-  };
-
-  // Sound Settings Panel
-  const SoundSettingsPanel = () => (
-    <Card className="w-80">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Volume2 className="w-5 h-5" />
-          {t("kitchen.soundSettings")}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">
-            {t("kitchen.enableSounds")}
-          </label>
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={cn(
-              "w-12 h-6 rounded-full transition-colors",
-              soundEnabled ? "bg-blue-600" : "bg-gray-300",
-            )}
-          >
-            <div
-              className={cn(
-                "w-5 h-5 rounded-full bg-white transition-transform",
-                soundEnabled ? "translate-x-6" : "translate-x-1",
-              )}
-            />
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t("kitchen.volume")}</label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.1"
-            value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className="w-full"
-          />
-        </div>
-
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => {
-              // Play a simple beep sound for new order
-              const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-              const audioContext = new AudioContextClass();
-              const oscillator = audioContext.createOscillator();
-              const gainNode = audioContext.createGain();
-
-              oscillator.connect(gainNode);
-              gainNode.connect(audioContext.destination);
-
-              oscillator.frequency.setValueAtTime(
-                800,
-                audioContext.currentTime,
-              );
-              gainNode.gain.setValueAtTime(
-                volume * 0.3,
-                audioContext.currentTime,
-              );
-              gainNode.gain.exponentialRampToValueAtTime(
-                0.01,
-                audioContext.currentTime + 0.5,
-              );
-
-              oscillator.start(audioContext.currentTime);
-              oscillator.stop(audioContext.currentTime + 0.5);
-            }}
-          >
-            {t("kitchen.testNewOrder")}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => {
-              // Play a different beep sound for ready order
-              const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-              const audioContext = new AudioContextClass();
-              const oscillator = audioContext.createOscillator();
-              const gainNode = audioContext.createGain();
-
-              oscillator.connect(gainNode);
-              gainNode.connect(audioContext.destination);
-
-              oscillator.frequency.setValueAtTime(
-                1200,
-                audioContext.currentTime,
-              );
-              gainNode.gain.setValueAtTime(
-                volume * 0.3,
-                audioContext.currentTime,
-              );
-              gainNode.gain.exponentialRampToValueAtTime(
-                0.01,
-                audioContext.currentTime + 0.3,
-              );
-
-              oscillator.start(audioContext.currentTime);
-              oscillator.stop(audioContext.currentTime + 0.3);
-            }}
-          >
-            {t("kitchen.testReady")}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    },
+    [],
   );
 
   return (
@@ -846,7 +782,13 @@ export function NewEnhancedKitchenLayout({
       {showSoundSettings && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="relative">
-            <SoundSettingsPanel />
+            <SoundSettingsPanel
+              soundEnabled={soundEnabled}
+              onToggleSound={() => setSoundEnabled(!soundEnabled)}
+              volume={volume}
+              onVolumeChange={setVolume}
+              t={t}
+            />
             <Button
               variant="outline"
               size="sm"
@@ -873,13 +815,7 @@ export function NewEnhancedKitchenLayout({
             </TabsTrigger>
             <TabsTrigger value="takeaway-ready" className="text-lg py-3">
               <Package className="w-5 h-5 mr-2" />
-              {t("kitchen.takeawayBoard")} (
-              {
-                kitchenRelevantOrders.filter(
-                  (o) => o.order_type === "takeout" && o.status === "ready",
-                ).length
-              }
-              )
+              {t("kitchen.takeawayBoard")} ({takeawayReadyOrders.length})
             </TabsTrigger>
           </TabsList>
 
@@ -913,14 +849,23 @@ export function NewEnhancedKitchenLayout({
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {kitchenRelevantOrders.map((order) => (
-                  <EnhancedOrderCard key={order.id} order={order} />
+                  <EnhancedOrderCard
+                    key={order.id}
+                    order={order}
+                    t={t}
+                    volume={volume}
+                    onOrderStatusUpdate={handleOrderStatusUpdate}
+                    onItemStatusUpdate={handleItemStatusUpdate}
+                    onItemServe={handleItemServe}
+                    onRefresh={refetch}
+                  />
                 ))}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="takeaway-ready">
-            <TakeawayBoardInner />
+            <TakeawayBoard orders={takeawayReadyOrders} t={t} />
           </TabsContent>
         </Tabs>
       </div>
