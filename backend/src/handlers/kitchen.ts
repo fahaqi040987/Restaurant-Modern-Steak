@@ -11,7 +11,7 @@ export async function getKitchenOrders(c: Context) {
   try {
     let query = `
       SELECT DISTINCT o.id::text, o.order_number, o.table_id::text, o.order_type, o.status,
-             o.created_at, o.customer_name,
+             o.created_at, o.customer_name, o.notes,
              t.table_number
       FROM orders o
       LEFT JOIN dining_tables t ON o.table_id = t.id
@@ -67,6 +67,7 @@ export async function getKitchenOrders(c: Context) {
         order_type: row.order_type ?? '',
         status: row.status ?? '',
         customer_name: row.customer_name ?? '',
+        notes: row.notes ?? undefined,
         created_at: row.created_at,
         items,
       });

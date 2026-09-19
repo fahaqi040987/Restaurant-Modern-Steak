@@ -357,6 +357,7 @@
     "cooking": "Memasak",
     "serveNow": "Sajikan Sekarang",
     "orderNotes": "Catatan Pesanan:",
+    "noItems": "Tidak ada item di pesanan ini",
     "chef": "Chef",
     "activeOrders": "{{count}} pesanan aktif",
     "kitchenCaughtUp": "Dapur sudah menyelesaikan semua pesanan!",

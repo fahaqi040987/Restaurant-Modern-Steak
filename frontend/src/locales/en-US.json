@@ -357,6 +357,7 @@
     "cooking": "Cooking",
     "serveNow": "Serve Now",
     "orderNotes": "Order Notes:",
+    "noItems": "No items in this order",
     "chef": "Chef",
     "activeOrders": "{{count}} active orders",
     "kitchenCaughtUp": "Kitchen is all caught up!",
