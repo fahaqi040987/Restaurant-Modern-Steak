@@ -99,15 +99,37 @@ describe('Logistics Handler', () => {
         },
         body: JSON.stringify({
           product_id: '1',
+          operation: 'add',
+          quantity: 10,
+          reason: 'purchase'
+        })
+      });
+
+      const body = await response.json() as any;
+      expect(response.status).toBe(200);
+      expect(body).toHaveProperty('message', 'Stock adjusted successfully');
+      expect(body).toHaveProperty('previous_stock');
+      expect(body).toHaveProperty('new_stock');
+    });
+
+    it('should return 400 for invalid reason', async () => {
+      const response = await app.request('/api/v1/admin/inventory/adjust', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          product_id: '1',
+          operation: 'add',
           quantity: 10,
           reason: 'Initial stock'
         })
       });
 
       const body = await response.json() as any;
-      expect(response.status).toBe(200);
-      expect(body).toHaveProperty('success', true);
-      expect(body).toHaveProperty('message');
+      expect(response.status).toBe(400);
+      expect(body).toHaveProperty('error', 'Invalid reason');
     });
 
     it('should return 400 for missing required fields', async () => {
@@ -125,6 +147,26 @@ describe('Logistics Handler', () => {
       const body = await response.json() as any;
       expect(response.status).toBe(400);
       expect(body).toHaveProperty('error');
+    });
+
+    it('should return 400 for invalid reason', async () => {
+      const response = await app.request('/api/v1/admin/inventory/adjust', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          product_id: '1',
+          operation: 'add',
+          quantity: 10,
+          reason: 'Initial stock'
+        })
+      });
+
+      const body = await response.json() as any;
+      expect(response.status).toBe(400);
+      expect(body).toHaveProperty('error', 'Invalid reason');
     });
 
     it('should return 400 for negative quantity', async () => {

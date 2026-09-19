@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'node:crypto';
 import { pool } from '../db/connection.js';
 import { successResponse, errorResponse, paginatedResponse } from '../lib/response.js';
 import { parsePagination, buildMeta } from '../lib/pagination.js';
@@ -257,6 +258,24 @@ export async function getAdminTables(c: Context) {
   }
 }
 
+// Slugify a table number into a readable, URL-safe QR code suffix:
+// "T01" -> "t01", "T 01" -> "t-01"
+const slugifyTableNumber = (tableNumber: string) =>
+  tableNumber.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'table';
+
+// Generate a QR code for a table. Prefers a readable code derived from the
+// table number (matching the seed convention, e.g. T01 -> table-t01); falls
+// back to a UUID suffix when the readable code is already taken.
+const generateQrCode = async (tableNumber: string): Promise<string> => {
+  const readable = `table-${slugifyTableNumber(tableNumber)}`;
+
+  const existing = await pool.query('SELECT 1 FROM dining_tables WHERE qr_code = $1', [readable]);
+  if (existing.rowCount === 0) {
+    return readable;
+  }
+  return `table-${randomUUID()}`;
+};
+
 export async function createTable(c: Context) {
   let body: { table_number?: string; seating_capacity?: number; location?: string };
   try {
@@ -270,13 +289,15 @@ export async function createTable(c: Context) {
   }
 
   try {
+    const qrCode = await generateQrCode(body.table_number);
+
     const res = await pool.query(
-      `INSERT INTO dining_tables (table_number, seating_capacity, location)
-       VALUES ($1, $2, $3) RETURNING id`,
-      [body.table_number, body.seating_capacity ?? 4, body.location || null],
+      `INSERT INTO dining_tables (table_number, seating_capacity, location, qr_code)
+       VALUES ($1, $2, $3, $4) RETURNING id, qr_code`,
+      [body.table_number, body.seating_capacity ?? 4, body.location || null, qrCode],
     );
 
-    return successResponse(c, 'Table created successfully', { id: res.rows[0].id }, 201);
+    return successResponse(c, 'Table created successfully', { id: res.rows[0].id, qr_code: res.rows[0].qr_code }, 201);
   } catch (err) {
     return errorResponse(c, 'Failed to create table', (err as Error).message);
   }
@@ -285,7 +306,7 @@ export async function createTable(c: Context) {
 export async function updateTable(c: Context) {
   const tableId = c.req.param('id');
 
-  let body: { table_number?: string; seating_capacity?: number; location?: string; is_occupied?: boolean };
+  let body: { table_number?: string; seating_capacity?: number; location?: string; is_occupied?: boolean; qr_code?: boolean };
   try {
     body = await c.req.json();
   } catch {
@@ -310,6 +331,17 @@ export async function updateTable(c: Context) {
     if (body.location !== undefined) {
       setClauses.push(`location = $${paramIdx}`);
       params.push(body.location);
+      paramIdx++;
+    }
+    if (body.qr_code === true) {
+      // Regenerate the QR code (e.g. for tables created before qr_code was
+      // auto-generated, which ended up with NULL and an unscannable QR).
+      const current = await pool.query('SELECT table_number FROM dining_tables WHERE id = $1', [tableId]);
+      if (current.rowCount === 0) {
+        return errorResponse(c, 'Table not found', 'not_found', 404);
+      }
+      setClauses.push(`qr_code = $${paramIdx}`);
+      params.push(await generateQrCode(current.rows[0].table_number));
       paramIdx++;
     }
     if (body.is_occupied !== undefined) {
