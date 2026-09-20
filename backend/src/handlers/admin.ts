@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { pool } from '../db/connection.js';
 import { successResponse, errorResponse, paginatedResponse } from '../lib/response.js';
 import { parsePagination, buildMeta } from '../lib/pagination.js';
+import { computeTableStatus, TABLE_STATUSES } from '../lib/table-status.js';
 
 // ── Admin Categories ─────────────────────────────────────────────────────────
 
@@ -192,9 +193,13 @@ export async function getAdminTables(c: Context) {
       paramIdx++;
     }
     if (status === 'occupied') {
-      conditions.push(`t.is_occupied = true`);
+      conditions.push(`t.is_occupied = true AND t.status = 'available'`);
     } else if (status === 'available') {
-      conditions.push(`t.is_occupied = false`);
+      conditions.push(`t.is_occupied = false AND t.status = 'available'`);
+    } else if (status === 'reserved' || status === 'maintenance') {
+      conditions.push(`t.status = $${paramIdx}`);
+      params.push(status);
+      paramIdx++;
     }
     if (search) {
       conditions.push(`(t.table_number ILIKE $${paramIdx} OR t.location ILIKE $${paramIdx})`);
@@ -211,14 +216,23 @@ export async function getAdminTables(c: Context) {
     );
     const total = Number(countRes.rows[0].count);
 
-    // Fetch with LEFT JOIN to active orders
+    // Fetch with the latest active order per table. LATERAL picks exactly one
+    // order (newest first) so a table with several unfinished orders still
+    // appears exactly once, showing only its most recent order.
     const dataRes = await pool.query(
       `SELECT t.id, t.table_number, t.seating_capacity, t.location, t.is_occupied,
+              t.status, t.status_note,
               t.qr_code, t.created_at, t.updated_at,
               o.id as order_id, o.order_number, o.customer_name, o.status as order_status,
               o.created_at as order_created_at, o.total_amount
        FROM dining_tables t
-       LEFT JOIN orders o ON t.id = o.table_id AND o.status NOT IN ('completed', 'cancelled')
+       LEFT JOIN LATERAL (
+         SELECT id, order_number, customer_name, status, created_at, total_amount
+         FROM orders
+         WHERE table_id = t.id AND status NOT IN ('completed', 'cancelled')
+         ORDER BY created_at DESC
+         LIMIT 1
+       ) o ON true
        ${whereClause}
        ORDER BY t.table_number ASC
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
@@ -232,6 +246,8 @@ export async function getAdminTables(c: Context) {
         seating_capacity: row.seating_capacity,
         location: row.location,
         is_occupied: row.is_occupied,
+        status: computeTableStatus(row.is_occupied as boolean | null, row.status as string | null),
+        status_note: row.status_note ?? null,
         qr_code: row.qr_code,
         created_at: row.created_at,
         updated_at: row.updated_at,
@@ -306,11 +322,15 @@ export async function createTable(c: Context) {
 export async function updateTable(c: Context) {
   const tableId = c.req.param('id');
 
-  let body: { table_number?: string; seating_capacity?: number; location?: string; is_occupied?: boolean; qr_code?: boolean };
+  let body: { table_number?: string; seating_capacity?: number; location?: string; is_occupied?: boolean; qr_code?: boolean; status?: string; status_note?: string | null };
   try {
     body = await c.req.json();
   } catch {
     return errorResponse(c, 'Invalid request body', 'invalid_json', 400);
+  }
+
+  if (body.status !== undefined && !(TABLE_STATUSES as readonly string[]).includes(body.status)) {
+    return errorResponse(c, 'Invalid table status', 'invalid_status', 400);
   }
 
   try {
@@ -348,6 +368,26 @@ export async function updateTable(c: Context) {
       setClauses.push(`is_occupied = $${paramIdx}`);
       params.push(body.is_occupied);
       paramIdx++;
+    }
+    if (body.status !== undefined) {
+      setClauses.push(`status = $${paramIdx}`);
+      params.push(body.status);
+      paramIdx++;
+      // A note only makes sense while the manual state is set; clear it when
+      // the table returns to available.
+      setClauses.push(`status_note = $${paramIdx}`);
+      params.push(body.status === 'available' ? null : (body.status_note ?? null));
+      paramIdx++;
+      // Marking a table available is a RELEASE: occupancy is order-driven and
+      // must not keep the table busy after staff explicitly free it (e.g. a
+      // lingering served order).
+      if (body.status === 'available' && body.is_occupied === undefined) {
+        setClauses.push(`is_occupied = $${paramIdx}`);
+        params.push(false);
+        paramIdx++;
+      }
+    } else if (body.status_note !== undefined && body.status_note !== null) {
+      return errorResponse(c, 'status_note requires a status field', 'note_without_status', 400);
     }
 
     if (setClauses.length === 0) {

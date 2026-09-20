@@ -36,7 +36,11 @@ export function TableForm({ table, onSuccess, onCancel, mode = 'create' }: Table
         id: table.id,
         table_number: table.table_number,
         seating_capacity: table.seating_capacity,
-        status: table.is_occupied ? 'occupied' as const : 'available' as const,
+        // 'occupied' is order-driven, not a manual state — show the manual
+        // status only
+        status: (table.status === 'reserved' || table.status === 'maintenance')
+          ? table.status
+          : 'available',
         location: table.location || '',
       }
     : {

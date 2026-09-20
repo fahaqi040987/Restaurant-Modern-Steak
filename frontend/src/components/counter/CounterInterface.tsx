@@ -22,7 +22,7 @@ import {
   Receipt,
   UtensilsCrossed
 } from 'lucide-react'
-import type { Product, DiningTable, Order } from '@/types'
+import type { Product, DiningTable, Order, TableStatus } from '@/types'
 
 function getImageUrl(url: string | null | undefined): string | null {
   if (!url) return null
@@ -95,16 +95,18 @@ export function CounterInterface() {
     }
   })
 
-  // Fetch available tables 
+  // Fetch available tables (auto-refresh so labels match table management)
   const { data: tables = [] } = useQuery({
     queryKey: ['tables'],
-    queryFn: () => apiClient.getTables().then(res => res.data)
+    queryFn: () => apiClient.getTables().then(res => res.data),
+    refetchInterval: 10_000,
   })
 
   // Fetch pending orders for payment processing
   const { data: pendingOrders = [] } = useQuery({
     queryKey: ['pendingOrders'],
-    queryFn: () => apiClient.getOrders({ status: ['ready', 'served'] }).then(res => res.data)
+    queryFn: () => apiClient.getOrders({ status: ['ready', 'served'] }).then(res => res.data),
+    refetchInterval: 15_000,
   })
 
   // Create order mutation (counter endpoint - all order types)
@@ -146,8 +148,22 @@ export function CounterInterface() {
     (product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
   )
 
-  // Available tables (for dine-in)
-  const availableTables = tables.filter(table => !table.is_occupied)
+  // Effective table status — same model as /admin/tables and the server
+  // station: maintenance > reserved > occupied > available. Occupancy is
+  // order-driven; reserved/maintenance are staff-set.
+  const getTableStatus = (table: DiningTable): TableStatus => {
+    if (table.status) return table.status
+    return table.is_occupied ? 'occupied' : 'available'
+  }
+
+  // Tables that can take a new dine-in order
+  const availableTables = tables.filter(table => getTableStatus(table) === 'available')
+
+  // Held tables, for the disabled grid entries (why a table is missing from
+  // the selectable pool)
+  const heldTables = tables
+    .filter(table => getTableStatus(table) !== 'available')
+    .sort((a, b) => a.table_number.localeCompare(b.table_number))
 
   const addToCart = (product: Product) => {
     const existingItem = cart.find(item => item.product.id === product.id)
@@ -208,6 +224,9 @@ export function CounterInterface() {
 
   const handleProcessPayment = () => {
     if (!selectedOrder || !paymentAmount) return
+    // The order list can be momentarily stale — never submit a payment for
+    // an order the backend already closed.
+    if (selectedOrder.status === 'completed' || selectedOrder.status === 'cancelled') return
 
     const paymentData: ProcessPaymentRequest = {
       payment_method: paymentMethod,
@@ -455,6 +474,9 @@ export function CounterInterface() {
                       selectedOrder?.id === order.id ? 'ring-2 ring-primary' : 'hover:shadow-md'
                     }`}
                     onClick={() => {
+                      // A stale list can still contain a closed order — never
+                      // make it selectable for payment
+                      if (order.status === 'completed' || order.status === 'cancelled') return
                       setSelectedOrder(order)
                       setPaymentAmount(order.total_amount.toString())
                     }}
@@ -504,7 +526,7 @@ export function CounterInterface() {
                     <TableIcon className="w-4 h-4 mr-2" />
                     Select Table
                   </h3>
-                  <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="grid grid-cols-3 gap-2 mb-4 max-h-48 overflow-y-auto">
                     {availableTables.slice(0, 9).map(table => (
                       <Button
                         key={table.id}
@@ -515,11 +537,37 @@ export function CounterInterface() {
                       >
                         {table.table_number}
                         <span className="text-xs block">
-                          {table.seating_capacity} seats
+                          {table.seating_capacity} {table.seating_capacity === 1 ? 'seat' : 'seats'}
                         </span>
                       </Button>
                     ))}
+                    {heldTables.map(table => {
+                      const status = getTableStatus(table)
+                      const label = status === 'occupied'
+                        ? 'Occupied'
+                        : status === 'reserved'
+                          ? 'Reserved'
+                          : 'Maintenance'
+                      return (
+                        <Button
+                          key={table.id}
+                          variant="outline"
+                          size="sm"
+                          disabled
+                          className="h-12 opacity-60 cursor-not-allowed"
+                          title={table.status_note || label}
+                        >
+                          {table.table_number}
+                          <span className="text-xs block">{label}</span>
+                        </Button>
+                      )
+                    })}
                   </div>
+                  {availableTables.length === 0 && (
+                    <p className="text-xs text-muted-foreground mb-2">
+                      No tables available right now
+                    </p>
+                  )}
                 </>
               ) : (
                 <div className="mb-4">
@@ -724,9 +772,19 @@ export function CounterInterface() {
                     className="w-full"
                     size="lg"
                     onClick={handleProcessPayment}
-                    disabled={!paymentAmount || processPaymentMutation.isPending}
+                    disabled={
+                      !paymentAmount ||
+                      processPaymentMutation.isPending ||
+                      selectedOrder.status === 'completed' ||
+                      selectedOrder.status === 'cancelled'
+                    }
                   >
-                    {processPaymentMutation.isPending ? (
+                    {selectedOrder.status === 'completed' || selectedOrder.status === 'cancelled' ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Order {selectedOrder.status === 'completed' ? 'Already Completed' : 'Cancelled'}
+                      </>
+                    ) : processPaymentMutation.isPending ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                         Processing...

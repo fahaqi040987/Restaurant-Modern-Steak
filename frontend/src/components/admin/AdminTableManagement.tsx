@@ -21,7 +21,10 @@ import {
   QrCode as QrCodeIcon,
   Copy,
   ExternalLink,
-  Printer
+  Printer,
+  Receipt,
+  Wrench,
+  RotateCcw
 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import {
@@ -38,7 +41,7 @@ import { PaginationControlsComponent } from '@/components/ui/pagination-controls
 import { usePagination } from '@/hooks/usePagination'
 import { TableGridSkeleton, SearchingSkeleton, FilteringSkeleton, StatsCardSkeleton } from '@/components/ui/skeletons'
 import { InlineLoading } from '@/components/ui/loading-spinner'
-import type { DiningTable } from '@/types'
+import type { DiningTable, TableStatus } from '@/types'
 
 type ViewMode = 'list' | 'table-form'
 
@@ -103,7 +106,7 @@ export function AdminTableManagement() {
 
   // Define types for table data with status
   interface TableWithStatus extends DiningTable {
-    status?: 'available' | 'occupied' | 'reserved' | 'maintenance';
+    status?: TableStatus;
     location_notes?: string;
   }
 
@@ -132,6 +135,34 @@ export function AdminTableManagement() {
       toastHelpers.apiError('Delete table', error)
     }
   })
+
+  // Manual table status mutation (available / reserved / maintenance)
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status, status_note }: { id: string; status: Exclude<TableStatus, 'occupied'>; status_note?: string | null }) =>
+      apiClient.updateTable(id, { status, status_note: status_note ?? null }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-tables'] })
+      queryClient.invalidateQueries({ queryKey: ['tables'] })
+      queryClient.invalidateQueries({ queryKey: ['tables-summary'] })
+    },
+    onError: (error: Error) => {
+      toastHelpers.apiError('Update table status', error)
+    }
+  })
+
+  const handleSetStatus = (table: TableWithStatus, status: Exclude<TableStatus, 'occupied'>) => {
+    let status_note: string | null = null
+    if (status !== 'available') {
+      status_note = window.prompt(
+        status === 'reserved'
+          ? t('admin.reservedNotePrompt', { tableNumber: table.table_number })
+          : t('admin.maintenanceNotePrompt', { tableNumber: table.table_number }),
+        table.status_note || ''
+      )
+      if (status_note === null) return // user cancelled
+    }
+    updateStatusMutation.mutate({ id: table.id, status, status_note })
+  }
 
   // Form handlers
   const handleFormSuccess = () => {
@@ -473,6 +504,14 @@ export function AdminTableManagement() {
                 default: return status
               }
             }
+            // Why is the table in this state? (order for occupied, note for
+            // reserved/maintenance)
+            const statusReason = table.status === 'occupied' && table.current_order
+              ? `${table.current_order.order_number}${table.current_order.customer_name ? ` • ${table.current_order.customer_name}` : ''}${table.current_order.status ? ` • ${table.current_order.status}` : ''}`
+              : table.status === 'reserved' || table.status === 'maintenance'
+                ? table.status_note
+                : null
+            const effectiveStatus: TableStatus = table.status || 'available'
             return (
               <Card key={table.id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
@@ -482,9 +521,15 @@ export function AdminTableManagement() {
                       <div className="flex items-center gap-2 mt-1">
                         <Badge className={`gap-1 ${statusBadge.className}`}>
                           {statusBadge.icon}
-                          {getStatusLabel(table.status || 'available')}
+                          {getStatusLabel(effectiveStatus)}
                         </Badge>
                       </div>
+                      {statusReason && (
+                        <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1" data-testid="status-reason">
+                          <Receipt className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{statusReason}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="text-right">
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -501,6 +546,45 @@ export function AdminTableManagement() {
                       <span className="text-sm text-muted-foreground">{table.location_notes}</span>
                     </div>
                   )}
+                  {/* Status controls — why the state changes and how to release it */}
+                  <div className="flex flex-wrap items-center gap-1 mb-3">
+                    {effectiveStatus !== 'available' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleSetStatus(table, 'available')}
+                        disabled={updateStatusMutation.isPending}
+                        className="h-7 gap-1 text-xs"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        {t('admin.markAvailable')}
+                      </Button>
+                    )}
+                    {effectiveStatus !== 'reserved' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleSetStatus(table, 'reserved')}
+                        disabled={updateStatusMutation.isPending}
+                        className="h-7 gap-1 text-xs"
+                      >
+                        <Clock className="h-3 w-3" />
+                        {t('admin.markReserved')}
+                      </Button>
+                    )}
+                    {effectiveStatus !== 'maintenance' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleSetStatus(table, 'maintenance')}
+                        disabled={updateStatusMutation.isPending}
+                        className="h-7 gap-1 text-xs"
+                      >
+                        <Wrench className="h-3 w-3" />
+                        {t('admin.markMaintenance')}
+                      </Button>
+                    )}
+                  </div>
                   <div className="flex items-center justify-between pt-2">
                     <div className="flex gap-1">
                       <Button

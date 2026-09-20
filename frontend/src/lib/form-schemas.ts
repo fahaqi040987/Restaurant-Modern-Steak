@@ -72,8 +72,10 @@ export const updateCategorySchema = createCategorySchema.partial().extend({
   id: z.string().or(z.number()),
 })
 
-// Table related schemas
-export const tableStatusValues = ['available', 'occupied', 'reserved', 'maintenance'] as const
+// Table related schemas.
+// 'occupied' is order-driven (is_occupied) and cannot be set manually — the
+// form only offers the manual states, matching the backend TABLE_STATUSES.
+export const tableStatusValues = ['available', 'reserved', 'maintenance'] as const
 export const tableStatusSchema = z.enum(tableStatusValues)
 
 export const createTableSchema = z.object({

@@ -460,7 +460,7 @@ describe("CounterInterface (Checkout)", () => {
 
       await waitFor(() => {
         // Should show total of 185,000 - multiple matches expected
-        const priceTexts = screen.getAllByText(/Rp\s*185\.000/i);
+        const priceTexts = screen.getAllByText(/Rp\.?\s*185\.000/i);
         expect(priceTexts.length).toBeGreaterThan(0);
       });
     });
@@ -495,7 +495,7 @@ describe("CounterInterface (Checkout)", () => {
 
       await waitFor(() => {
         // Total should be 330,000
-        expect(screen.getByText(/Rp\s*330\.000/i)).toBeInTheDocument();
+        expect(screen.getByText(/Rp\.?\s*330\.000/i)).toBeInTheDocument();
       });
     });
 
@@ -554,7 +554,7 @@ describe("CounterInterface (Checkout)", () => {
 
       await waitFor(() => {
         // Prices should be in IDR format
-        expect(screen.getByText(/Rp\s*185\.000/i)).toBeInTheDocument();
+        expect(screen.getByText(/Rp\.?\s*185\.000/i)).toBeInTheDocument();
       });
     });
   });
@@ -861,6 +861,50 @@ describe("CounterInterface (Checkout)", () => {
         ).toBeInTheDocument();
       });
     });
+
+    it("should disable payment for a stale completed order", async () => {
+      // Regression: a stale/cached list can still contain a completed order.
+      // Selecting it must NOT open the payment panel for it.
+      vi.mocked(apiClient.getOrders).mockResolvedValue({
+        success: true,
+        message: "Success",
+        data: [
+          createMockOrder({
+            id: "order-9",
+            order_number: "ORD-20251227-0009",
+            status: "completed",
+            total_amount: 150000,
+          }),
+        ],
+        meta: { current_page: 1, per_page: 50, total: 1, total_pages: 1 },
+      });
+
+      renderWithProviders(<CounterInterface />);
+
+      // Switch to payment tab
+      const paymentTab = screen.getByRole("button", {
+        name: /Process Payment/i,
+      });
+      fireEvent.click(paymentTab);
+
+      await waitFor(() => {
+        expect(screen.getByText("Order #ORD-20251227-0009")).toBeInTheDocument();
+      });
+
+      // Try to select it
+      const orderCard = screen
+        .getByText("Order #ORD-20251227-0009")
+        .closest(".cursor-pointer");
+      if (orderCard) fireEvent.click(orderCard);
+
+      // The payment panel must not open for a closed order
+      await waitFor(() => {
+        expect(
+          screen.getByText("Select an order to process payment"),
+        ).toBeInTheDocument();
+      });
+      expect(screen.queryByText("Payment Details")).not.toBeInTheDocument();
+    });
   });
 
   // ========================
@@ -893,7 +937,7 @@ describe("CounterInterface (Checkout)", () => {
 
       await waitFor(() => {
         // Total should be displayed in payment details - multiple matches possible
-        const totalTexts = screen.getAllByText(/Rp\s*407\.000/i);
+        const totalTexts = screen.getAllByText(/Rp\.?\s*407\.000/i);
         expect(totalTexts.length).toBeGreaterThan(0);
       });
     });
@@ -1359,6 +1403,83 @@ describe("CounterInterface (Checkout)", () => {
           screen.getByText("Select an order to process payment"),
         ).toBeInTheDocument();
       });
+    });
+
+    it("should render single-seat bar tables unambiguously", async () => {
+      // Regression: "BAR01" + "1 seats" read as a phantom table "BAR011".
+      // Capacity must use correct singular/plural so labels stay unambiguous.
+      setupDefaultMocks();
+      vi.mocked(apiClient.getTables).mockResolvedValue({
+        success: true,
+        message: "Success",
+        data: [
+          createMockTable({ id: "tbl-bar", table_number: "BAR01", is_occupied: false, seating_capacity: 1 }),
+          createMockTable({ id: "tbl-t4", table_number: "T04", is_occupied: false, seating_capacity: 4 }),
+        ],
+      });
+
+      renderWithProviders(<CounterInterface />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /BAR01/i })).toBeInTheDocument();
+      });
+
+      const barButton = screen.getByRole("button", { name: /BAR01/i });
+      expect(within(barButton).getByText("1 seat")).toBeInTheDocument();
+      expect(within(barButton).queryByText("1 seats")).not.toBeInTheDocument();
+
+      const t4Button = screen.getByRole("button", { name: /T04/i });
+      expect(within(t4Button).getByText("4 seats")).toBeInTheDocument();
+    });
+
+    it("should sync table status labels with table management", async () => {
+      // Regression: the counter's Select Table grid ignored the effective
+      // table status (reserved / maintenance / occupied) and never refreshed,
+      // so its labels drifted from /admin/tables.
+      setupDefaultMocks();
+      vi.mocked(apiClient.getTables).mockResolvedValue({
+        success: true,
+        message: "Success",
+        data: [
+          createMockTable({ id: "tbl-free", table_number: "T10", is_occupied: false }),
+          createMockTable({
+            id: "tbl-reserved",
+            table_number: "T11",
+            is_occupied: false,
+            status: "reserved",
+            status_note: "Guest 7pm",
+          }),
+          createMockTable({ id: "tbl-occupied", table_number: "T12", is_occupied: true, status: "occupied" }),
+          createMockTable({
+            id: "tbl-maintenance",
+            table_number: "T13",
+            is_occupied: false,
+            status: "maintenance",
+          }),
+        ],
+      });
+
+      renderWithProviders(<CounterInterface />);
+
+      // Wait for the tables query to resolve and the grid to render
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /T10/i })).toBeInTheDocument();
+      });
+
+      const freeButton = screen.getByRole("button", { name: /T10/i });
+      expect(freeButton).toBeEnabled();
+
+      const reservedButton = screen.getByRole("button", { name: /T11/i });
+      expect(reservedButton).toBeDisabled();
+      expect(reservedButton).toHaveTextContent("Reserved");
+
+      const occupiedButton = screen.getByRole("button", { name: /T12/i });
+      expect(occupiedButton).toBeDisabled();
+      expect(occupiedButton).toHaveTextContent("Occupied");
+
+      const maintenanceButton = screen.getByRole("button", { name: /T13/i });
+      expect(maintenanceButton).toBeDisabled();
+      expect(maintenanceButton).toHaveTextContent("Maintenance");
     });
   });
 });

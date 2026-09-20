@@ -17,7 +17,7 @@ import type {
   DashboardStats,
   SalesReportItem,
   OrdersReportItem,
-  TableStatus,
+  TableStatusStats,
   OrderFilters,
   ProductFilters,
   TableFilters,
@@ -287,7 +287,7 @@ class APIClient {
     });
   }
 
-  async getTableStatus(): Promise<APIResponse<TableStatus>> {
+  async getTableStatus(): Promise<APIResponse<TableStatusStats>> {
     return this.request({
       method: "GET",
       url: "/tables/status",

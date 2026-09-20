@@ -197,7 +197,22 @@ async function createOrderNotification(orderId: string, status: string, message:
 // ── GetOrders ──────────────────────────────────────────────────────────
 
 export async function getOrders(c: Context) {
-  const status = c.req.query('status');
+  // The status filter arrives in three shapes depending on the client:
+  //   - comma-separated:  ?status=ready,served       (server page)
+  //   - repeated:         ?status=ready&status=served
+  //   - Axios array:      ?status[]=ready&status[]=served (counter page)
+  // Normalize all of them into one flat list; an unrecognized shape must not
+  // silently disable the filter (that once leaked completed orders into the
+  // payment queue).
+  const statusValues = [
+    ...(c.req.queries('status') ?? []),
+    ...(c.req.queries('status[]') ?? []),
+    ...(c.req.query('status') ? [c.req.query('status') as string] : []),
+  ]
+    .flatMap((value) => value.split(','))
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const status = statusValues.length > 0 ? statusValues.join(',') : undefined;
   const orderType = c.req.query('order_type');
   const { page, perPage, offset } = parsePagination({
     page: c.req.query('page'),
@@ -207,7 +222,10 @@ export async function getOrders(c: Context) {
   try {
     // Build conditions
     const conditions = [];
-    if (status) conditions.push(eq(orders.status, status));
+    if (status) {
+      const statuses = status.split(',').map((s) => s.trim()).filter(Boolean);
+      if (statuses.length > 0) conditions.push(inArray(orders.status, statuses));
+    }
     if (orderType) conditions.push(eq(orders.orderType, orderType));
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -243,16 +261,16 @@ export async function getOrders(c: Context) {
       first_name: string | null;
       last_name: string | null;
     }>(sql`
-      SELECT DISTINCT o.id, o.order_number, o.table_id, o.user_id, o.customer_name,
-             o.order_type, o.status, o.subtotal, o.tax_amount, o.discount_amount,
-             o.total_amount, o.notes, o.created_at, o.updated_at, o.served_at, o.completed_at,
+      SELECT DISTINCT orders.id, orders.order_number, orders.table_id, orders.user_id, orders.customer_name,
+             orders.order_type, orders.status, orders.subtotal, orders.tax_amount, orders.discount_amount,
+             orders.total_amount, orders.notes, orders.created_at, orders.updated_at, orders.served_at, orders.completed_at,
              t.table_number, t.location as table_location,
              u.username, u.first_name, u.last_name
-      FROM orders o
-      LEFT JOIN dining_tables t ON o.table_id = t.id
-      LEFT JOIN users u ON o.user_id = u.id
+      FROM orders
+      LEFT JOIN dining_tables t ON orders.table_id = t.id
+      LEFT JOIN users u ON orders.user_id = u.id
       ${whereClause ? sql`WHERE ${whereClause}` : sql``}
-      ORDER BY o.created_at DESC
+      ORDER BY orders.created_at DESC
       LIMIT ${perPage} OFFSET ${offset}
     `);
 
@@ -409,7 +427,10 @@ export async function createOrder(c: Context) {
     }
 
     const taxAmount = subtotal * taxRate;
-    const totalAmount = subtotal + taxAmount;
+    // Round to cents: totals are stored DECIMAL(10,2) and echoed to clients
+    // that send the amount back for payment — keep them identical.
+    const roundedTaxAmount = Math.round(taxAmount * 100) / 100;
+    const totalAmount = Math.round((subtotal + taxAmount) * 100) / 100;
 
     // Insert order
     const orderRes = await client.query(
@@ -425,7 +446,7 @@ export async function createOrder(c: Context) {
         body.order_type,
         'pending',
         subtotal,
-        taxAmount,
+        roundedTaxAmount,
         0,
         totalAmount,
         body.notes || null,
@@ -449,11 +470,21 @@ export async function createOrder(c: Context) {
 
     // Update table status if dine-in
     if (body.order_type === 'dine_in' && body.table_id) {
+      const tableState = await client.query('SELECT status FROM dining_tables WHERE id = $1', [body.table_id]);
+      if (tableState.rows.length > 0 && ['reserved', 'maintenance'].includes(tableState.rows[0].status)) {
+        await client.query('ROLLBACK');
+        return errorResponse(
+          c,
+          `Table is currently ${tableState.rows[0].status} and cannot take orders`,
+          'table_not_available',
+          400,
+        );
+      }
       await client.query('UPDATE dining_tables SET is_occupied = true WHERE id = $1', [body.table_id]);
     }
 
     // Deduct stock for ingredients based on the recipe
-    await internalAutoDeduct(client, body.items);
+    await internalAutoDeduct(client, body.items, orderId);
 
     await client.query('COMMIT');
 
@@ -519,11 +550,20 @@ export async function updateOrderStatus(c: Context) {
       [orderId, currentStatus, body.status, userId, body.notes || null],
     );
 
-    // Free table if completed or cancelled
+    // Free table if completed or cancelled — but only when no other active
+    // order still needs it
     if (body.status === 'completed' || body.status === 'cancelled') {
       await client.query(
         `UPDATE dining_tables SET is_occupied = false
-         WHERE id IN (SELECT table_id FROM orders WHERE id = $1 AND table_id IS NOT NULL)`,
+         WHERE id IN (
+           SELECT table_id FROM orders WHERE id = $1 AND table_id IS NOT NULL
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM orders o2
+           WHERE o2.table_id = dining_tables.id
+             AND o2.id <> $1
+             AND o2.status IN ('pending', 'confirmed', 'preparing', 'ready', 'served')
+         )`,
         [orderId],
       );
     }

@@ -6,7 +6,8 @@ import { db, pool } from '../db/connection.js';
 
 export async function internalAutoDeduct(
   client: any,
-  orderItems: Array<{ product_id: string; quantity: number }>
+  orderItems: Array<{ product_id: string; quantity: number }>,
+  orderId?: string
 ) {
   const deductedItems: Array<{
     ingredient_id: string;
@@ -44,11 +45,13 @@ export async function internalAutoDeduct(
         [newStock, ingredientId]
       );
 
-      // Create history record
+      // Create history record. operation must satisfy the
+      // ingredient_history_operation_check constraint (order_consumption is
+      // the value reserved for order-triggered stock deductions).
       await client.query(
-        `INSERT INTO ingredient_history (ingredient_id, operation, quantity, previous_stock, new_stock, reason, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [ingredientId, 'auto_deduct', totalQuantity, currentStock, newStock, 'recipe_usage', null]
+        `INSERT INTO ingredient_history (ingredient_id, operation, quantity, previous_stock, new_stock, reason, notes, order_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [ingredientId, 'order_consumption', totalQuantity, currentStock, newStock, 'recipe_usage', null, orderId ?? null]
       );
 
       deductedItems.push({
