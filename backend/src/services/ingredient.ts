@@ -19,14 +19,14 @@ export async function deductIngredientsForOrder(orderId: string): Promise<void> 
     for (const item of itemsRes.rows) {
       // Get recipe (product ingredients)
       const recipesRes = await client.query(
-        `SELECT pi.ingredient_id, pi.quantity_needed
+        `SELECT pi.ingredient_id, pi.quantity_required
          FROM product_ingredients pi
          WHERE pi.product_id = $1`,
         [item.product_id],
       );
 
       for (const recipe of recipesRes.rows) {
-        const deductionAmount = Number(recipe.quantity_needed) * item.quantity;
+        const deductionAmount = Number(recipe.quantity_required) * item.quantity;
 
         // Get current stock
         const stockRes = await client.query(
@@ -100,14 +100,14 @@ export async function restoreIngredientsForOrder(orderId: string): Promise<void>
     for (const item of itemsRes.rows) {
       // Get recipe (product ingredients)
       const recipesRes = await client.query(
-        `SELECT pi.ingredient_id, pi.quantity_needed
+        `SELECT pi.ingredient_id, pi.quantity_required
          FROM product_ingredients pi
          WHERE pi.product_id = $1`,
         [item.product_id],
       );
 
       for (const recipe of recipesRes.rows) {
-        const restoreAmount = Number(recipe.quantity_needed) * item.quantity;
+        const restoreAmount = Number(recipe.quantity_required) * item.quantity;
 
         // Get current stock
         const stockRes = await client.query(
