@@ -476,14 +476,18 @@ export async function createCustomerOrder(c: Context) {
     }
 
     const taxAmount = subtotal * (taxRate / 100);
-    const totalAmount = subtotal + taxAmount;
+    // Round to cents before storing/echoing: the payment flow compares the
+    // client-sent amount against the DECIMAL(10,2) stored total, so the
+    // computed value must not carry floating-point noise.
+    const roundedTaxAmount = Math.round(taxAmount * 100) / 100;
+    const totalAmount = Math.round((subtotal + taxAmount) * 100) / 100;
 
     // Create order
     const orderRes = await client.query(
       `INSERT INTO orders (order_number, table_id, customer_name, order_type, status, subtotal, tax_amount, total_amount, notes)
        VALUES ($1, $2, $3, 'dine_in', 'pending', $4, $5, $6, $7)
        RETURNING id`,
-      [orderNumber, body.table_id, customerName || null, subtotal, taxAmount, totalAmount, notes || null],
+      [orderNumber, body.table_id, customerName || null, subtotal, roundedTaxAmount, totalAmount, notes || null],
     );
 
     const orderId = orderRes.rows[0].id;
@@ -500,11 +504,21 @@ export async function createCustomerOrder(c: Context) {
       );
     }
 
-    // Mark table as occupied
+    // Mark table as occupied (reject reserved / maintenance tables)
+    const tableStatusRes = await client.query('SELECT status FROM dining_tables WHERE id = $1', [body.table_id]);
+    if (tableStatusRes.rows.length > 0 && ['reserved', 'maintenance'].includes(tableStatusRes.rows[0].status)) {
+      await client.query('ROLLBACK');
+      return errorResponse(
+        c,
+        `Table is currently ${tableStatusRes.rows[0].status} and cannot take orders`,
+        'table_not_available',
+        400,
+      );
+    }
     await client.query(`UPDATE dining_tables SET is_occupied = true WHERE id = $1`, [body.table_id]);
 
     // Deduct stock for ingredients
-    await internalAutoDeduct(client, body.items);
+    await internalAutoDeduct(client, body.items, orderId);
 
     await client.query('COMMIT');
 

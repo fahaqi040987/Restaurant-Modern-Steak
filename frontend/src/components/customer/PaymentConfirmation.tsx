@@ -23,33 +23,6 @@ interface PaymentConfirmationProps {
   className?: string
 }
 
-const statusConfig = {
-  completed: {
-    icon: CheckCircle,
-    title: 'Pembayaran Berhasil!',
-    description: 'Pesanan Anda sedang diproses oleh dapur kami.',
-    color: 'text-green-500',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-500',
-  },
-  pending: {
-    icon: Clock,
-    title: 'Menunggu Konfirmasi',
-    description: 'Pembayaran Anda sedang diverifikasi. Harap tunggu sebentar.',
-    color: 'text-yellow-500',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-500',
-  },
-  failed: {
-    icon: XCircle,
-    title: 'Pembayaran Gagal',
-    description: 'Terjadi kesalahan dalam proses pembayaran. Silakan coba lagi.',
-    color: 'text-red-500',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-500',
-  },
-}
-
 /**
  * Payment confirmation component displaying payment status.
  * Shows success/pending/failed states with appropriate visual feedback.
@@ -72,6 +45,47 @@ export function PaymentConfirmation({
   onRetryPayment,
   className,
 }: PaymentConfirmationProps) {
+  // Cash via QR is settled at the cashier: until the cashier confirms, the
+  // money has NOT been received, so the screen must ask for payment instead
+  // of claiming success.
+  const isCashPending = payment.payment_method === 'cash' && payment.status === 'pending'
+
+  const statusConfig = {
+    completed: {
+      icon: CheckCircle,
+      title: 'Pembayaran Berhasil!',
+      description: 'Pesanan Anda sedang diproses oleh dapur kami.',
+      color: 'text-green-500',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-500',
+    },
+    pending: isCashPending
+      ? {
+          icon: Clock,
+          title: 'Menunggu Pembayaran di Kasir',
+          description:
+            'Silakan bayar tunai di kasir dengan menyebutkan nomor pesanan Anda. Kasir akan mengonfirmasi setelah menerima pembayaran.',
+          color: 'text-yellow-500',
+          bgColor: 'bg-yellow-50',
+          borderColor: 'border-yellow-500',
+        }
+      : {
+          icon: Clock,
+          title: 'Menunggu Konfirmasi',
+          description: 'Pembayaran Anda sedang diverifikasi. Harap tunggu sebentar.',
+          color: 'text-yellow-500',
+          bgColor: 'bg-yellow-50',
+          borderColor: 'border-yellow-500',
+        },
+    failed: {
+      icon: XCircle,
+      title: 'Pembayaran Gagal',
+      description: 'Terjadi kesalahan dalam proses pembayaran. Silakan coba lagi.',
+      color: 'text-red-500',
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-500',
+    },
+  }
   const config = statusConfig[payment.status]
   const Icon = config.icon
 
@@ -169,12 +183,17 @@ export function PaymentConfirmation({
           {/* Total Amount */}
           <div className="flex justify-between items-center pt-4">
             <span className="text-lg font-semibold text-[var(--public-text-primary)]">
-              Total Dibayar
+              {isCashPending ? 'Total Tagihan' : 'Total Dibayar'}
             </span>
             <span className="text-2xl font-bold text-[var(--public-secondary)]">
               {formatCurrency(payment.amount)}
             </span>
           </div>
+          {isCashPending && (
+            <p className="text-xs text-[var(--public-text-muted)]">
+              Pembayaran akan dicatat oleh kasir setelah uang diterima.
+            </p>
+          )}
         </CardContent>
       </Card>
 

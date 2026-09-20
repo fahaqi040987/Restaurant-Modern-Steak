@@ -10,7 +10,8 @@ import {
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ShoppingCart, Plus, Minus, Check, AlertCircle } from "lucide-react";
-import apiClient from "@/api/client";
+import apiClient from '@/api/client';
+import { getImageUrl } from '@/lib/images';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -123,9 +124,26 @@ function CustomerOrderPage() {
     },
   });
 
-  // T086: Handle payment submission
+  // T086: Handle payment submission.
+  // Cash is settled at the cashier, not online: skip the payment API so no
+  // money is recorded yet, and show the cashier-confirmation screen. The
+  // cashier records the cash via Process Payment, which completes the order.
   const handlePaymentSubmit = (method: PaymentMethodType) => {
     setSelectedPaymentMethod(method);
+
+    if (method === "cash") {
+      setPaymentConfirmation({
+        order_id: orderInfo!.order_id,
+        payment_id: orderInfo!.order_id,
+        amount: orderInfo!.total_amount,
+        payment_method: "cash",
+        status: "pending",
+        created_at: new Date().toISOString(),
+      });
+      setCurrentStep("confirmation");
+      return;
+    }
+
     // Map component payment method to API payment method
     const apiMethod = method === "card" ? "credit_card" : method;
     paymentMutation.mutate({
@@ -398,7 +416,7 @@ function CustomerOrderPage() {
                 {item.image_url && (
                   <div className="aspect-video bg-[var(--public-bg-primary)] overflow-hidden rounded-t-lg">
                     <img
-                      src={item.image_url}
+                      src={getImageUrl(item.image_url) ?? undefined}
                       alt={item.name}
                       className="w-full h-full object-cover"
                     />

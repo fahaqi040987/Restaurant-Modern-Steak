@@ -76,6 +76,19 @@ export interface Product {
   category?: Category;
 }
 
+// Effective table status, shared by admin tables page and server station.
+// `maintenance` / `reserved` are manual states; `occupied` is order-driven.
+export type TableStatus = 'available' | 'occupied' | 'reserved' | 'maintenance';
+
+export interface TableCurrentOrder {
+  id: string;
+  order_number: string;
+  customer_name?: string | null;
+  status: Order['status'];
+  total_amount?: number;
+  created_at?: string;
+}
+
 // Table Types
 export interface DiningTable {
   id: string;
@@ -83,6 +96,9 @@ export interface DiningTable {
   seating_capacity: number;
   location?: string;
   is_occupied: boolean;
+  status?: TableStatus;
+  status_note?: string | null;
+  current_order?: TableCurrentOrder | null;
   qr_code?: string;
   created_at: string;
   updated_at: string;
@@ -231,8 +247,8 @@ export interface KitchenOrder {
   items?: OrderItem[];
 }
 
-// Table Status Types
-export interface TableStatus {
+// Table Status Types (dashboard statistics)
+export interface TableStatusStats {
   total_tables: number;
   occupied_tables: number;
   available_tables: number;
@@ -850,6 +866,8 @@ export interface UpdateTableData {
   location?: string;
   is_occupied?: boolean;
   qr_code?: string;
+  status?: Exclude<TableStatus, 'occupied'>;
+  status_note?: string | null;
 }
 
 // ===========================================

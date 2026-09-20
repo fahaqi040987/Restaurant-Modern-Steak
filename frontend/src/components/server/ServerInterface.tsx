@@ -17,7 +17,6 @@ import {
   Table as TableIcon,
   Search,
   Settings,
-  Package,
   UtensilsCrossed
 } from 'lucide-react'
 import type { Product, DiningTable } from '@/types'
@@ -109,7 +108,9 @@ export function ServerInterface() {
     }
   })
 
-  // Fetch active orders to show table status
+  // Fetch orders currently in the kitchen pipeline (pending → ready). This is
+  // the SAME definition the kitchen board uses, and it auto-refreshes so the
+  // badge cannot go stale while the kitchen list keeps moving.
   const { data: activeOrders = [] } = useQuery({
     queryKey: ['active-orders'],
     queryFn: async () => {
@@ -120,7 +121,8 @@ export function ServerInterface() {
         console.error('Failed to fetch active orders:', error)
         return []
       }
-    }
+    },
+    refetchInterval: 10_000,
   })
 
   // Create order mutation (server endpoint - dine-in only)
@@ -153,33 +155,50 @@ export function ServerInterface() {
     (product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
   )
 
-  // Helper function to get table status
+  // Helper function to get table status. Prefers the effective status from
+  // the API (available/occupied/reserved/maintenance) and falls back to the
+  // legacy is_occupied + active-order derivation.
   const getTableStatus = (table: DiningTable) => {
-    // Ensure activeOrders is always an array
     const orders = Array.isArray(activeOrders) ? activeOrders : []
-    const hasActiveOrder = orders.some(order => order.table_id === table.id)
-    
-    if (table.is_occupied && hasActiveOrder) {
-      return { status: 'occupied', label: 'Occupied', color: 'bg-red-100 text-red-800 border-red-200' }
-    } else if (hasActiveOrder) {
-      return { status: 'pending', label: 'Order Pending', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' }
-    } else if (table.is_occupied) {
-      return { status: 'seated', label: 'Seated', color: 'bg-blue-100 text-blue-800 border-blue-200' }
-    } else {
-      return { status: 'available', label: 'Available', color: 'bg-green-100 text-green-800 border-green-200' }
+    const activeOrder = orders.find(order => order.table_id === table.id)
+    const apiStatus = table.status
+
+    if (apiStatus === 'maintenance') {
+      return { status: 'maintenance' as const, label: 'Maintenance', color: 'bg-red-100 text-red-800 border-red-200', activeOrder: undefined }
     }
+    if (apiStatus === 'reserved') {
+      return { status: 'reserved' as const, label: 'Reserved', color: 'bg-purple-100 text-purple-800 border-purple-200', activeOrder: undefined }
+    }
+    if (apiStatus === 'occupied' || (apiStatus === undefined && table.is_occupied)) {
+      if (activeOrder) {
+        return { status: 'occupied' as const, label: 'Occupied', color: 'bg-red-100 text-red-800 border-red-200', activeOrder }
+      }
+      // Marked occupied but no open kitchen order anymore (e.g. served,
+      // awaiting payment) — keep it out of the selectable pool only when the
+      // API confirms it is free
+      if (apiStatus === 'occupied') {
+        return { status: 'available' as const, label: 'Available', color: 'bg-green-100 text-green-800 border-green-200', activeOrder: undefined }
+      }
+      return { status: 'seated' as const, label: 'Seated', color: 'bg-blue-100 text-blue-800 border-blue-200', activeOrder: undefined }
+    }
+    if (activeOrder) {
+      return { status: 'pending' as const, label: 'Order Pending', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', activeOrder }
+    }
+    return { status: 'available' as const, label: 'Available', color: 'bg-green-100 text-green-800 border-green-200', activeOrder: undefined }
   }
 
-  // Available tables (not occupied or ready for new orders)
-  const availableTables = tables.filter(table => !table.is_occupied)
+  // Available tables = free AND not manually held (reserved/maintenance)
+  const availableTables = tables.filter(table => {
+    const info = getTableStatus(table)
+    return info.status === 'available'
+  })
   
   // All tables with status for restaurant view
   const tablesWithStatus = tables.map(table => {
-    const orders = Array.isArray(activeOrders) ? activeOrders : []
+    const statusInfo = getTableStatus(table)
     return {
       ...table,
-      statusInfo: getTableStatus(table),
-      activeOrder: orders.find(order => order.table_id === table.id)
+      statusInfo,
     }
   })
 
@@ -261,7 +280,9 @@ export function ServerInterface() {
               </Badge>
               {Array.isArray(activeOrders) && activeOrders.length > 0 && (
                 <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs px-2 py-1">
-                  {activeOrders.length} <span className="hidden sm:inline">Active Orders</span><span className="sm:hidden">Orders</span>
+                  <span className="hidden sm:inline">In Kitchen:</span>
+                  <span className="sm:hidden">Kitchen:</span>
+                  {activeOrders.length}
                 </Badge>
               )}
             </div>
@@ -448,7 +469,9 @@ export function ServerInterface() {
                     className="h-12 sm:h-14 flex flex-col text-xs sm:text-sm min-h-[48px] touch-manipulation"
                   >
                     <span className="font-semibold">{table.table_number}</span>
-                    <span className="text-[10px] sm:text-xs opacity-75">{table.seating_capacity} seats</span>
+                    <span className="text-[10px] sm:text-xs opacity-75">
+                      {table.seating_capacity} {table.seating_capacity === 1 ? 'seat' : 'seats'}
+                    </span>
                   </Button>
                 ))}
               </div>
@@ -468,23 +491,23 @@ export function ServerInterface() {
                   <span className="truncate">Available</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-500 flex-shrink-0"></div>
-                  <span className="truncate">Seated</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500 flex-shrink-0"></div>
-                  <span className="truncate">Pending</span>
-                </div>
-                <div className="flex items-center gap-1">
                   <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500 flex-shrink-0"></div>
                   <span className="truncate">Occupied</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-purple-500 flex-shrink-0"></div>
+                  <span className="truncate">Reserved</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gray-500 flex-shrink-0"></div>
+                  <span className="truncate">Maintenance</span>
                 </div>
               </div>
 
               {/* Table Grid */}
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 sm:max-h-48 overflow-y-auto">
                 {tablesWithStatus.map(table => {
-                  const canSelect = table.statusInfo.status === 'available' || table.statusInfo.status === 'seated'
+                  const canSelect = table.statusInfo.status === 'available' || table.statusInfo.status === 'occupied'
                   return (
                     <Button
                       key={table.id}
@@ -496,21 +519,28 @@ export function ServerInterface() {
                         selectedTable?.id === table.id ? 'ring-2 ring-primary' : ''
                       }`}
                     >
-                      <div className="font-semibold text-xs sm:text-sm">T{table.table_number}</div>
-                      <div className="text-[10px] sm:text-xs">{table.seating_capacity} seats</div>
+                      <div className="font-semibold text-xs sm:text-sm">{table.table_number}</div>
+                      <div className="text-[10px] sm:text-xs">
+                        {table.seating_capacity} {table.seating_capacity === 1 ? 'seat' : 'seats'}
+                      </div>
                       
                       {/* Status indicator */}
                       <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
                         table.statusInfo.status === 'available' ? 'bg-green-500' :
-                        table.statusInfo.status === 'seated' ? 'bg-blue-500' :
-                        table.statusInfo.status === 'pending' ? 'bg-yellow-500' :
+                        table.statusInfo.status === 'reserved' ? 'bg-purple-500' :
+                        table.statusInfo.status === 'maintenance' ? 'bg-gray-500' :
                         'bg-red-500'
                       }`} />
                       
-                      {/* Active order indicator */}
-                      {table.activeOrder && (
+                      {/* Active order indicator — shows WHY the table is busy */}
+                      {table.statusInfo.activeOrder && (
                         <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 text-[9px] sm:text-[10px] bg-yellow-200 text-yellow-800 px-1 py-0.5 rounded truncate max-w-full">
-                          #{table.activeOrder.order_number?.slice(-4)}
+                          #{table.statusInfo.activeOrder.order_number?.slice(-4)}
+                        </div>
+                      )}
+                      {(table.statusInfo.status === 'reserved' || table.statusInfo.status === 'maintenance') && (
+                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 text-[9px] sm:text-[10px] bg-muted text-muted-foreground px-1 py-0.5 rounded truncate max-w-full">
+                          {table.statusInfo.status === 'reserved' ? 'R' : 'M'}{table.status_note ? `: ${table.status_note.slice(0, 12)}` : ''}
                         </div>
                       )}
                     </Button>
@@ -555,15 +585,15 @@ export function ServerInterface() {
         <div className="p-3 sm:p-4 border-b border-border flex-shrink-0">
           <h3 className="font-semibold mb-3 text-xs sm:text-sm">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm" className="h-8 sm:h-10 text-xs touch-manipulation min-h-[36px]">
+            <Button
+              variant={showTableView ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowTableView(!showTableView)}
+              className="h-8 sm:h-10 text-xs touch-manipulation min-h-[36px]"
+            >
               <Settings className="w-3 h-3 mr-1" />
               <span className="hidden sm:inline">Table Settings</span>
               <span className="sm:hidden">Settings</span>
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 sm:h-10 text-xs touch-manipulation min-h-[36px]">
-              <Package className="w-3 h-3 mr-1" />
-              <span className="hidden sm:inline">Specials</span>
-              <span className="sm:hidden">Specials</span>
             </Button>
           </div>
         </div>

@@ -131,10 +131,18 @@ export async function processPayment(c: Context) {
         [orderId],
       );
 
-      // Free up the table
+      // Free up the table — but only when no other active order still needs it
       await client.query(
         `UPDATE dining_tables SET is_occupied = false
-         WHERE id IN (SELECT table_id FROM orders WHERE id = $1 AND table_id IS NOT NULL)`,
+         WHERE id IN (
+           SELECT table_id FROM orders WHERE id = $1 AND table_id IS NOT NULL
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM orders o2
+           WHERE o2.table_id = dining_tables.id
+             AND o2.id <> $1
+             AND o2.status IN ('pending', 'confirmed', 'preparing', 'ready', 'served')
+         )`,
         [orderId],
       );
 
@@ -379,9 +387,13 @@ export async function createCustomerPayment(c: Context) {
       return c.json({ success: false, error: 'Order is already fully paid' }, 400);
     }
 
-    // T078: Amount must match remaining
+    // T078: Amount must match remaining. Compare at cent precision — the
+    // client computes the total in floating point (29999.84 * 1.11 =
+    // 33299.8224) while the stored total is DECIMAL(10,2) (33299.82), so an
+    // exact float comparison wrongly rejects legitimate payments.
     const remainingAmount = orderTotal - totalPaid;
-    if (body.amount !== remainingAmount) {
+    const roundToCents = (value: number) => Math.round(value * 100) / 100;
+    if (roundToCents(body.amount) !== roundToCents(remainingAmount)) {
       await client.query('ROLLBACK');
       return c.json({
         success: false,
@@ -398,18 +410,22 @@ export async function createCustomerPayment(c: Context) {
     );
     const paymentId = paymentRes.rows[0].id;
 
-    // Update order status to paid
+    // Move the order into the kitchen pipeline. 'paid' is not a valid order
+    // status (orders_status_check) and a paid QR order still must be cooked —
+    // 'confirmed' is the paid-and-accepted state. Never regress a status that
+    // already progressed past pending.
+    const newStatus = orderStatus === 'pending' ? 'confirmed' : orderStatus;
     await client.query(
-      "UPDATE orders SET status = 'paid', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
-      [orderId],
+      "UPDATE orders SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+      [newStatus, orderId],
     );
 
     // Log status change (non-critical)
     try {
       await client.query(
         `INSERT INTO order_status_history (order_id, previous_status, new_status, notes)
-         VALUES ($1, $2, 'paid', 'Customer paid via ' || $3)`,
-        [orderId, orderStatus, body.payment_method],
+         VALUES ($1, $2, $3, 'Customer paid via ' || $4)`,
+        [orderId, orderStatus, newStatus, body.payment_method],
       );
     } catch {
       // Non-critical

@@ -54,6 +54,8 @@ CREATE TABLE dining_tables (
     seating_capacity INTEGER DEFAULT 4,
     location VARCHAR(50), -- e.g., 'main floor', 'patio', 'private room'
     is_occupied BOOLEAN DEFAULT false,
+    status VARCHAR(20) NOT NULL DEFAULT 'available' CHECK (status IN ('available', 'reserved', 'maintenance')),
+    status_note VARCHAR(200), -- why the table is reserved / under maintenance
     qr_code VARCHAR(50) UNIQUE, -- QR code identifier for table scanning
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

@@ -5,7 +5,7 @@
 
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ServerInterface } from '../ServerInterface';
@@ -272,12 +272,13 @@ describe('ServerInterface (Server Station)', () => {
       const floorButton = screen.getByRole('button', { name: /Floor/i });
       fireEvent.click(floorButton);
 
-      // Floor view should show status legend
+      // Floor view should show status legend (4 clear states, no more
+      // ambiguous "Seated" label)
       await waitFor(() => {
         expect(screen.getByText('Available')).toBeInTheDocument();
-        expect(screen.getByText('Seated')).toBeInTheDocument();
-        expect(screen.getByText('Pending')).toBeInTheDocument();
         expect(screen.getByText('Occupied')).toBeInTheDocument();
+        expect(screen.getByText('Reserved')).toBeInTheDocument();
+        expect(screen.getByText('Maintenance')).toBeInTheDocument();
       });
     });
 
@@ -429,8 +430,8 @@ describe('ServerInterface (Server Station)', () => {
       renderWithProviders(<ServerInterface />);
 
       await waitFor(() => {
-        // Should show active orders badge
-        expect(screen.getByText(/Active Orders/i)).toBeInTheDocument();
+        // Should show the kitchen-pipeline badge (orders pending → ready)
+        expect(screen.getByText(/In Kitchen:/i)).toBeInTheDocument();
       });
     });
 
@@ -474,6 +475,30 @@ describe('ServerInterface (Server Station)', () => {
         // Active order indicator should be shown (order number snippet)
         expect(screen.getByText(/#0001/i)).toBeInTheDocument();
       });
+    });
+
+    it('should show bar table labels verbatim in floor view (no invented prefix)', async () => {
+      // Regression: floor view hardcoded a "T" prefix, rendering the real
+      // table "BAR01" as "TBAR01" — a label that does not exist.
+      setupDefaultMocks();
+      vi.mocked(apiClient.getTables).mockResolvedValue({
+        success: true,
+        message: 'Success',
+        data: [createMockTable({ id: 'table-bar', table_number: 'BAR01', seating_capacity: 1 })],
+      });
+
+      renderWithProviders(<ServerInterface />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Floor/i })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /Floor/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('BAR01')).toBeInTheDocument();
+      });
+      expect(screen.queryByText('TBAR01')).not.toBeInTheDocument();
     });
   });
 
@@ -546,7 +571,7 @@ describe('ServerInterface (Server Station)', () => {
 
       // Check total shows in the cart section (using getAllBy for multiple matches)
       await waitFor(() => {
-        const priceTexts = screen.getAllByText(/Rp\s*185\.000/i);
+        const priceTexts = screen.getAllByText(/Rp\.?\s*185\.000/i);
         expect(priceTexts.length).toBeGreaterThan(0);
       });
     });
@@ -883,6 +908,92 @@ describe('ServerInterface (Server Station)', () => {
         const prepTimeBadges = screen.getAllByText(/25min/);
         expect(prepTimeBadges.length).toBeGreaterThan(0);
       });
+    });
+  });
+
+  // ========================
+  // ActiveOrders_Sync regression: the "In Kitchen" badge must stay in sync
+  // with reality (kitchen board) instead of showing stale cached counts.
+  // ========================
+
+  describe('ActiveOrders_Sync', () => {
+    it('refreshes the In Kitchen badge when active orders change', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        setupDefaultMocks();
+
+        renderWithProviders(<ServerInterface />);
+
+        // Badge shows the kitchen-pipeline count initially
+        await waitFor(() => {
+          expect(screen.getByText(/In Kitchen:/i)).toBeInTheDocument();
+        });
+
+        // All orders leave the kitchen pipeline (completed elsewhere)
+        vi.mocked(apiClient.getOrders).mockResolvedValue({
+          success: true,
+          message: 'Success',
+          data: [],
+          meta: { current_page: 1, per_page: 50, total: 0, total_pages: 0 },
+        });
+
+        // After the refetch interval the badge must be gone
+        act(() => {
+          vi.advanceTimersByTime(11_000);
+        });
+
+        await waitFor(() => {
+          expect(screen.queryByText(/In Kitchen:/i)).not.toBeInTheDocument();
+        });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  // ========================
+  // Quick Actions regression (buttons in the order panel sidebar)
+  // ========================
+
+  describe('QuickActions_Regression', () => {
+    it('should switch to Floor view when the Table Settings quick action is clicked', async () => {
+      setupDefaultMocks();
+
+      renderWithProviders(<ServerInterface />);
+
+      await waitFor(() => {
+        expect(screen.getByText('T01')).toBeInTheDocument();
+      });
+
+      // Default view is List: the floor-view status legend is not shown yet
+      expect(screen.queryByText('Occupied')).not.toBeInTheDocument();
+
+      // Click the "Table Settings" quick action button
+      fireEvent.click(screen.getByRole('button', { name: /Table Settings/i }));
+
+      // Floor view becomes visible (status legend appears)
+      await waitFor(() => {
+        expect(screen.getByText('Occupied')).toBeInTheDocument();
+      });
+
+      // Clicking again returns to the List view
+      fireEvent.click(screen.getByRole('button', { name: /Table Settings/i }));
+
+      await waitFor(() => {
+        expect(screen.queryByText('Occupied')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should not render a Specials button (no specials feature exists)', async () => {
+      setupDefaultMocks();
+
+      renderWithProviders(<ServerInterface />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Rendang Wagyu')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByRole('button', { name: /Specials/i })).not.toBeInTheDocument();
     });
   });
 });

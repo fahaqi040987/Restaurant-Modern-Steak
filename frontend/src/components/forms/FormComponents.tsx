@@ -400,7 +400,6 @@ export const orderTypeOptions: SelectOption[] = [
 
 export const tableStatusOptions: SelectOption[] = [
   { value: 'available', label: 'Available' },
-  { value: 'occupied', label: 'Occupied' },
   { value: 'reserved', label: 'Reserved' },
   { value: 'maintenance', label: 'Under Maintenance' },
 ]

@@ -3,6 +3,7 @@ import { eq, and, not, inArray, ilike, sql } from 'drizzle-orm';
 import { db } from '../db/connection.js';
 import { diningTables, orders } from '../db/schema.js';
 import { successResponse, errorResponse } from '../lib/response.js';
+import { computeTableStatus } from '../lib/table-status.js';
 
 export async function getTables(c: Context) {
   const location = c.req.query('location');
@@ -30,6 +31,8 @@ export async function getTables(c: Context) {
         seatingCapacity: diningTables.seatingCapacity,
         location: diningTables.location,
         isOccupied: diningTables.isOccupied,
+        status: diningTables.status,
+        statusNote: diningTables.statusNote,
         qrCode: diningTables.qrCode,
         createdAt: diningTables.createdAt,
         updatedAt: diningTables.updatedAt,
@@ -38,16 +41,47 @@ export async function getTables(c: Context) {
       .where(whereClause)
       .orderBy(diningTables.tableNumber);
 
+    // Latest active order per table (the "why" indicator for occupied tables)
+    const activeOrderRows = await db
+      .select({
+        tableId: orders.tableId,
+        id: orders.id,
+        orderNumber: orders.orderNumber,
+        customerName: orders.customerName,
+        status: orders.status,
+        totalAmount: orders.totalAmount,
+        createdAt: orders.createdAt,
+      })
+      .from(orders)
+      .where(not(inArray(orders.status, ['completed', 'cancelled'])))
+      .orderBy(sql`${orders.createdAt} DESC`);
+
+    const activeOrderByTable = new Map<string, Record<string, unknown>>();
+    for (const order of activeOrderRows) {
+      if (order.tableId && !activeOrderByTable.has(order.tableId)) {
+        activeOrderByTable.set(order.tableId, {
+          id: order.id,
+          order_number: order.orderNumber,
+          customer_name: order.customerName,
+          status: order.status,
+          total_amount: Number(order.totalAmount),
+          created_at: order.createdAt,
+        });
+      }
+    }
+
     const data = rows.map((row) => ({
       id: row.id,
       table_number: row.tableNumber,
       seating_capacity: row.seatingCapacity,
       location: row.location,
       is_occupied: row.isOccupied,
+      status: computeTableStatus(row.isOccupied, row.status),
+      status_note: row.statusNote ?? null,
       qr_code: row.qrCode,
       created_at: row.createdAt,
       updated_at: row.updatedAt,
-      current_order: null,
+      current_order: activeOrderByTable.get(row.id) ?? null,
     }));
 
     return successResponse(c, 'Tables retrieved successfully', data);
@@ -67,6 +101,8 @@ export async function getTable(c: Context) {
         seatingCapacity: diningTables.seatingCapacity,
         location: diningTables.location,
         isOccupied: diningTables.isOccupied,
+        status: diningTables.status,
+        statusNote: diningTables.statusNote,
         qrCode: diningTables.qrCode,
         createdAt: diningTables.createdAt,
         updatedAt: diningTables.updatedAt,
@@ -125,6 +161,8 @@ export async function getTable(c: Context) {
       seating_capacity: row.seatingCapacity,
       location: row.location,
       is_occupied: row.isOccupied,
+      status: computeTableStatus(row.isOccupied, row.status),
+      status_note: row.statusNote ?? null,
       qr_code: row.qrCode,
       created_at: row.createdAt,
       updated_at: row.updatedAt,
@@ -146,6 +184,8 @@ export async function getTablesByLocation(c: Context) {
         seatingCapacity: diningTables.seatingCapacity,
         location: diningTables.location,
         isOccupied: diningTables.isOccupied,
+        status: diningTables.status,
+        statusNote: diningTables.statusNote,
         qrCode: diningTables.qrCode,
         createdAt: diningTables.createdAt,
         updatedAt: diningTables.updatedAt,
@@ -165,6 +205,8 @@ export async function getTablesByLocation(c: Context) {
         seating_capacity: row.seatingCapacity,
         location: row.location,
         is_occupied: row.isOccupied,
+        status: computeTableStatus(row.isOccupied, row.status),
+        status_note: row.statusNote ?? null,
         qr_code: row.qrCode,
         created_at: row.createdAt,
         updated_at: row.updatedAt,

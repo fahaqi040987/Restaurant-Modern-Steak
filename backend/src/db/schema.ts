@@ -98,6 +98,8 @@ export const diningTables = pgTable(
     seatingCapacity: integer('seating_capacity').default(4),
     location: varchar('location', { length: 50 }),
     isOccupied: boolean('is_occupied').default(false),
+    status: varchar('status', { length: 20 }).notNull().default('available'),
+    statusNote: varchar('status_note', { length: 200 }),
     qrCode: varchar('qr_code', { length: 50 }).unique(),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow(),
