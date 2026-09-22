@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -13,8 +14,38 @@ import {
   CheckCircle
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
+import apiClient from '@/api/client'
+import type { PaymentMethodConfig } from '@/types'
 
-export type PaymentMethod = 'cash' | 'credit_card' | 'debit_card' | 'digital_wallet'
+export type PaymentMethod = string
+
+// Icon/color per known code; custom codes fall back to the defaults
+const methodIcons: Record<string, typeof CreditCard> = {
+  cash: Banknote,
+  qris: Smartphone,
+  debit_card: Wallet,
+  credit_card: CreditCard,
+  digital_wallet: Smartphone
+}
+
+const methodColors: Record<string, string> = {
+  cash: 'bg-green-500',
+  qris: 'bg-indigo-500',
+  debit_card: 'bg-purple-500',
+  credit_card: 'bg-blue-500',
+  digital_wallet: 'bg-orange-500'
+}
+
+// Known codes use i18n keys; custom codes fall back to the API label/description
+const methodLabelKeys: Record<string, { nameKey: string; descriptionKey: string }> = {
+  cash: { nameKey: 'pos.cash', descriptionKey: 'pos.cashDesc' },
+  credit_card: { nameKey: 'pos.creditCard', descriptionKey: 'pos.creditCardDesc' },
+  debit_card: { nameKey: 'pos.debitCard', descriptionKey: 'pos.debitCardDesc' },
+  digital_wallet: { nameKey: 'pos.digitalWallet', descriptionKey: 'pos.digitalWalletDesc' }
+}
+
+const getMethodIcon = (code: string) => methodIcons[code] ?? CreditCard
+const getMethodColor = (code: string) => methodColors[code] ?? 'bg-blue-500'
 
 interface PaymentMethodSelectionProps {
   totalAmount: number
@@ -42,40 +73,26 @@ export function PaymentMethodSelection({
   const [referenceNumber, setReferenceNumber] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const paymentMethods = [
-    {
-      id: 'cash' as PaymentMethod,
-      nameKey: 'pos.cash',
-      descriptionKey: 'pos.cashDesc',
-      icon: Banknote,
-      color: 'bg-green-500',
-      available: true
-    },
-    {
-      id: 'credit_card' as PaymentMethod,
-      nameKey: 'pos.creditCard',
-      descriptionKey: 'pos.creditCardDesc',
-      icon: CreditCard,
-      color: 'bg-blue-500',
-      available: true
-    },
-    {
-      id: 'debit_card' as PaymentMethod,
-      nameKey: 'pos.debitCard',
-      descriptionKey: 'pos.debitCardDesc',
-      icon: Wallet,
-      color: 'bg-purple-500',
-      available: true
-    },
-    {
-      id: 'digital_wallet' as PaymentMethod,
-      nameKey: 'pos.digitalWallet',
-      descriptionKey: 'pos.digitalWalletDesc',
-      icon: Smartphone,
-      color: 'bg-orange-500',
-      available: true
-    }
-  ]
+  // Active payment methods are admin-configurable — always rendered from the API
+  const {
+    data: methodsResponse,
+    isPending: methodsPending,
+    isError: methodsError
+  } = useQuery({
+    queryKey: ['activePaymentMethods'],
+    queryFn: () => apiClient.getActivePaymentMethods()
+  })
+  const paymentMethods: PaymentMethodConfig[] = methodsResponse?.data ?? []
+
+  const getMethodName = (method: PaymentMethodConfig) => {
+    const keys = methodLabelKeys[method.code]
+    return keys ? t(keys.nameKey) : method.label
+  }
+
+  const getMethodDescription = (method: PaymentMethodConfig) => {
+    const keys = methodLabelKeys[method.code]
+    return keys ? t(keys.descriptionKey) : method.description
+  }
 
   const handleMethodSelect = (method: PaymentMethod) => {
     setSelectedMethod(method)
@@ -142,45 +159,58 @@ export function PaymentMethodSelection({
         </CardHeader>
 
         <CardContent className="pt-0">
-          <div className="grid gap-3">
-            {paymentMethods.map((method) => (
-              <Card
-                key={method.id}
-                className={`cursor-pointer border-2 transition-all hover:shadow-md ${
-                  method.available
-                    ? 'hover:border-blue-300 border-gray-200'
-                    : 'opacity-50 cursor-not-allowed border-gray-100'
-                }`}
-                onClick={() => method.available && handleMethodSelect(method.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${method.color} text-white`}>
-                      <method.icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{t(method.nameKey)}</h3>
-                      <p className="text-sm text-gray-500">{t(method.descriptionKey)}</p>
-                    </div>
-                    {method.available && (
-                      <Badge variant="outline" className="text-xs">
-                        {t('pos.available')}
-                      </Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {methodsPending ? (
+            <div className="grid gap-3">
+              {[0, 1, 2].map((index) => (
+                <div
+                  key={index}
+                  className="h-20 rounded-lg border-2 border-gray-100 bg-gray-50 animate-pulse"
+                />
+              ))}
+              <p className="text-center text-xs text-gray-400">{t('common.loading')}</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {paymentMethods.map((method) => {
+                const Icon = getMethodIcon(method.code)
+                const description = getMethodDescription(method)
+                return (
+                  <Card
+                    key={method.id}
+                    className="cursor-pointer border-2 border-gray-200 transition-all hover:shadow-md hover:border-blue-300"
+                    onClick={() => handleMethodSelect(method.code)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${getMethodColor(method.code)} text-white`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900">{getMethodName(method)}</h3>
+                          {description && (
+                            <p className="text-sm text-gray-500">{description}</p>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {t('pos.available')}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+              {methodsError && (
+                <p className="text-center text-xs text-red-500">{t('common.error')}</p>
+              )}
+            </div>
+          )}
         </CardContent>
       </div>
     )
   }
 
-  const getMethodName = () => {
-    const method = paymentMethods.find(m => m.id === selectedMethod)
-    return method ? t(method.nameKey) : ''
-  }
+  const selectedConfig = paymentMethods.find(m => m.code === selectedMethod)
+  const selectedMethodName = selectedConfig ? getMethodName(selectedConfig) : selectedMethod
 
   return (
     <div className="bg-white rounded-lg shadow-lg max-w-md mx-auto">
@@ -194,7 +224,7 @@ export function PaymentMethodSelection({
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <CardTitle className="text-lg font-semibold">
-            {t('pos.paymentTitle', { method: getMethodName() })}
+            {t('pos.paymentTitle', { method: selectedMethodName })}
           </CardTitle>
           <Button variant="ghost" size="sm" onClick={onCancel}>
             ×

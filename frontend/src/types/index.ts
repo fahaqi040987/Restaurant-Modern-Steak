@@ -183,7 +183,7 @@ export interface Payment {
 }
 
 export interface ProcessPaymentRequest {
-  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'digital_wallet' | 'qris';
+  payment_method: string;
   amount: number;
   reference_number?: string;
 }
@@ -532,9 +532,51 @@ export interface ReservationPagination {
 
 // T082: Payment types for QR-based customer ordering
 export interface CreatePaymentRequest {
-  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'digital_wallet' | 'qris';
+  payment_method: string;
   amount: number;
   reference_number?: string;
+}
+
+/**
+ * Configurable payment method (admin view - includes integration settings)
+ */
+export interface PaymentMethodConfig {
+  id: string;
+  code: string; // 'cash' | 'qris' | 'debit_card' | 'credit_card' | 'digital_wallet' | custom code
+  label: string;
+  description?: string;
+  is_active: boolean;
+  provider?: string; // 'manual' | 'midtrans' | 'xendit' | 'edc' | custom provider
+  api_endpoint?: string; // external payment provider API URL
+  webhook_url?: string; // webhook URL that receives payment notifications
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Payment method as exposed to unauthenticated customers (no integration secrets)
+ */
+export interface PublicPaymentMethod {
+  id: string;
+  code: string;
+  label: string;
+  description?: string;
+  provider?: string;
+  sort_order: number;
+}
+
+/**
+ * Request payload for updating a payment method configuration (admin)
+ */
+export interface UpdatePaymentMethodRequest {
+  label?: string;
+  description?: string | null;
+  is_active?: boolean;
+  provider?: string | null;
+  api_endpoint?: string | null;
+  webhook_url?: string | null;
+  sort_order?: number;
 }
 
 export interface PaymentConfirmation {

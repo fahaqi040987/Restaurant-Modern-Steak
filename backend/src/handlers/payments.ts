@@ -2,6 +2,7 @@ import type { Context } from 'hono';
 import { sql } from 'drizzle-orm';
 import { db, pool } from '../db/connection.js';
 import { successResponse, errorResponse } from '../lib/response.js';
+import { getActivePaymentMethodCodes } from './payment-methods.js';
 
 // T094: Fraud detection constants
 const MAX_PAYMENTS_PER_MINUTE = 5;
@@ -26,10 +27,12 @@ export async function processPayment(c: Context) {
     return errorResponse(c, 'Invalid request body', 'invalid_json', 400);
   }
 
-  // Validate payment method
-  const validMethods = ['cash', 'credit_card', 'debit_card', 'digital_wallet'];
+  // Validate payment method against the configurable payment_methods table,
+  // falling back to the legacy hardcoded list when the table is unavailable
+  const activeCodes = await getActivePaymentMethodCodes();
+  const validMethods = activeCodes ?? ['cash', 'credit_card', 'debit_card', 'digital_wallet'];
   if (!validMethods.includes(body.payment_method)) {
-    return errorResponse(c, 'Invalid payment method', 'invalid_payment_method', 400);
+    return errorResponse(c, 'Payment method is not available', 'payment_method_unavailable', 400);
   }
 
   if (!body.amount || body.amount <= 0) {
@@ -340,6 +343,17 @@ export async function createCustomerPayment(c: Context) {
     body = await c.req.json();
   } catch {
     return c.json({ success: false, error: 'Invalid request body' }, 400);
+  }
+
+  // Validate payment method is a non-empty string and available in the
+  // configurable payment_methods table (legacy fallback when table missing)
+  if (typeof body.payment_method !== 'string' || body.payment_method.trim() === '') {
+    return c.json({ success: false, error: 'Payment method is required' }, 400);
+  }
+  const activeCodes = await getActivePaymentMethodCodes();
+  const validMethods = activeCodes ?? ['cash', 'credit_card', 'debit_card', 'digital_wallet'];
+  if (!validMethods.includes(body.payment_method)) {
+    return c.json({ success: false, error: 'Payment method is not available' }, 400);
   }
 
   // T100: Authorization check — verify table ownership

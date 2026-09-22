@@ -184,6 +184,30 @@ export const payments = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// payment_methods
+// ---------------------------------------------------------------------------
+export const paymentMethods = pgTable(
+  'payment_methods',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    code: varchar('code', { length: 30 }).unique().notNull(),
+    label: varchar('label', { length: 100 }).notNull(),
+    description: varchar('description', { length: 255 }),
+    isActive: boolean('is_active').notNull().default(true),
+    provider: varchar('provider', { length: 50 }),
+    apiEndpoint: varchar('api_endpoint', { length: 500 }),
+    webhookUrl: varchar('webhook_url', { length: 500 }),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+  },
+  (table) => ({
+    codeIdx: uniqueIndex('idx_payment_methods_code').on(table.code),
+    activeIdx: index('idx_payment_methods_active').on(table.isActive),
+  }),
+);
+
+// ---------------------------------------------------------------------------
 // inventory
 // ---------------------------------------------------------------------------
 export const inventory = pgTable(

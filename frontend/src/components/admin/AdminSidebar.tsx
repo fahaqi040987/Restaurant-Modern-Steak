@@ -20,7 +20,9 @@ import {
   Link2,
   Store,
   Navigation,
-  BookOpen
+  BookOpen,
+  CalendarCheck,
+  Wallet
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
 
@@ -73,11 +75,25 @@ const adminSections: AdminSection[] = [
     href: '/admin/settings'
   },
   {
+    id: 'payment-methods',
+    labelKey: 'admin.paymentMethods',
+    icon: <Wallet className="w-5 h-5" />,
+    descriptionKey: 'admin.paymentMethodsDescription',
+    href: '/admin/payment-methods'
+  },
+  {
     id: 'contacts',
     labelKey: 'admin.contactMessages',
     icon: <MessageSquare className="w-5 h-5" />,
     descriptionKey: 'admin.contactDescription',
     href: '/admin/contacts'
+  },
+  {
+    id: 'reservations',
+    labelKey: 'admin.reservations',
+    icon: <CalendarCheck className="w-5 h-5" />,
+    descriptionKey: 'admin.reservationsDescription',
+    href: '/admin/reservations'
   },
   {
     id: 'logistics',

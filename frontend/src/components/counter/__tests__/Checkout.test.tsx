@@ -26,6 +26,7 @@ vi.mock("@/api/client", () => ({
     getProductsByCategory: vi.fn(),
     getTables: vi.fn(),
     getOrders: vi.fn(),
+    getActivePaymentMethods: vi.fn(),
     createCounterOrder: vi.fn(),
     processCounterPayment: vi.fn(),
   },
@@ -39,6 +40,13 @@ vi.mock("@/lib/toast-helpers", () => ({
     apiError: vi.fn(),
     orderCreated: vi.fn(),
   },
+}));
+
+// Mock i18n (labels resolve to their keys; assertions match by regex)
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+  }),
 }));
 
 // ============================================================================
@@ -154,7 +162,58 @@ const createMockOrder = (overrides: Partial<Order> = {}): Order => ({
 // Setup Default Mocks
 // ============================================================================
 
+const setupPaymentMethodMocks = () => {
+  vi.mocked(apiClient.getActivePaymentMethods).mockResolvedValue({
+    success: true,
+    message: "Success",
+    data: [
+      {
+        id: "pm-cash",
+        code: "cash",
+        label: "Cash",
+        description: "Physical cash payment",
+        is_active: true,
+        sort_order: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "pm-credit-card",
+        code: "credit_card",
+        label: "Credit Card",
+        description: "Visa, Mastercard, Amex",
+        is_active: true,
+        sort_order: 2,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "pm-debit-card",
+        code: "debit_card",
+        label: "Debit Card",
+        description: "Direct bank payment",
+        is_active: true,
+        sort_order: 3,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: "pm-digital-wallet",
+        code: "digital_wallet",
+        label: "Digital Wallet",
+        description: "Apple Pay, Google Pay, etc.",
+        is_active: true,
+        sort_order: 4,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ],
+  });
+};
+
 const setupDefaultMocks = () => {
+  setupPaymentMethodMocks();
+
   const categories = [
     createMockCategory({ id: "cat-1", name: "Steak" }),
     createMockCategory({ id: "cat-2", name: "Beverages" }),
@@ -824,6 +883,7 @@ describe("CounterInterface (Checkout)", () => {
     });
 
     it("should show empty state when no orders ready for payment", async () => {
+      setupPaymentMethodMocks();
       vi.mocked(apiClient.getCategories).mockResolvedValue({
         success: true,
         message: "Success",
@@ -865,6 +925,7 @@ describe("CounterInterface (Checkout)", () => {
     it("should disable payment for a stale completed order", async () => {
       // Regression: a stale/cached list can still contain a completed order.
       // Selecting it must NOT open the payment panel for it.
+      setupPaymentMethodMocks();
       vi.mocked(apiClient.getOrders).mockResolvedValue({
         success: true,
         message: "Success",

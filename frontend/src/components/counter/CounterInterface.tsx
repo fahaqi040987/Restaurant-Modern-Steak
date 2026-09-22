@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import apiClient from '@/api/client'
 import { toastHelpers } from '@/lib/toast-helpers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,7 +12,9 @@ import {
   Minus,
   ShoppingCart,
   CreditCard,
-  DollarSign,
+  Banknote,
+  Wallet,
+  Smartphone,
   Check,
   Clock,
   Table as TableIcon,
@@ -22,7 +25,7 @@ import {
   Receipt,
   UtensilsCrossed
 } from 'lucide-react'
-import type { Product, DiningTable, Order, TableStatus } from '@/types'
+import type { Product, DiningTable, Order, TableStatus, PaymentMethodConfig } from '@/types'
 
 function getImageUrl(url: string | null | undefined): string | null {
   if (!url) return null
@@ -54,12 +57,34 @@ interface CreateOrderRequest {
 }
 
 interface ProcessPaymentRequest {
-  payment_method: 'cash' | 'credit_card' | 'debit_card' | 'digital_wallet'
+  payment_method: string
   amount: number
   reference_number?: string
 }
 
+// Icon/label per known method code; custom codes fall back to default icon + API label
+const methodIcons: Record<string, typeof CreditCard> = {
+  cash: Banknote,
+  qris: Smartphone,
+  debit_card: Wallet,
+  credit_card: CreditCard,
+  digital_wallet: Smartphone
+}
+
+const methodLabelKeys: Record<string, string> = {
+  cash: 'pos.cash',
+  credit_card: 'pos.creditCard',
+  debit_card: 'pos.debitCard',
+  digital_wallet: 'pos.digitalWallet'
+}
+
+const getPaymentMethodLabel = (method: PaymentMethodConfig, t: (key: string) => string): string => {
+  const nameKey = methodLabelKeys[method.code]
+  return nameKey ? t(nameKey) : method.label
+}
+
 export function CounterInterface() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'create' | 'payment'>('create')
   const [orderType, setOrderType] = useState<'dine_in' | 'takeout' | 'delivery'>('dine_in')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -71,7 +96,7 @@ export function CounterInterface() {
   
   // Payment states
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit_card' | 'debit_card' | 'digital_wallet'>('cash')
+  const [paymentMethod, setPaymentMethod] = useState<string>('')
   const [paymentAmount, setPaymentAmount] = useState('')
   const [referenceNumber, setReferenceNumber] = useState('')
   
@@ -109,6 +134,20 @@ export function CounterInterface() {
     refetchInterval: 15_000,
   })
 
+  // Fetch active payment methods (admin-configurable)
+  const { data: paymentMethodsResponse } = useQuery({
+    queryKey: ['activePaymentMethods'],
+    queryFn: () => apiClient.getActivePaymentMethods(),
+  })
+  const paymentMethods: PaymentMethodConfig[] = paymentMethodsResponse?.data ?? []
+
+  // Default-select the first active method once loaded (re-selects if it gets deactivated)
+  useEffect(() => {
+    if (paymentMethods.length > 0 && !paymentMethods.some(method => method.code === paymentMethod)) {
+      setPaymentMethod(paymentMethods[0].code)
+    }
+  }, [paymentMethods, paymentMethod])
+
   // Create order mutation (counter endpoint - all order types)
   const createOrderMutation = useMutation({
     mutationFn: (orderData: CreateOrderRequest) =>
@@ -130,7 +169,7 @@ export function CounterInterface() {
 
   // Process payment mutation
   const processPaymentMutation = useMutation({
-    mutationFn: ({ orderId, paymentData }: { orderId: string, paymentData: ProcessPaymentRequest }) => 
+    mutationFn: ({ orderId, paymentData }: { orderId: string, paymentData: ProcessPaymentRequest }) =>
       apiClient.processCounterPayment(orderId, paymentData),
     onSuccess: () => {
       // Reset payment form
@@ -223,7 +262,7 @@ export function CounterInterface() {
   }
 
   const handleProcessPayment = () => {
-    if (!selectedOrder || !paymentAmount) return
+    if (!selectedOrder || !paymentAmount || !paymentMethod) return
     // The order list can be momentarily stale — never submit a payment for
     // an order the backend already closed.
     if (selectedOrder.status === 'completed' || selectedOrder.status === 'cancelled') return
@@ -701,6 +740,18 @@ export function CounterInterface() {
                         <span>{selectedOrder.customer_name}</span>
                       </div>
                     )}
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal:</span>
+                      <span>{formatCurrency(selectedOrder.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>
+                        {t('counter.tax')}
+                        {selectedOrder.subtotal > 0 &&
+                          ` (${Math.round((selectedOrder.tax_amount / selectedOrder.subtotal) * 100)}%)`}
+                      </span>
+                      <span>{formatCurrency(selectedOrder.tax_amount)}</span>
+                    </div>
                     <div className="flex justify-between font-semibold text-lg">
                       <span>Total:</span>
                       <span>{formatCurrency(selectedOrder.total_amount)}</span>
@@ -712,37 +763,20 @@ export function CounterInterface() {
                   <div>
                     <label className="text-sm font-medium mb-2 block">Payment Method</label>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant={paymentMethod === 'cash' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setPaymentMethod('cash')}
-                      >
-                        <DollarSign className="w-4 h-4 mr-1" />
-                        Cash
-                      </Button>
-                      <Button
-                        variant={paymentMethod === 'credit_card' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setPaymentMethod('credit_card')}
-                      >
-                        <CreditCard className="w-4 h-4 mr-1" />
-                        Credit
-                      </Button>
-                      <Button
-                        variant={paymentMethod === 'debit_card' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setPaymentMethod('debit_card')}
-                      >
-                        <CreditCard className="w-4 h-4 mr-1" />
-                        Debit
-                      </Button>
-                      <Button
-                        variant={paymentMethod === 'digital_wallet' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setPaymentMethod('digital_wallet')}
-                      >
-                        Digital
-                      </Button>
+                      {paymentMethods.map((method) => {
+                        const Icon = methodIcons[method.code] ?? CreditCard
+                        return (
+                          <Button
+                            key={method.code}
+                            variant={paymentMethod === method.code ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setPaymentMethod(method.code)}
+                          >
+                            <Icon className="w-4 h-4 mr-1" />
+                            {getPaymentMethodLabel(method, t)}
+                          </Button>
+                        )
+                      })}
                     </div>
                   </div>
 
@@ -757,7 +791,7 @@ export function CounterInterface() {
                     />
                   </div>
 
-                  {paymentMethod !== 'cash' && (
+                  {paymentMethod !== '' && paymentMethod !== 'cash' && (
                     <div>
                       <label className="text-sm font-medium mb-1 block">Reference Number</label>
                       <Input
@@ -774,6 +808,7 @@ export function CounterInterface() {
                     onClick={handleProcessPayment}
                     disabled={
                       !paymentAmount ||
+                      !paymentMethod ||
                       processPaymentMutation.isPending ||
                       selectedOrder.status === 'completed' ||
                       selectedOrder.status === 'cancelled'

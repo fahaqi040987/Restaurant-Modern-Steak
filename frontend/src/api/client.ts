@@ -38,6 +38,9 @@ import type {
   // T082-T083: QR ordering types
   CreatePaymentRequest,
   PaymentConfirmation,
+  PaymentMethodConfig,
+  PublicPaymentMethod,
+  UpdatePaymentMethodRequest,
   CreateSurveyRequest,
   SatisfactionSurvey,
   SurveyStatsResponse,
@@ -1301,6 +1304,70 @@ class APIClient {
     return this.request({
       method: "GET",
       url: "/admin/contacts/counts/new",
+    });
+  }
+
+  // ===========================================
+  // Reservations (Admin - Auth Required)
+  // ===========================================
+
+  /**
+   * Get pending reservations count for badge
+   * @returns Count of pending reservations
+   */
+  async getPendingReservationsCount(): Promise<APIResponse<{ pending_reservations: number }>> {
+    return this.request({
+      method: "GET",
+      url: "/admin/reservations/counts/pending",
+    });
+  }
+
+  // ===========================================
+  // Payment Methods (Public + Auth + Admin)
+  // ===========================================
+
+  /**
+   * Get active payment methods (any authenticated staff)
+   * Used by POS/counter payment flows
+   */
+  async getActivePaymentMethods(): Promise<APIResponse<PaymentMethodConfig[]>> {
+    return this.request({
+      method: "GET",
+      url: "/payment-methods",
+    });
+  }
+
+  /**
+   * Get all payment methods including inactive ones (admin/manager)
+   */
+  async getAdminPaymentMethods(): Promise<APIResponse<PaymentMethodConfig[]>> {
+    return this.request({
+      method: "GET",
+      url: "/admin/payment-methods",
+    });
+  }
+
+  /**
+   * Update a payment method configuration (admin/manager)
+   */
+  async updatePaymentMethod(
+    id: string,
+    data: UpdatePaymentMethodRequest,
+  ): Promise<APIResponse<PaymentMethodConfig>> {
+    return this.request({
+      method: "PUT",
+      url: `/admin/payment-methods/${id}`,
+      data,
+    });
+  }
+
+  /**
+   * Get active payment methods for the public/customer ordering flow (no auth)
+   */
+  async getPublicPaymentMethods(): Promise<APIResponse<PublicPaymentMethod[]>> {
+    return this.request({
+      method: "GET",
+      url: "/public/payment-methods",
     });
   }
 

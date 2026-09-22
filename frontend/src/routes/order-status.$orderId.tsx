@@ -378,7 +378,9 @@ function OrderStatusPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-[var(--public-text-secondary)]">
-                  Pajak (11%)
+                  Pajak
+                  {Number(order.subtotal) > 0 &&
+                    ` (${Math.round((Number(order.tax_amount) / Number(order.subtotal)) * 100)}%)`}
                 </span>
                 <span className="text-[var(--public-text-primary)]">
                   {formatCurrency(order.tax_amount)}

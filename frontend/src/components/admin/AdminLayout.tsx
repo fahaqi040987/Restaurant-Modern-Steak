@@ -18,7 +18,9 @@ import {
   UserCog,
   LayoutGrid,
   Bell,
-  Mail
+  Mail,
+  CalendarCheck,
+  Wallet
 } from 'lucide-react'
 import type { User as UserType } from '@/types'
 
@@ -36,6 +38,7 @@ import { AdminTableManagement } from './AdminTableManagement'
 import { AdminReports } from './AdminReports'
 import { NotificationsPage } from './NotificationsPage'
 import ContactSubmissions from './ContactSubmissions'
+import PaymentMethodsSettings from './PaymentMethodsSettings'
 
 interface AdminLayoutProps {
   user: UserType
@@ -47,7 +50,7 @@ interface AdminSection {
   icon: React.ReactNode
   descriptionKey: string
   showBadge: boolean
-  badgeKey?: 'notifications' | 'newContacts'
+  badgeKey?: 'notifications' | 'newContacts' | 'pendingReservations'
 }
 
 const adminSections: AdminSection[] = [
@@ -75,6 +78,14 @@ const adminSections: AdminSection[] = [
     badgeKey: 'newContacts' as const
   },
   {
+    id: 'reservations',
+    labelKey: 'admin.reservations',
+    icon: <CalendarCheck className="w-5 h-5" />,
+    descriptionKey: 'admin.reservationsDescription',
+    showBadge: true,
+    badgeKey: 'pendingReservations' as const
+  },
+  {
     id: 'server',
     labelKey: 'admin.serverInterface',
     icon: <Users className="w-5 h-5" />,
@@ -100,6 +111,13 @@ const adminSections: AdminSection[] = [
     labelKey: 'admin.settings',
     icon: <Settings className="w-5 h-5" />,
     descriptionKey: 'admin.settingsDescription',
+    showBadge: false
+  },
+  {
+    id: 'payment-methods',
+    labelKey: 'admin.paymentMethods',
+    icon: <Wallet className="w-5 h-5" />,
+    descriptionKey: 'admin.paymentMethodsDescription',
     showBadge: false
   },
   {
@@ -182,6 +200,8 @@ export function AdminLayout({ user }: AdminLayoutProps) {
             <FormDemo />
           </div>
         )
+      case 'payment-methods':
+        return <PaymentMethodsSettings />
       case 'staff':
         return <AdminStaffManagement />
       case 'menu':

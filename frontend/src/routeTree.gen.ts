@@ -33,9 +33,11 @@ import { Route as AdminTablesRouteImport } from './routes/admin/tables'
 import { Route as AdminStaffRouteImport } from './routes/admin/staff'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminServerRouteImport } from './routes/admin/server'
+import { Route as AdminReservationsRouteImport } from './routes/admin/reservations'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
 import { Route as AdminRecipesRouteImport } from './routes/admin/recipes'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
+import { Route as AdminPaymentMethodsRouteImport } from './routes/admin/payment-methods'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminMenuConfigRouteImport } from './routes/admin/menu-config'
 import { Route as AdminMenuRouteImport } from './routes/admin/menu'
@@ -174,6 +176,11 @@ const AdminServerRoute = AdminServerRouteImport.update({
   path: '/server',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReservationsRoute = AdminReservationsRouteImport.update({
+  id: '/reservations',
+  path: '/reservations',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminReportsRoute = AdminReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -187,6 +194,11 @@ const AdminRecipesRoute = AdminRecipesRouteImport.update({
 const AdminProfileRoute = AdminProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPaymentMethodsRoute = AdminPaymentMethodsRouteImport.update({
+  id: '/payment-methods',
+  path: '/payment-methods',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
@@ -296,9 +308,11 @@ export interface FileRoutesByFullPath {
   '/admin/menu': typeof AdminMenuRoute
   '/admin/menu-config': typeof AdminMenuConfigRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/payment-methods': typeof AdminPaymentMethodsRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/recipes': typeof AdminRecipesRoute
   '/admin/reports': typeof AdminReportsRoute
+  '/admin/reservations': typeof AdminReservationsRoute
   '/admin/server': typeof AdminServerRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -341,9 +355,11 @@ export interface FileRoutesByTo {
   '/admin/menu': typeof AdminMenuRoute
   '/admin/menu-config': typeof AdminMenuConfigRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/payment-methods': typeof AdminPaymentMethodsRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/recipes': typeof AdminRecipesRoute
   '/admin/reports': typeof AdminReportsRoute
+  '/admin/reservations': typeof AdminReservationsRoute
   '/admin/server': typeof AdminServerRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -388,9 +404,11 @@ export interface FileRoutesById {
   '/admin/menu': typeof AdminMenuRoute
   '/admin/menu-config': typeof AdminMenuConfigRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/payment-methods': typeof AdminPaymentMethodsRoute
   '/admin/profile': typeof AdminProfileRoute
   '/admin/recipes': typeof AdminRecipesRoute
   '/admin/reports': typeof AdminReportsRoute
+  '/admin/reservations': typeof AdminReservationsRoute
   '/admin/server': typeof AdminServerRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/staff': typeof AdminStaffRoute
@@ -436,9 +454,11 @@ export interface FileRouteTypes {
     | '/admin/menu'
     | '/admin/menu-config'
     | '/admin/notifications'
+    | '/admin/payment-methods'
     | '/admin/profile'
     | '/admin/recipes'
     | '/admin/reports'
+    | '/admin/reservations'
     | '/admin/server'
     | '/admin/settings'
     | '/admin/staff'
@@ -481,9 +501,11 @@ export interface FileRouteTypes {
     | '/admin/menu'
     | '/admin/menu-config'
     | '/admin/notifications'
+    | '/admin/payment-methods'
     | '/admin/profile'
     | '/admin/recipes'
     | '/admin/reports'
+    | '/admin/reservations'
     | '/admin/server'
     | '/admin/settings'
     | '/admin/staff'
@@ -527,9 +549,11 @@ export interface FileRouteTypes {
     | '/admin/menu'
     | '/admin/menu-config'
     | '/admin/notifications'
+    | '/admin/payment-methods'
     | '/admin/profile'
     | '/admin/recipes'
     | '/admin/reports'
+    | '/admin/reservations'
     | '/admin/server'
     | '/admin/settings'
     | '/admin/staff'
@@ -751,6 +775,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminServerRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/reservations': {
+      id: '/admin/reservations'
+      path: '/reservations'
+      fullPath: '/admin/reservations'
+      preLoaderRoute: typeof AdminReservationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/reports': {
       id: '/admin/reports'
       path: '/reports'
@@ -770,6 +801,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/admin/profile'
       preLoaderRoute: typeof AdminProfileRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/payment-methods': {
+      id: '/admin/payment-methods'
+      path: '/payment-methods'
+      fullPath: '/admin/payment-methods'
+      preLoaderRoute: typeof AdminPaymentMethodsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/notifications': {
@@ -906,9 +944,11 @@ interface AdminRouteChildren {
   AdminMenuRoute: typeof AdminMenuRoute
   AdminMenuConfigRoute: typeof AdminMenuConfigRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminPaymentMethodsRoute: typeof AdminPaymentMethodsRoute
   AdminProfileRoute: typeof AdminProfileRoute
   AdminRecipesRoute: typeof AdminRecipesRoute
   AdminReportsRoute: typeof AdminReportsRoute
+  AdminReservationsRoute: typeof AdminReservationsRoute
   AdminServerRoute: typeof AdminServerRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStaffRoute: typeof AdminStaffRoute
@@ -928,9 +968,11 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMenuRoute: AdminMenuRoute,
   AdminMenuConfigRoute: AdminMenuConfigRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminPaymentMethodsRoute: AdminPaymentMethodsRoute,
   AdminProfileRoute: AdminProfileRoute,
   AdminRecipesRoute: AdminRecipesRoute,
   AdminReportsRoute: AdminReportsRoute,
+  AdminReservationsRoute: AdminReservationsRoute,
   AdminServerRoute: AdminServerRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStaffRoute: AdminStaffRoute,
