@@ -56,7 +56,6 @@ d('Payment methods configuration (integration)', () => {
     // Restore original state: seeds active, drop any test-created rows
     await pool.query('UPDATE payment_methods SET is_active = true WHERE code = ANY($1)', [SEED_CODES]);
     await pool.query("DELETE FROM payment_methods WHERE code LIKE 'test-%'");
-    await pool.end();
   });
 
   it('public endpoint returns only active methods without api_endpoint/webhook_url', async () => {
@@ -158,5 +157,70 @@ d('Payment methods configuration (integration)', () => {
     const codes = await getActivePaymentMethodCodes();
     expect(codes).not.toBeNull();
     expect(codes).toContain('cash');
+  });
+});
+
+// ── Deploy-skew resilience ───────────────────────────────────────────────────
+// Regression: production deployed the new backend before migration 0001, so
+// `relation "payment_methods" does not exist` took down every payment UI.
+// The customer-facing endpoints must serve defaults instead of erroring.
+d('Payment methods fallback when table is missing (deploy skew)', () => {
+  let app: Hono;
+  let authHeader: Record<string, string>;
+
+  beforeAll(async () => {
+    app = new Hono();
+    setupRoutes(app);
+    authHeader = { Authorization: `Bearer ${generateTestToken()}` };
+  });
+
+  it('public endpoint serves default methods when the table does not exist', async () => {
+    await pool.query('ALTER TABLE payment_methods RENAME TO payment_methods_backup');
+    try {
+      const res = await app.request('/api/v1/public/payment-methods');
+      expect(res.status).toBe(200);
+
+      const body = (await res.json()) as { success: boolean; data: Array<{ code: string }> };
+      expect(body.success).toBe(true);
+      const codes = body.data.map((m) => m.code);
+      for (const code of SEED_CODES) {
+        expect(codes).toContain(code);
+      }
+      // Defaults are public-safe too
+      for (const method of body.data) {
+        expect(Object.keys(method)).not.toContain('api_endpoint');
+        expect(Object.keys(method)).not.toContain('webhook_url');
+      }
+    } finally {
+      await pool.query('ALTER TABLE payment_methods_backup RENAME TO payment_methods');
+    }
+  });
+
+  it('staff endpoint serves default methods when the table does not exist', async () => {
+    await pool.query('ALTER TABLE payment_methods RENAME TO payment_methods_backup');
+    try {
+      const res = await app.request('/api/v1/payment-methods', { headers: authHeader });
+      expect(res.status).toBe(200);
+
+      const body = (await res.json()) as { success: boolean; data: Array<{ code: string }> };
+      expect(body.success).toBe(true);
+      expect(body.data.map((m) => m.code)).toContain('cash');
+    } finally {
+      await pool.query('ALTER TABLE payment_methods_backup RENAME TO payment_methods');
+    }
+  });
+
+  it('admin endpoint still reports the error so misconfiguration stays visible', async () => {
+    await pool.query('ALTER TABLE payment_methods RENAME TO payment_methods_backup');
+    try {
+      const res = await app.request('/api/v1/admin/payment-methods', { headers: authHeader });
+      expect(res.status).toBe(500);
+
+      const body = (await res.json()) as { success: boolean; error: string };
+      expect(body.success).toBe(false);
+      expect(body.error).toContain('does not exist');
+    } finally {
+      await pool.query('ALTER TABLE payment_methods_backup RENAME TO payment_methods');
+    }
   });
 });

@@ -17,6 +17,31 @@ type PaymentMethodRow = {
   updated_at: string | null;
 };
 
+// Defaults used when the payment_methods table is not available yet (e.g. the
+// deploy shipped before `npm run db:migrate` did). Keeps every payment UI
+// functional with the standard methods instead of erroring; the admin
+// endpoint intentionally does NOT fall back so misconfiguration stays visible.
+const DEFAULT_ACTIVE_METHODS = [
+  { code: 'cash', label: 'Tunai', description: 'Bayar tunai di kasir', provider: 'manual' },
+  { code: 'qris', label: 'QRIS', description: 'Scan QRIS untuk membayar', provider: 'midtrans' },
+  { code: 'debit_card', label: 'Kartu Debit', description: 'Bayar dengan kartu debit (EDC)', provider: 'edc' },
+  { code: 'credit_card', label: 'Kartu Kredit', description: 'Bayar dengan kartu kredit (EDC)', provider: 'edc' },
+  { code: 'digital_wallet', label: 'Dompet Digital', description: 'GoPay/OVO/DANA/e-wallet lainnya', provider: 'midtrans' },
+].map((m, i) => ({
+  id: `default-${m.code}`,
+  ...m,
+  is_active: true,
+  api_endpoint: null,
+  webhook_url: null,
+  sort_order: i + 1,
+  created_at: null,
+  updated_at: null,
+}));
+
+function isMissingRelationError(err: unknown): boolean {
+  return (err as Error)?.message?.includes('does not exist') ?? false;
+}
+
 // ── GetAdminPaymentMethods (all methods, incl. inactive) ────────────────────
 
 export async function getAdminPaymentMethods(c: Context) {
@@ -48,6 +73,10 @@ export async function getActivePaymentMethods(c: Context) {
 
     return successResponse(c, 'Payment methods retrieved successfully', res.rows);
   } catch (err) {
+    if (isMissingRelationError(err)) {
+      console.warn('[payment-methods] payment_methods table missing — serving default methods. Run: npm run db:migrate');
+      return successResponse(c, 'Payment methods retrieved successfully (defaults)', DEFAULT_ACTIVE_METHODS);
+    }
     return errorResponse(c, 'Failed to fetch payment methods', (err as Error).message);
   }
 }
@@ -72,6 +101,21 @@ export async function getPublicPaymentMethods(c: Context) {
 
     return successResponse(c, 'Payment methods retrieved successfully', res.rows);
   } catch (err) {
+    if (isMissingRelationError(err)) {
+      console.warn('[payment-methods] payment_methods table missing — serving default methods. Run: npm run db:migrate');
+      return successResponse(
+        c,
+        'Payment methods retrieved successfully (defaults)',
+        DEFAULT_ACTIVE_METHODS.map(({ id, code, label, description, provider, sort_order }) => ({
+          id,
+          code,
+          label,
+          description,
+          provider,
+          sort_order,
+        })),
+      );
+    }
     return errorResponse(c, 'Failed to fetch payment methods', (err as Error).message);
   }
 }
