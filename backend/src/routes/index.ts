@@ -12,6 +12,7 @@ import { getProducts, getProduct, getCategories, getProductsByCategory, createPr
 import { getTables, getTable, getTablesByLocation, getTableStatus } from '../handlers/tables.js';
 import { getOrders, getOrder, createOrder, updateOrderStatus, getOrderStatusHistory } from '../handlers/orders.js';
 import { processPayment, getPayments, getPaymentSummary, createCustomerPayment } from '../handlers/payments.js';
+import { getAdminPaymentMethods, getActivePaymentMethods, getPublicPaymentMethods, updatePaymentMethod } from '../handlers/payment-methods.js';
 import { getKitchenOrders, updateOrderItemStatus } from '../handlers/kitchen.js';
 import { getInventory, getProductInventory, adjustStock, getLowStock, getStockHistory } from '../handlers/inventory.js';
 import { getIngredients, getIngredient, createIngredient, updateIngredient, deleteIngredient, restockIngredient, getLowStockIngredients, getIngredientHistory, adjustStockIngredient } from '../handlers/ingredients.js';
@@ -67,6 +68,7 @@ export function setupRoutes(app: Hono) {
   publicAPI.get('/franchise/content', getFranchiseContent);
   publicAPI.get('/franchise/content/:section', getFranchiseContentBySection);
   publicAPI.get('/menu-config', getPublicMenuConfig);
+  publicAPI.get('/payment-methods', getPublicPaymentMethods);
 
   api.route('/public', publicAPI);
 
@@ -135,6 +137,9 @@ export function setupRoutes(app: Hono) {
   protectedRoutes.get('/orders/:id/payments', getPayments);
   protectedRoutes.get('/orders/:id/payment-summary', getPaymentSummary);
 
+  // Payment methods (active only, for all authenticated users)
+  protectedRoutes.get('/payment-methods', getActivePaymentMethods);
+
   api.route('/', protectedRoutes);
 
   // ── Server routes (server/admin/manager) ────────────────────────────────────
@@ -177,6 +182,10 @@ export function setupRoutes(app: Hono) {
   adminRoutes.get('/settings', getSettings);
   adminRoutes.put('/settings', updateSettings);
   adminRoutes.get('/health', getAdminSystemHealth);
+
+  // Payment method configuration
+  adminRoutes.get('/payment-methods', getAdminPaymentMethods);
+  adminRoutes.put('/payment-methods/:id', updatePaymentMethod);
 
   // Restaurant info & hours
   adminRoutes.put('/restaurant-info', updateRestaurantInfo);

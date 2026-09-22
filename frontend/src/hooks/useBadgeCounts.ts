@@ -4,10 +4,11 @@ import apiClient from '@/api/client';
 interface BadgeCounts {
   notifications: number;
   newContacts: number;
+  pendingReservations: number;
 }
 
 /**
- * Hook to fetch badge counts (unread notifications, new contacts)
+ * Hook to fetch badge counts (unread notifications, new contacts, pending reservations)
  * with automatic polling every 30 seconds
  */
 export function useBadgeCounts() {
@@ -31,9 +32,20 @@ export function useBadgeCounts() {
     staleTime: 25000,
   });
 
+  const { data: reservationsData } = useQuery({
+    queryKey: ['badge-counts', 'reservations'],
+    queryFn: async () => {
+      const response = await apiClient.getPendingReservationsCount();
+      return response.data;
+    },
+    refetchInterval: 30000, // Poll every 30 seconds
+    staleTime: 25000,
+  });
+
   const counts: BadgeCounts = {
     notifications: notifData?.notifications || 0,
     newContacts: contactsData?.new_contacts || 0,
+    pendingReservations: reservationsData?.pending_reservations || 0,
   };
 
   return counts;

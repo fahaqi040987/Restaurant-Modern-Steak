@@ -28,6 +28,9 @@ import type {
 } from "@/types";
 import "@/styles/public-theme.css";
 
+// Exposed for regression tests (see src/routes/__tests__/CustomerOrderTax.test.tsx)
+export { CustomerOrderPage };
+
 export const Route = createFileRoute("/order/$tableCode")({
   component: CustomerOrderPage,
 });
@@ -51,6 +54,8 @@ function CustomerOrderPage() {
   const [orderInfo, setOrderInfo] = useState<{
     order_id: string;
     order_number: string;
+    subtotal: number;
+    tax_amount: number;
     total_amount: number;
   } | null>(null);
   const [paymentConfirmation, setPaymentConfirmation] =
@@ -95,10 +100,14 @@ function CustomerOrderPage() {
         })),
       }),
     onSuccess: (data) => {
-      // T086: Store order info and proceed to payment step
+      // T086: Store order info and proceed to payment step.
+      // subtotal/tax_amount/total_amount come from the server, which applies
+      // the configured tax rate — never recompute tax on the client.
       setOrderInfo({
         order_id: data.order_id,
         order_number: data.order_number,
+        subtotal: data.subtotal,
+        tax_amount: data.tax_amount,
         total_amount: data.total_amount,
       });
       setCart([]);
@@ -144,10 +153,9 @@ function CustomerOrderPage() {
       return;
     }
 
-    // Map component payment method to API payment method
-    const apiMethod = method === "card" ? "credit_card" : method;
+    // Send the actual method code selected from the payment methods list
     paymentMutation.mutate({
-      payment_method: apiMethod as CreatePaymentRequest["payment_method"],
+      payment_method: method,
       amount: orderInfo!.total_amount,
     });
   };
@@ -189,13 +197,15 @@ function CustomerOrderPage() {
     }
   };
 
+  // Cart preview only — the order's real totals (incl. tax) are computed
+  // server-side when the order is placed. Tax is intentionally not estimated
+  // here because the configured rate is not known on the client.
   const getTotal = () => {
     const subtotal = cart.reduce(
       (sum, item) => sum + item.product.price * item.quantity,
       0,
     );
-    const tax = subtotal * 0.11;
-    return { subtotal, tax, total: subtotal + tax };
+    return { subtotal, total: subtotal };
   };
 
   const formatCurrency = (amount: number) => {
@@ -271,13 +281,31 @@ function CustomerOrderPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex justify-between items-center py-3 border-t border-[var(--public-border)]">
-                <span className="text-[var(--public-text-secondary)]">
-                  Total Pembayaran
-                </span>
-                <span className="text-2xl font-bold text-[var(--public-secondary)]">
-                  {formatCurrency(orderInfo.total_amount)}
-                </span>
+              <div className="border-t border-[var(--public-border)] pt-3 mt-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[var(--public-text-secondary)]">Subtotal</span>
+                  <span className="text-[var(--public-text-primary)]">
+                    {formatCurrency(orderInfo.subtotal)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[var(--public-text-secondary)]">
+                    Pajak
+                    {orderInfo.subtotal > 0 &&
+                      ` (${Math.round((orderInfo.tax_amount / orderInfo.subtotal) * 100)}%)`}
+                  </span>
+                  <span className="text-[var(--public-text-primary)]">
+                    {formatCurrency(orderInfo.tax_amount)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-t border-[var(--public-border)]">
+                  <span className="text-[var(--public-text-secondary)]">
+                    Total Pembayaran
+                  </span>
+                  <span className="text-2xl font-bold text-[var(--public-secondary)]">
+                    {formatCurrency(orderInfo.total_amount)}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
