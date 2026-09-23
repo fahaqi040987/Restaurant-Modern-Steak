@@ -170,7 +170,7 @@ export const payments = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey(),
     orderId: uuid('order_id').references(() => orders.id, { onDelete: 'cascade' }),
-    paymentMethod: varchar('payment_method', { length: 20 }).notNull(),
+    paymentMethod: varchar('payment_method', { length: 50 }).notNull(),
     amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
     referenceNumber: varchar('reference_number', { length: 100 }),
     status: varchar('status', { length: 20 }).notNull().default('pending'),
