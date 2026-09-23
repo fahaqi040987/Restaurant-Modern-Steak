@@ -3,6 +3,7 @@
  */
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ChevronRight, Utensils } from 'lucide-react'
@@ -14,6 +15,7 @@ import { ServiceCards, InfoCards } from '@/components/public/ServiceCards'
 import { apiClient } from '@/api/client'
 import { cn, formatOperatingTime, isValidOperatingTime, getTimezoneAbbreviation } from '@/lib/utils'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
+import { useRestaurantInfo } from '@/hooks/useRestaurantInfo'
 
 export const Route = createFileRoute('/site/')({
   component: PublicLandingPage,
@@ -41,12 +43,24 @@ function getImageUrl(url: string | null | undefined): string | null {
 
 function PublicLandingPage() {
   // Fetch restaurant info
-  const { data: restaurantInfo } = useQuery({
-    queryKey: ['restaurantInfo'],
-    queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 5, // 5 minutes for faster updates
-    refetchOnMount: true, // Always refetch on mount to get latest data
-  })
+  const { data: restaurantInfo } = useRestaurantInfo()
+
+  const heroImageUrl =
+    restaurantInfo?.hero_image_url || '/assets/restoran/images/banner_landing_page.jpg'
+
+  // Preload the hero (LCP) image on this page only - a global preload in
+  // index.html wasted bandwidth on every other page ("unused preload" warnings)
+  useEffect(() => {
+    const link = document.createElement('link')
+    link.rel = 'preload'
+    link.as = 'image'
+    link.href = heroImageUrl
+    link.fetchPriority = 'high'
+    document.head.appendChild(link)
+    return () => {
+      document.head.removeChild(link)
+    }
+  }, [heroImageUrl])
 
   // Fetch featured menu items (limit to 4)
   const { data: menuItems, isLoading: isLoadingMenu } = useQuery({
@@ -70,9 +84,7 @@ function PublicLandingPage() {
           restaurantInfo?.tagline ||
           'Experience the finest premium steaks crafted with passion and served with elegance'
         }
-        backgroundImage={
-          restaurantInfo?.hero_image_url || '/assets/restoran/images/banner_landing_page.jpg'
-        }
+        backgroundImage={heroImageUrl}
       />
 
       {/* Info Cards - Quick restaurant details */}

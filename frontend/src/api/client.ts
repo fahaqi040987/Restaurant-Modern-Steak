@@ -107,7 +107,10 @@ class APIClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
+        const isLoginRequest = error.config?.url?.includes("/auth/login");
+        // A 401 on the login request itself means invalid credentials - the login
+        // page must stay mounted so it can display the error instead of reloading.
+        if (error.response?.status === 401 && !isLoginRequest) {
           localStorage.removeItem("pos_token");
           localStorage.removeItem("pos_user");
           // Redirect to login page

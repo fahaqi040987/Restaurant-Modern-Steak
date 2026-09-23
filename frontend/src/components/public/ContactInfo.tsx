@@ -154,7 +154,13 @@ export function ContactInfo({
           {showMap && restaurantInfo?.map_latitude && restaurantInfo?.map_longitude && (
             <div className="mt-4 rounded-lg overflow-hidden border border-[var(--public-border)]">
               <iframe
-                src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}&q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&zoom=15`}
+                src={
+                  import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+                    ? `https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&zoom=15`
+                    // Keyless embed - used when no Maps API key is configured,
+                    // avoids the embed failing with "google is not defined"
+                    : `https://maps.google.com/maps?q=${restaurantInfo.map_latitude},${restaurantInfo.map_longitude}&z=15&output=embed`
+                }
                 width="100%"
                 height="200"
                 style={{ border: 0 }}

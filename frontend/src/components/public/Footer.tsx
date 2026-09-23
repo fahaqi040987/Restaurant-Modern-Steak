@@ -12,7 +12,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn, getTimezoneAbbreviation } from '@/lib/utils'
+import { cn, getTimezoneAbbreviation, normalizeExternalUrl } from '@/lib/utils'
 import type { RestaurantInfo, OperatingHours } from '@/types'
 
 interface FooterProps {
@@ -183,6 +183,17 @@ export function Footer({ restaurantInfo, showReservation = true, className }: Fo
     { to: '/site/contact', labelKey: 'public.contact' },
   ]
 
+  // Single source of truth for the phone link so display text and href always match
+  const phoneDisplay = restaurantInfo?.phone || '+62 811 717 112'
+  const phoneHref = `tel:${phoneDisplay.replace(/[^+\d]/g, '')}`
+
+  // Normalize social URLs (repairs malformed protocols like "Ss://") and skip placeholders
+  const socialLinks = [
+    { url: normalizeExternalUrl(restaurantInfo?.instagram_url), label: 'Follow us on Instagram', Icon: Instagram },
+    { url: normalizeExternalUrl(restaurantInfo?.facebook_url), label: 'Follow us on Facebook', Icon: Facebook },
+    { url: normalizeExternalUrl(restaurantInfo?.twitter_url), label: 'Follow us on Twitter', Icon: Twitter },
+  ].filter((social): social is { url: string; label: string; Icon: typeof Instagram } => Boolean(social.url))
+
   return (
     <footer
       className={cn(
@@ -268,9 +279,10 @@ export function Footer({ restaurantInfo, showReservation = true, className }: Fo
 
             {/* Social Media Links */}
             <div className="flex items-center gap-4 pt-4">
-              {restaurantInfo?.instagram_url && (
+              {socialLinks.map(({ url, label, Icon }) => (
                 <a
-                  href={restaurantInfo.instagram_url}
+                  key={label}
+                  href={url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
@@ -278,79 +290,11 @@ export function Footer({ restaurantInfo, showReservation = true, className }: Fo
                     'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
                     'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
                   )}
-                  aria-label="Follow us on Instagram"
+                  aria-label={label}
                 >
-                  <Instagram className="h-5 w-5" />
+                  <Icon className="h-5 w-5" />
                 </a>
-              )}
-              {restaurantInfo?.facebook_url && (
-                <a
-                  href={restaurantInfo.facebook_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center',
-                    'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                    'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
-                  )}
-                  aria-label="Follow us on Facebook"
-                >
-                  <Facebook className="h-5 w-5" />
-                </a>
-              )}
-              {restaurantInfo?.twitter_url && (
-                <a
-                  href={restaurantInfo.twitter_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center',
-                    'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                    'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
-                  )}
-                  aria-label="Follow us on Twitter"
-                >
-                  <Twitter className="h-5 w-5" />
-                </a>
-              )}
-              {/* Default social icons if no restaurant info */}
-              {!restaurantInfo && (
-                <>
-                  <a
-                    href="#"
-                    className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center',
-                      'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                      'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
-                    )}
-                    aria-label="Follow us on Instagram"
-                  >
-                    <Instagram className="h-5 w-5" />
-                  </a>
-                  <a
-                    href="#"
-                    className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center',
-                      'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                      'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
-                    )}
-                    aria-label="Follow us on Facebook"
-                  >
-                    <Facebook className="h-5 w-5" />
-                  </a>
-                  <a
-                    href="#"
-                    className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center',
-                      'bg-[var(--public-bg-hover)] text-[var(--public-text-secondary)]',
-                      'hover:bg-[var(--public-accent)] hover:text-white transition-[background-color,color]'
-                    )}
-                    aria-label="Follow us on Twitter"
-                  >
-                    <Twitter className="h-5 w-5" />
-                  </a>
-                </>
-              )}
+              ))}
             </div>
           </div>
 
@@ -397,7 +341,7 @@ export function Footer({ restaurantInfo, showReservation = true, className }: Fo
             <ul className="space-y-4">
               <li>
                 <a
-                  href={`tel:${restaurantInfo?.phone || '+622112345678'}`}
+                  href={phoneHref}
                   className={cn(
                     'flex items-center gap-3 text-sm',
                     'text-[var(--public-text-secondary)] hover:text-[var(--public-accent)]',
@@ -407,7 +351,7 @@ export function Footer({ restaurantInfo, showReservation = true, className }: Fo
                   <span className="w-8 h-8 rounded-full bg-[var(--public-bg-hover)] flex items-center justify-center flex-shrink-0">
                     <Phone className="h-4 w-4" aria-hidden="true" />
                   </span>
-                  <span>{restaurantInfo?.phone || '+62 811 717 112'}</span>
+                  <span>{phoneDisplay}</span>
                 </a>
               </li>
               <li>

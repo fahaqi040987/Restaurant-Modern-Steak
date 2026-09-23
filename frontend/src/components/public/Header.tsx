@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { apiClient } from '@/api/client'
+import { useRestaurantInfo } from '@/hooks/useRestaurantInfo'
 
 interface NavLinkProps {
   to: string
@@ -78,11 +79,7 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Fetch restaurant info for logo
-  const { data: restaurantInfo } = useQuery({
-    queryKey: ['restaurantInfo'],
-    queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  const { data: restaurantInfo } = useRestaurantInfo()
 
   // Fetch menu config
   const { data: menuConfig = [] } = useQuery({
@@ -153,14 +150,18 @@ export function Header() {
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8">
           {processedNavLinks.map((link) => {
-            if (!link.enabled) {
+            // Only render a non-interactive item when there is a maintenance
+            // message to explain it; a disabled item without one would confuse
+            // visitors (and breaks keyboard access to the page).
+            if (!link.enabled && link.maintenanceText) {
               return (
                 <span
                   key={link.to}
+                  aria-disabled="true"
                   className="text-sm font-medium text-muted-foreground cursor-not-allowed"
                   title={link.maintenanceText}
                 >
-                  {link.maintenanceText || t(link.labelKey)}
+                  {link.maintenanceText}
                 </span>
               )
             }
@@ -274,16 +275,17 @@ export function Header() {
               aria-label="Mobile navigation"
             >
               {processedNavLinks.map((link) => {
-                if (!link.enabled) {
+                if (!link.enabled && link.maintenanceText) {
                   return (
                     <div
                       key={link.to}
+                      aria-disabled="true"
                       className={cn(
                         'text-lg py-3 px-4 rounded-md text-muted-foreground cursor-not-allowed'
                       )}
                       title={link.maintenanceText}
                     >
-                      {link.maintenanceText || t(link.labelKey)}
+                      {link.maintenanceText}
                     </div>
                   )
                 }
@@ -368,7 +370,7 @@ export function Header() {
               {/* Contact Info */}
               <div className="mt-6 pt-6 border-t border-[var(--public-border)]">
                 <a
-                  href="tel:+6221123456"
+                  href={`tel:${(restaurantInfo?.phone || '+62 811 717 112').replace(/[^+\d]/g, '')}`}
                   className={cn(
                     'flex items-center gap-3 py-2 px-4',
                     'text-sm text-[var(--public-text-secondary)]',
@@ -376,7 +378,7 @@ export function Header() {
                   )}
                 >
                   <Phone className="h-4 w-4" aria-hidden="true" />
-                  <span>+62 21 123 456</span>
+                  <span>{restaurantInfo?.phone || '+62 811 717 112'}</span>
                 </a>
               </div>
             </nav>
