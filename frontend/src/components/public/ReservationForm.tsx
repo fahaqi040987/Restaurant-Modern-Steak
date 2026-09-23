@@ -172,6 +172,7 @@ export function ReservationForm({
           id="customer_name"
           type="text"
           autoComplete="name"
+          required
           {...register('customer_name')}
           placeholder={t('reservation.namePlaceholder')}
           className={cn(
@@ -208,6 +209,7 @@ export function ReservationForm({
           type="email"
           autoComplete="email"
           spellCheck={false}
+          required
           {...register('email')}
           placeholder={t('reservation.emailPlaceholder')}
           className={cn(
@@ -244,6 +246,7 @@ export function ReservationForm({
           type="tel"
           inputMode="tel"
           autoComplete="tel"
+          required
           {...register('phone')}
           placeholder={t('reservation.phonePlaceholder')}
           className={cn(
@@ -279,6 +282,7 @@ export function ReservationForm({
           id="party_size"
           type="number"
           inputMode="numeric"
+          required
           {...register('party_size', { valueAsNumber: true })}
           min={1}
           max={20}
@@ -317,6 +321,7 @@ export function ReservationForm({
           <Input
             id="reservation_date"
             type="date"
+            required
             {...register('reservation_date')}
             min={today}
             className={cn(
@@ -351,6 +356,7 @@ export function ReservationForm({
           <Input
             id="reservation_time"
             type="time"
+            required
             {...register('reservation_time')}
             className={cn(
               'public-input',

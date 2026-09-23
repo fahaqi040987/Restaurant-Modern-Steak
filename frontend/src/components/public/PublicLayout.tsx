@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { apiClient } from '@/api/client'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { Loader } from './Loader'
+import { useRestaurantInfo } from '@/hooks/useRestaurantInfo'
 import '@/styles/public-theme.css'
 
 interface PublicLayoutProps {
@@ -59,13 +58,7 @@ export function PublicLayout({
   }
 
   // Fetch restaurant info for footer
-  const { data: restaurantInfo } = useQuery({
-    queryKey: ['restaurantInfo'],
-    queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 5, // 5 minutes for faster updates after admin changes
-    refetchOnMount: true,
-    retry: 1,
-  })
+  const { data: restaurantInfo } = useRestaurantInfo()
 
   return (
     <div className="public-theme min-h-screen flex flex-col">

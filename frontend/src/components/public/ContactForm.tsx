@@ -185,6 +185,7 @@ export function ContactForm({
           id="name"
           type="text"
           autoComplete="name"
+          required
           {...register('name')}
           placeholder={t('contact.namePlaceholder')}
           className={cn(
@@ -221,6 +222,7 @@ export function ContactForm({
           type="email"
           autoComplete="email"
           spellCheck={false}
+          required
           {...register('email')}
           placeholder={t('contact.emailPlaceholder')}
           className={cn(
@@ -279,6 +281,7 @@ export function ContactForm({
           disabled={disabled || mutation.isPending}
         >
           <SelectTrigger
+            id="subject"
             data-testid="subject-trigger"
             className={cn(
               'public-input',
@@ -324,6 +327,7 @@ export function ContactForm({
         </Label>
         <Textarea
           id="message"
+          required
           {...register('message')}
           placeholder={t('contact.messagePlaceholder')}
           rows={5}

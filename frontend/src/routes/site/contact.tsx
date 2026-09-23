@@ -3,13 +3,12 @@
  * Public contact page with ContactForm and ContactInfo components
  */
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PublicLayout } from '@/components/public/PublicLayout'
 import { ContactForm } from '@/components/public/ContactForm'
 import { ContactInfo } from '@/components/public/ContactInfo'
-import { apiClient } from '@/api/client'
+import { useRestaurantInfo } from '@/hooks/useRestaurantInfo'
 
 export const Route = createFileRoute('/site/contact')({
   component: PublicContactPage,
@@ -17,12 +16,7 @@ export const Route = createFileRoute('/site/contact')({
 
 function PublicContactPage() {
   const { t } = useTranslation()
-  const { data: restaurantInfo, isLoading, error } = useQuery({
-    queryKey: ['restaurantInfo'],
-    queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 5, // 5 minutes for faster updates
-    refetchOnMount: true,
-  })
+  const { data: restaurantInfo, isLoading, error } = useRestaurantInfo()
 
   return (
     <PublicLayout>

@@ -3,13 +3,12 @@
  * Public reservation page with ReservationForm component
  */
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Phone, MapPin, Clock, Calendar, Users, HelpCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PublicLayout } from '@/components/public/PublicLayout'
 import { ReservationForm } from '@/components/public/ReservationForm'
-import { apiClient } from '@/api/client'
+import { useRestaurantInfo } from '@/hooks/useRestaurantInfo'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/site/reservation')({
@@ -18,12 +17,7 @@ export const Route = createFileRoute('/site/reservation')({
 
 function ReservationPage() {
   const { t } = useTranslation()
-  const { data: restaurantInfo, isLoading } = useQuery({
-    queryKey: ['restaurantInfo'],
-    queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 5, // 5 minutes for faster updates
-    refetchOnMount: true,
-  })
+  const { data: restaurantInfo, isLoading, isError } = useRestaurantInfo()
 
   const DAY_NAMES = [
     t('reservation.sunday'),
@@ -155,17 +149,19 @@ function ReservationPage() {
                 <CardContent className="space-y-3">
                   {isLoading ? (
                     <p className="text-[var(--public-text-secondary)] text-sm">{t('common.loading')}</p>
+                  ) : isError || !restaurantInfo?.phone ? (
+                    <p className="text-[var(--public-text-muted)] text-sm">
+                      {t('public.phoneNotAvailable')}
+                    </p>
                   ) : (
                     <>
-                      {restaurantInfo?.phone && (
-                        <a
-                          href={`tel:${restaurantInfo.phone}`}
-                          className="flex items-center gap-2 text-[var(--public-text-secondary)] hover:text-[var(--public-accent)] transition-colors text-sm"
-                        >
-                          <Phone className="h-4 w-4" />
-                          {restaurantInfo.phone}
-                        </a>
-                      )}
+                      <a
+                        href={`tel:${restaurantInfo.phone}`}
+                        className="flex items-center gap-2 text-[var(--public-text-secondary)] hover:text-[var(--public-accent)] transition-colors text-sm"
+                      >
+                        <Phone className="h-4 w-4" />
+                        {restaurantInfo.phone}
+                      </a>
                       {restaurantInfo?.address && (
                         <div className="flex items-start gap-2 text-[var(--public-text-secondary)] text-sm">
                           <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -191,7 +187,7 @@ function ReservationPage() {
                 <CardContent>
                   {isLoading ? (
                     <p className="text-[var(--public-text-secondary)] text-sm">{t('common.loading')}</p>
-                  ) : restaurantInfo?.operating_hours && restaurantInfo.operating_hours.length > 0 ? (
+                  ) : !isError && restaurantInfo?.operating_hours && restaurantInfo.operating_hours.length > 0 ? (
                     <div className="space-y-1">
                       {restaurantInfo.operating_hours
                         .sort((a, b) => a.day_of_week - b.day_of_week)

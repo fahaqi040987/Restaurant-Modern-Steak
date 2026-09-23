@@ -202,3 +202,32 @@ export function getTimezoneAbbreviation(
   return timezoneMap[timezone] || 'WIB'
 }
 
+/**
+ * Normalize an externally-entered URL (e.g. social links from admin settings)
+ * so it is safe to render as a link.
+ *
+ * - Returns null for empty values and placeholder links ("#") so callers can
+ *   skip rendering instead of outputting a dead anchor.
+ * - Repairs malformed protocols (e.g. "Ss://instagram.com/x" or "htp://...")
+ *   by rebuilding the URL with https://.
+ * - Prefixes scheme-less values ("instagram.com/x") with https://.
+ */
+export function normalizeExternalUrl(
+  url: string | null | undefined
+): string | null {
+  if (!url) return null
+
+  const trimmed = url.trim()
+  if (!trimmed || trimmed === '#') return null
+
+  // Strip any scheme (valid or malformed, e.g. "https", "Ss", "htp") and rebuild with https://
+  const schemeMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\/(.*)$/)
+  if (schemeMatch) {
+    return `https://${schemeMatch[2]}`
+  }
+  if (trimmed.startsWith('//')) {
+    return `https://${trimmed.slice(2)}`
+  }
+  return `https://${trimmed}`
+}
+

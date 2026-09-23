@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ChevronRight, Calendar, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,7 +7,7 @@ import { PublicLayout } from '@/components/public/PublicLayout'
 import { StorySection } from '@/components/public/StorySection'
 import { TestimonialSlider } from '@/components/public/TestimonialSlider'
 import { CounterStats } from '@/components/public/CounterStats'
-import { apiClient } from '@/api/client'
+import { useRestaurantInfo } from '@/hooks/useRestaurantInfo'
 import { cn } from '@/lib/utils'
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
 
@@ -17,12 +16,7 @@ export const Route = createFileRoute('/site/about')({
 })
 
 function PublicAboutPage() {
-  const { data: restaurantInfo } = useQuery({
-    queryKey: ['restaurantInfo'],
-    queryFn: () => apiClient.getRestaurantInfo(),
-    staleTime: 1000 * 60 * 5, // 5 minutes for faster updates
-    refetchOnMount: true,
-  })
+  const { data: restaurantInfo } = useRestaurantInfo()
 
   return (
     <PublicLayout>

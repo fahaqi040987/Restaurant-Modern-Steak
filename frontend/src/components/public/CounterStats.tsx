@@ -212,7 +212,10 @@ function StatItemComponent({
         className="text-4xl md:text-5xl font-bold text-white mb-2"
         style={{ fontFamily: 'var(--font-heading, Nunito, sans-serif)' }}
       >
-        {formatNumber(count)}
+        {/* Before the section is scrolled into view the target value is rendered
+            (the block is still hidden via opacity), so the real numbers are
+            present in the DOM for SEO/no-JS instead of placeholder zeros. */}
+        {formatNumber(isVisible ? count : stat.value)}
         {stat.suffix && <span className="text-white/80">{stat.suffix}</span>}
       </div>
 
