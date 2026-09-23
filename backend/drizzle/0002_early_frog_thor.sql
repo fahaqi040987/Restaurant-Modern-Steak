@@ -1,0 +1,1 @@
+ALTER TABLE "payments" ALTER COLUMN "payment_method" SET DATA TYPE varchar(50);
