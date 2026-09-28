@@ -127,7 +127,7 @@ export async function getPublicMenu(c: Context) {
       SELECT p.id, p.name, p.description, p.price, p.image_url, p.category_id, c.name as category_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.is_available = true
+      WHERE p.is_available = true AND p.is_deleted = false
     `;
     const params: unknown[] = [];
     let argIndex = 0;
@@ -453,7 +453,7 @@ export async function createCustomerOrder(c: Context) {
     let subtotal = 0;
     for (const item of body.items) {
       const productRes = await client.query(
-        `SELECT price FROM products WHERE id = $1 AND is_available = true`,
+        `SELECT price FROM products WHERE id = $1 AND is_available = true AND is_deleted = false`,
         [item.product_id],
       );
 
